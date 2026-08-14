@@ -1,0 +1,348 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Parent Portal - TutorDesk</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..900&amp;family=Hanken+Grotesk:wght@400..700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#446661",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#1b1c1a",
+                      "danger-tint": "#F7E1DC",
+                      "tertiary-fixed-dim": "#a9cec8",
+                      "on-secondary-container": "#724700",
+                      "paper-100": "#F1EFE8",
+                      "secondary-fixed-dim": "#ffb95b",
+                      "on-tertiary-fixed-variant": "#2b4d48",
+                      "on-primary": "#ffffff",
+                      "surface": "#faf9f5",
+                      "primary-fixed-dim": "#8bd4c6",
+                      "on-tertiary": "#ffffff",
+                      "ink-900": "#16211E",
+                      "secondary-fixed": "#ffddb6",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed": "#2a1800",
+                      "surface-container-low": "#f4f4f0",
+                      "surface-container-highest": "#e3e2df",
+                      "ink-500": "#6A716C",
+                      "danger-solid": "#BE3F2C",
+                      "surface-container-high": "#e9e8e4",
+                      "surface-bright": "#faf9f5",
+                      "paper-0": "#FFFFFF",
+                      "primary": "#005248",
+                      "surface-dim": "#dbdad6",
+                      "paper-200": "#E5E2D8",
+                      "warning-tint": "#F8ECD3",
+                      "on-primary-fixed": "#00201c",
+                      "secondary-container": "#ffb54f",
+                      "background": "#faf9f5",
+                      "surface-tint": "#1a6a5f",
+                      "success-solid": "#2E7D5B",
+                      "primary-container": "#1c6b60",
+                      "outline": "#6f7976",
+                      "primary-fixed": "#a7f0e2",
+                      "surface-variant": "#e3e2df",
+                      "surface-container": "#efeeea",
+                      "on-background": "#1b1c1a",
+                      "on-error": "#ffffff",
+                      "inverse-primary": "#8bd4c6",
+                      "inverse-on-surface": "#f2f1ed",
+                      "on-primary-fixed-variant": "#005047",
+                      "success-tint": "#E2F0E9",
+                      "paper-300": "#CFCABB",
+                      "tertiary": "#2c4e49",
+                      "tertiary-fixed": "#c5eae4",
+                      "on-primary-container": "#9fe9da",
+                      "error": "#ba1a1a",
+                      "warning-solid": "#B9791A",
+                      "on-secondary-fixed-variant": "#643f00",
+                      "outline-variant": "#bec9c5",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-container": "#bde2dc",
+                      "on-surface-variant": "#3f4946",
+                      "ink-700": "#3A4441",
+                      "inverse-surface": "#2f312e",
+                      "on-tertiary-fixed": "#00201d",
+                      "secondary": "#845400",
+                      "on-error-container": "#93000a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "space-4": "16px",
+                      "gutter-desktop": "24px",
+                      "space-2": "8px",
+                      "max-width": "1200px",
+                      "gutter-mobile": "16px",
+                      "space-8": "32px",
+                      "space-3": "12px",
+                      "space-1": "4px",
+                      "space-6": "24px",
+                      "base": "4px"
+              },
+              "fontFamily": {
+                      "label": [
+                              "Hanken Grotesk"
+                      ],
+                      "title-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "title-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "data-display": [
+                              "IBM Plex Mono"
+                      ],
+                      "display-md": [
+                              "Fraunces"
+                      ],
+                      "caption": [
+                              "Hanken Grotesk"
+                      ],
+                      "body": [
+                              "Hanken Grotesk"
+                      ],
+                      "title-lg": [
+                              "Fraunces"
+                      ],
+                      "display-lg": [
+                              "Fraunces"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "label": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "title-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "26px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "title-sm": [
+                              "17px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-display": [
+                              "15px",
+                              {
+                                      "lineHeight": "22px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "38px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body": [
+                              "15px",
+                              {
+                                      "lineHeight": "22px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "30px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "44px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style type="text/tailwindcss">
+          @layer utilities {
+              .material-symbols-outlined {
+                  font-family: 'Material Symbols Outlined';
+                  font-weight: normal;
+                  font-style: normal;
+                  font-size: 24px;
+                  line-height: 1;
+                  letter-spacing: normal;
+                  text-transform: none;
+                  display: inline-block;
+                  white-space: nowrap;
+                  word-wrap: normal;
+                  direction: ltr;
+                  -webkit-font-feature-settings: 'liga';
+                  -webkit-font-smoothing: antialiased;
+              }
+          }
+      </style>
+</head>
+<body class="bg-background text-on-background font-body min-h-screen">
+<!-- TopNavBar (Parent Context) -->
+<nav class="bg-background border-b border-paper-200 sticky top-0 z-40">
+<div class="max-w-max-width mx-auto px-gutter-mobile md:px-gutter-desktop h-16 flex justify-between items-center">
+<div class="flex items-center gap-space-4">
+<span class="font-display-lg text-display-lg text-primary tracking-tight">TutorDesk</span>
+<span class="text-ink-500 hidden md:inline">|</span>
+<span class="font-title-md text-title-md text-ink-700 hidden md:inline">Aisha's Portal</span>
+</div>
+<div class="flex items-center gap-space-4">
+<button class="p-space-2 text-primary hover:bg-surface-container-low rounded-DEFAULT transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-title-sm text-title-sm">
+                    AO
+                </div>
+</div>
+</div>
+</nav>
+<main class="max-w-max-width mx-auto px-gutter-mobile md:px-gutter-desktop py-space-8">
+<header class="mb-space-8 flex flex-col md:flex-row md:justify-between md:items-end gap-space-4">
+<div>
+<h1 class="font-display-md text-display-md text-on-surface mb-space-1">Welcome, Aisha's Parents</h1>
+<p class="font-body-lg text-body-lg text-ink-500">Here's a quick overview of Aisha's progress and upcoming schedule.</p>
+</div>
+<button class="bg-primary text-on-primary px-space-4 py-space-3 rounded-DEFAULT font-label text-label hover:bg-primary-container transition-colors flex items-center gap-space-2 whitespace-nowrap self-start md:self-auto shadow-sm">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+                Message Tutor
+            </button>
+</header>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-4 md:gap-space-6">
+<!-- Hero: Next Class -->
+<section class="md:col-span-8 bg-paper-0 border border-paper-200 rounded-lg p-space-6 shadow-[0_2px_8px_-2px_rgba(22,33,30,0.06)] flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-space-4">
+<h2 class="font-title-lg text-title-lg text-primary">Next Session</h2>
+<span class="bg-warning-tint text-warning-solid px-space-3 py-space-1 rounded-full font-label text-label flex items-center gap-space-2">
+<span class="w-2 h-2 rounded-full bg-warning-solid animate-pulse"></span>
+                            Starting Soon
+                        </span>
+</div>
+<div class="mb-space-6">
+<h3 class="font-title-md text-title-md text-on-surface mb-space-2">Advanced Mathematics - Calculus Intro</h3>
+<div class="flex flex-col gap-space-2 text-ink-700 font-body-lg text-body-lg">
+<div class="flex items-center gap-space-2">
+<span class="material-symbols-outlined text-ink-500">calendar_today</span>
+                                Today, 4:00 PM - 5:30 PM
+                            </div>
+<div class="flex items-center gap-space-2">
+<span class="material-symbols-outlined text-ink-500">video_camera_front</span>
+                                Online via Zoom
+                            </div>
+</div>
+</div>
+</div>
+<div class="flex gap-space-4 mt-auto">
+<button class="flex-1 bg-warning-solid text-on-primary py-space-3 rounded-DEFAULT font-title-sm text-title-sm hover:bg-opacity-90 transition-opacity">
+                        Join Class Now
+                    </button>
+<button class="bg-paper-0 text-primary border border-primary px-space-4 py-space-3 rounded-DEFAULT font-title-sm text-title-sm hover:bg-surface-container-low transition-colors">
+                        Reschedule
+                    </button>
+</div>
+</section>
+<!-- Balance Summary -->
+<section class="md:col-span-4 bg-paper-0 border border-paper-200 rounded-lg p-space-6 shadow-[0_2px_8px_-2px_rgba(22,33,30,0.06)] flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-2 mb-space-4 text-ink-500">
+<span class="material-symbols-outlined">payments</span>
+<h2 class="font-label text-label uppercase tracking-wider">Current Balance</h2>
+</div>
+<div class="mb-space-6">
+<div class="font-display-md text-display-md text-danger-solid font-bold mb-space-1">
+                            ₦ 45,000
+                        </div>
+<p class="font-body text-body text-ink-500">Due by October 5th</p>
+</div>
+</div>
+<div class="space-y-space-3">
+<button class="w-full bg-primary text-on-primary py-space-2 rounded-DEFAULT font-label text-label hover:bg-primary-container transition-colors">
+                        Make Payment
+                    </button>
+<button class="w-full bg-surface-container-low text-primary py-space-2 rounded-DEFAULT font-label text-label hover:bg-surface-container-highest transition-colors">
+                        View Invoices
+                    </button>
+</div>
+</section>
+<!-- Latest Report Preview -->
+<section class="md:col-span-12 bg-paper-0 border border-paper-200 rounded-lg p-space-6 shadow-[0_2px_8px_-2px_rgba(22,33,30,0.06)]">
+<div class="flex justify-between items-center mb-space-6">
+<div class="flex items-center gap-space-2">
+<span class="material-symbols-outlined text-primary">assessment</span>
+<h2 class="font-title-lg text-title-lg text-on-surface">September Progress Report</h2>
+</div>
+<button class="text-primary hover:text-primary-container font-label text-label flex items-center gap-space-1">
+                        View Full Report
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-6">
+<!-- Key Metric 1 -->
+<div class="p-space-4 bg-surface-container-lowest border border-paper-200 rounded-DEFAULT">
+<div class="font-label text-label text-ink-500 mb-space-2">Attendance</div>
+<div class="font-title-lg text-title-lg text-success-solid mb-space-1">100%</div>
+<div class="font-caption text-caption text-ink-500">8 of 8 sessions attended</div>
+</div>
+<!-- Key Metric 2 -->
+<div class="p-space-4 bg-surface-container-lowest border border-paper-200 rounded-DEFAULT">
+<div class="font-label text-label text-ink-500 mb-space-2">Assignments</div>
+<div class="font-title-lg text-title-lg text-primary mb-space-1">92%</div>
+<div class="font-caption text-caption text-ink-500">Average score this month</div>
+</div>
+<!-- Note Snippet -->
+<div class="p-space-4 bg-surface-container-low rounded-DEFAULT md:col-span-1">
+<div class="font-label text-label text-ink-700 mb-space-2 flex items-center gap-space-1">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+                            Tutor's Note
+                        </div>
+<p class="font-body-lg text-body-lg text-ink-900 line-clamp-3 italic">
+                            "Aisha has shown excellent improvement in solving quadratic equations. Next month we will focus on introductory calculus concepts to prepare for her mid-terms."
+                        </p>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html><html class="h-full" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Materials Library - TutorDesk</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&amp;family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "danger-solid": "#BE3F2C",
+                        "ink-500": "#6A716C",
+                        "primary": "#005248",
+                        "ink-900": "#16211E",
+                        "surface-container": "#efeeea",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#00201c",
+                        "paper-100": "#F1EFE8",
+                        "secondary-container": "#ffb54f",
+                        "tertiary-fixed": "#c5eae4",
+                        "on-background": "#1b1c1a",
+                        "on-tertiary-fixed": "#00201d",
+                        "on-surface": "#1b1c1a",
+                        "primary-fixed": "#a7f0e2",
+                        "paper-0": "#FFFFFF",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "danger-tint": "#F7E1DC",
+                        "inverse-on-surface": "#f2f1ed",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#9fe9da",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2f312e",
+                        "surface-variant": "#e3e2df",
+                        "tertiary": "#2c4e49",
+                        "on-surface-variant": "#3f4946",
+                        "surface-container-low": "#f4f4f0",
+                        "secondary-fixed": "#ffddb6",
+                        "on-tertiary-container": "#bde2dc",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#bec9c5",
+                        "paper-300": "#CFCABB",
+                        "surface-dim": "#dbdad6",
+                        "on-secondary-container": "#724700",
+                        "surface-tint": "#1a6a5f",
+                        "background": "#faf9f5",
+                        "tertiary-fixed-dim": "#a9cec8",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "outline": "#6f7976",
+                        "surface-container-high": "#e9e8e4",
+                        "on-primary-fixed-variant": "#005047",
+                        "success-tint": "#E2F0E9",
+                        "surface-container-highest": "#e3e2df",
+                        "primary-fixed-dim": "#8bd4c6",
+                        "warning-tint": "#F8ECD3",
+                        "warning-solid": "#B9791A",
+                        "surface-bright": "#faf9f5",
+                        "surface": "#faf9f5",
+                        "secondary-fixed-dim": "#ffb95b",
+                        "primary-container": "#1c6b60",
+                        "paper-200": "#E5E2D8",
+                        "on-tertiary-fixed-variant": "#2b4d48",
+                        "ink-700": "#3A4441",
+                        "success-solid": "#2E7D5B",
+                        "secondary": "#845400",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#2a1800",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#8bd4c6",
+                        "tertiary-container": "#446661"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "space-2": "8px",
+                        "space-8": "32px",
+                        "space-6": "24px",
+                        "space-4": "16px",
+                        "space-3": "12px",
+                        "space-1": "4px",
+                        "gutter-mobile": "16px",
+                        "base": "4px",
+                        "gutter-desktop": "24px",
+                        "max-width": "1200px"
+                    },
+                    "fontFamily": {
+                        "label": ["Hanken Grotesk"],
+                        "title-md": ["Hanken Grotesk"],
+                        "title-sm": ["Hanken Grotesk"],
+                        "display-md": ["Fraunces"],
+                        "display-lg": ["Fraunces"],
+                        "title-lg": ["Fraunces"],
+                        "body": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "caption": ["Hanken Grotesk"],
+                        "data-display": ["IBM Plex Mono"]
+                    },
+                    "fontSize": {
+                        "label": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "title-md": ["20px", { "lineHeight": "26px", "fontWeight": "700" }],
+                        "title-sm": ["17px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "display-md": ["32px", { "lineHeight": "38px", "fontWeight": "600" }],
+                        "display-lg": ["40px", { "lineHeight": "44px", "fontWeight": "600" }],
+                        "title-lg": ["24px", { "lineHeight": "30px", "fontWeight": "600" }],
+                        "body": ["15px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "data-display": ["15px", { "lineHeight": "22px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .elev-1 { box-shadow: 0 4px 6px -1px rgba(22, 33, 30, 0.06), 0 2px 4px -2px rgba(22, 33, 30, 0.06); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body h-full flex overflow-hidden antialiased selection:bg-tertiary-fixed selection:text-on-tertiary-fixed">
+<!-- App Shell Container -->
+<div class="flex w-full h-full">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-screen py-space-6 w-64 fixed left-0 top-0 overflow-y-auto border-r border-outline-variant bg-primary text-primary-fixed transition-all duration-300 z-50" id="sidenav">
+<div class="px-space-4 mb-space-8 flex items-center justify-between">
+<div class="flex items-center gap-space-3">
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim/20 flex items-center justify-center shrink-0 border border-primary-fixed/30 overflow-hidden">
+<img class="object-cover w-full h-full" data-alt="A professional headshot of a Nigerian tutor in a softly lit, modern academic setting. The tutor is smiling warmly, wearing a crisp collared shirt. The background suggests a well-organized library with warm light mode aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyIFn_C8jRlkwRSO9A6vQR3stfQp77EODvQSjE7_y97KlKlYw4MGTwKcaMQjxvBntHeZ1hIYUn5DGd5U7_RiE4SqFIKuikorP8I_IFm8k4OJcsEJMbtBU0-2c1oub_rMg0cOLFgOZlMHvDb0lfYdWl3OF8XIkXWHwbAqnxI5Ch3WPyNVhdY8NU9_5wdX328XGDI8xicIzc8vjUvKJYn0-fBpwrBG4i3XngcGwCRIFDamcymDnbEsfl">
+</div>
+<div>
+<h1 class="font-display-md text-display-md font-bold text-primary-fixed text-[20px] leading-tight">TutorDesk</h1>
+<p class="font-caption text-caption text-primary-fixed-dim">Independent Operations</p>
+</div>
+</div>
+</div>
+<div class="px-space-4 mb-space-6">
+<button class="w-full bg-secondary-container text-on-secondary-container hover:bg-secondary-fixed-dim transition-colors py-space-2 px-space-4 rounded-lg flex items-center justify-center gap-space-2 font-title-sm text-title-sm shadow-sm relative overflow-hidden group">
+<span class="absolute right-2 top-2 w-2 h-2 rounded-full bg-paper-0 animate-pulse"></span>
+<span class="material-symbols-outlined" data-icon="play_arrow" data-weight="fill">play_arrow</span>
+                    Start Class
+                </button>
+</div>
+<ul class="flex flex-col gap-1 flex-1 px-space-2">
+<li>
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label text-label">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label text-label">Students</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label text-label">Schedule</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="font-label text-label">Classroom</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label text-label">Payments</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 bg-tertiary-container text-on-tertiary-container scale-[0.99] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open" data-weight="fill">folder_open</span>
+<span class="font-label text-label">Library</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label text-label">Messages</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto px-space-2 pt-space-4 border-t border-primary-fixed-variant/30 mx-space-4">
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label text-label">Settings</span>
+</a>
+<a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded-lg mx-2 my-1 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label text-label">Help</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col min-w-0 md:pl-64 transition-all duration-300 h-screen" id="main-content">
+<!-- TopNavBar -->
+<header class="h-16 flex justify-between items-center px-gutter-desktop w-full bg-background border-b border-paper-200 shrink-0 z-40 sticky top-0">
+<div class="flex items-center gap-space-4">
+<button class="md:hidden text-ink-500 hover:bg-surface-container-low p-space-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="hidden sm:flex items-center bg-paper-100 rounded-full px-space-4 py-space-2 border border-paper-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all w-64 lg:w-96">
+<span class="material-symbols-outlined text-ink-500 mr-space-2 text-sm" data-icon="search">search</span>
+<input class="bg-transparent border-none outline-none font-body text-body text-on-background placeholder:text-ink-500 w-full focus:ring-0 p-0" placeholder="Search materials..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-space-2">
+<div class="hidden lg:flex items-center gap-space-2 mr-space-4">
+<span class="w-2 h-2 rounded-full bg-success-solid"></span>
+<span class="font-label text-label text-ink-700">Synced</span>
+</div>
+<button class="text-ink-500 hover:bg-surface-container-low p-space-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+</button>
+<button class="text-ink-500 hover:bg-surface-container-low p-space-2 rounded-full transition-colors flex items-center justify-center relative">
+<span class="absolute top-2 right-2 w-2 h-2 bg-danger-solid rounded-full border-2 border-background"></span>
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-ink-500 hover:bg-surface-container-low p-space-2 rounded-full transition-colors flex items-center justify-center ml-space-2">
+<span class="material-symbols-outlined" data-icon="account_circle" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 overflow-y-auto p-gutter-mobile md:p-gutter-desktop flex flex-col">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-4 mb-space-8 shrink-0">
+<div>
+<div class="flex items-center gap-space-2 text-ink-500 font-label text-label mb-space-1">
+<span>Library</span>
+<span class="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary font-bold">All Materials</span>
+</div>
+<h2 class="font-display-lg text-display-lg text-on-background">Materials Library</h2>
+</div>
+<button class="bg-primary text-on-primary hover:bg-primary-container transition-colors py-space-2 px-space-4 rounded-lg flex items-center justify-center gap-space-2 font-title-sm text-title-sm whitespace-nowrap self-start sm:self-auto border border-primary">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                        Add material
+                    </button>
+</div>
+<!-- Content Grid Structure -->
+<div class="flex flex-1 gap-space-6 overflow-hidden min-h-0">
+<!-- Left Sidebar (Tree Nav) -->
+<aside class="hidden lg:flex flex-col w-64 shrink-0 bg-paper-0 border border-paper-200 rounded-xl overflow-hidden h-full">
+<div class="p-space-4 border-b border-paper-200 bg-paper-50 flex justify-between items-center">
+<h3 class="font-title-sm text-title-sm text-on-background">Browse structure</h3>
+<button class="text-ink-500 hover:text-on-background transition-colors p-1 rounded hover:bg-paper-200">
+<span class="material-symbols-outlined text-[20px]" data-icon="keyboard_double_arrow_left">keyboard_double_arrow_left</span>
+</button>
+</div>
+<div class="overflow-y-auto p-space-2 flex-1 custom-scrollbar">
+<!-- Tree Item 1 (Expanded) -->
+<div class="mb-1">
+<button class="w-full flex items-center gap-space-2 p-space-2 rounded-lg hover:bg-paper-100 transition-colors text-left group">
+<span class="material-symbols-outlined text-ink-500 text-[20px] transition-transform rotate-90" data-icon="chevron_right">chevron_right</span>
+<span class="material-symbols-outlined text-tertiary text-[20px]" data-icon="folder" data-weight="fill">folder</span>
+<span class="font-label text-label text-on-background flex-1">WAEC Prep</span>
+</button>
+<div class="pl-space-8 flex flex-col gap-1 mt-1">
+<button class="w-full flex items-center gap-space-2 p-space-2 rounded-lg bg-surface-container-low text-primary font-medium text-left">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="folder_open" data-weight="fill">folder_open</span>
+<span class="font-label text-label">Mathematics</span>
+</button>
+<button class="w-full flex items-center gap-space-2 p-space-2 rounded-lg hover:bg-paper-100 text-ink-700 text-left transition-colors">
+<span class="material-symbols-outlined text-ink-500 text-[20px]" data-icon="folder" data-weight="fill">folder</span>
+<span class="font-label text-label">English Language</span>
+</button>
+<button class="w-full flex items-center gap-space-2 p-space-2 rounded-lg hover:bg-paper-100 text-ink-700 text-left transition-colors">
+<span class="material-symbols-outlined text-ink-500 text-[20px]" data-icon="folder" data-weight="fill">folder</span>
+<span class="font-label text-label">Physics</span>
+</button>
+</div>
+</div>
+<!-- Tree Item 2 (Collapsed) -->
+<div class="mb-1">
+<button class="w-full flex items-center gap-space-2 p-space-2 rounded-lg hover:bg-paper-100 transition-colors text-left group">
+<span class="material-symbols-outlined text-ink-500 text-[20px] transition-transform group-hover:text-on-background" data-icon="chevron_right">chevron_right</span>
+<span class="material-symbols-outlined text-ink-500 text-[20px]" data-icon="folder" data-weight="fill">folder</span>
+<span class="font-label text-label text-ink-700 flex-1">JAMB Intensive</span>
+</button>
+</div>
+<!-- Tree Item 3 (Collapsed) -->
+<div class="mb-1">
+<button class="w-full flex items-center gap-space-2 p-space-2 rounded-lg hover:bg-paper-100 transition-colors text-left group">
+<span class="material-symbols-outlined text-ink-500 text-[20px] transition-transform group-hover:text-on-background" data-icon="chevron_right">chevron_right</span>
+<span class="material-symbols-outlined text-ink-500 text-[20px]" data-icon="folder" data-weight="fill">folder</span>
+<span class="font-label text-label text-ink-700 flex-1">Junior Sec (JSS 1-3)</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+<!-- Filters Bar -->
+<div class="bg-paper-0 border border-paper-200 rounded-xl p-space-3 mb-space-4 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-space-4">
+<div class="flex items-center gap-space-2 overflow-x-auto no-scrollbar pb-2 sm:pb-0">
+<button class="bg-surface-tint text-paper-0 px-space-3 py-space-1 rounded-full font-label text-label border border-surface-tint whitespace-nowrap">All Types</button>
+<button class="bg-paper-100 text-ink-700 hover:bg-paper-200 px-space-3 py-space-1 rounded-full font-label text-label border border-paper-300 transition-colors whitespace-nowrap">Documents</button>
+<button class="bg-paper-100 text-ink-700 hover:bg-paper-200 px-space-3 py-space-1 rounded-full font-label text-label border border-paper-300 transition-colors whitespace-nowrap">Slides</button>
+<button class="bg-paper-100 text-ink-700 hover:bg-paper-200 px-space-3 py-space-1 rounded-full font-label text-label border border-paper-300 transition-colors whitespace-nowrap">Quizzes</button>
+</div>
+<div class="flex items-center gap-space-3 border-t sm:border-t-0 sm:border-l border-paper-200 pt-space-3 sm:pt-0 sm:pl-space-4 shrink-0">
+<label class="flex items-center gap-space-2 cursor-pointer group">
+<div class="relative">
+<input checked="" class="sr-only peer" type="checkbox">
+<div class="w-9 h-5 bg-paper-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</div>
+<span class="font-label text-label text-ink-700 group-hover:text-on-background transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="cloud_download">cloud_download</span>
+                                        Available offline
+                                    </span>
+</label>
+<button class="text-ink-500 hover:bg-paper-200 p-1.5 rounded transition-colors flex items-center justify-center border border-paper-200 lg:hidden">
+<span class="material-symbols-outlined text-[20px]" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Card Grid -->
+<div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-4 pb-space-8">
+<!-- Card 1 -->
+<div class="bg-paper-0 border border-paper-200 rounded-xl p-space-4 elev-1 hover:border-primary-fixed/50 transition-colors group cursor-pointer flex flex-col h-full relative">
+<div class="absolute top-space-4 right-space-4 z-10">
+<button class="text-ink-500 hover:text-primary transition-colors bg-paper-0/80 rounded-full p-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<div class="flex items-start gap-space-3 mb-space-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low border border-paper-200 flex items-center justify-center shrink-0 text-danger-solid group-hover:bg-danger-tint/30 transition-colors">
+<span class="material-symbols-outlined text-[28px]" data-icon="picture_as_pdf" data-weight="fill">picture_as_pdf</span>
+</div>
+<div class="pr-6">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold text-ink-700 tracking-wider uppercase border border-paper-300">WAEC</span>
+<span class="bg-success-tint px-2 py-0.5 rounded text-[10px] font-bold text-success-solid tracking-wider uppercase border border-success-solid/20 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]" data-icon="offline_pin">offline_pin</span> Offline
+                                                </span>
+</div>
+<h4 class="font-title-sm text-title-sm text-on-background line-clamp-2 group-hover:text-primary transition-colors">Algebraic Fractions &amp; Equations Past Questions</h4>
+</div>
+</div>
+<div class="mt-auto pt-space-3 border-t border-paper-200 flex justify-between items-center">
+<p class="font-caption text-caption text-ink-500">Mathematics • SS3</p>
+<p class="font-data-display text-data-display text-ink-500 text-[12px]">2.4 MB</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-paper-0 border border-paper-200 rounded-xl p-space-4 elev-1 hover:border-primary-fixed/50 transition-colors group cursor-pointer flex flex-col h-full relative">
+<div class="absolute top-space-4 right-space-4 z-10">
+<button class="text-ink-500 hover:text-primary transition-colors bg-paper-0/80 rounded-full p-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<div class="flex items-start gap-space-3 mb-space-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low border border-paper-200 flex items-center justify-center shrink-0 text-secondary group-hover:bg-warning-tint/30 transition-colors">
+<span class="material-symbols-outlined text-[28px]" data-icon="slideshow" data-weight="fill">slideshow</span>
+</div>
+<div class="pr-6">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold text-ink-700 tracking-wider uppercase border border-paper-300">WAEC</span>
+<span class="bg-success-tint px-2 py-0.5 rounded text-[10px] font-bold text-success-solid tracking-wider uppercase border border-success-solid/20 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]" data-icon="offline_pin">offline_pin</span> Offline
+                                                </span>
+</div>
+<h4 class="font-title-sm text-title-sm text-on-background line-clamp-2 group-hover:text-primary transition-colors">Introduction to Trigonometry (Slide Deck)</h4>
+</div>
+</div>
+<div class="mt-auto pt-space-3 border-t border-paper-200 flex justify-between items-center">
+<p class="font-caption text-caption text-ink-500">Mathematics • SS2</p>
+<p class="font-data-display text-data-display text-ink-500 text-[12px]">5.1 MB</p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-paper-0 border border-paper-200 rounded-xl p-space-4 elev-1 hover:border-primary-fixed/50 transition-colors group cursor-pointer flex flex-col h-full relative">
+<div class="absolute top-space-4 right-space-4 z-10">
+<button class="text-ink-500 hover:text-primary transition-colors bg-paper-0/80 rounded-full p-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<div class="flex items-start gap-space-3 mb-space-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low border border-paper-200 flex items-center justify-center shrink-0 text-primary group-hover:bg-success-tint/30 transition-colors">
+<span class="material-symbols-outlined text-[28px]" data-icon="quiz" data-weight="fill">quiz</span>
+</div>
+<div class="pr-6">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold text-ink-700 tracking-wider uppercase border border-paper-300">JAMB</span>
+<span class="bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold text-ink-500 tracking-wider uppercase border border-paper-300 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]" data-icon="cloud">cloud</span> Online
+                                                </span>
+</div>
+<h4 class="font-title-sm text-title-sm text-on-background line-clamp-2 group-hover:text-primary transition-colors">Mock Exam 1: Quantitative Reasoning</h4>
+</div>
+</div>
+<div class="mt-auto pt-space-3 border-t border-paper-200 flex justify-between items-center">
+<p class="font-caption text-caption text-ink-500">General Math • Intensive</p>
+<p class="font-caption text-caption text-ink-500 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" data-icon="timer">timer</span> 45m</p>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-paper-0 border border-paper-200 rounded-xl p-space-4 elev-1 hover:border-primary-fixed/50 transition-colors group cursor-pointer flex flex-col h-full relative">
+<div class="absolute top-space-4 right-space-4 z-10">
+<button class="text-ink-500 hover:text-primary transition-colors bg-paper-0/80 rounded-full p-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<div class="flex items-start gap-space-3 mb-space-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low border border-paper-200 flex items-center justify-center shrink-0 text-primary-container group-hover:bg-primary-fixed/30 transition-colors">
+<span class="material-symbols-outlined text-[28px]" data-icon="article" data-weight="fill">article</span>
+</div>
+<div class="pr-6">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold text-ink-700 tracking-wider uppercase border border-paper-300">Internal</span>
+<span class="bg-success-tint px-2 py-0.5 rounded text-[10px] font-bold text-success-solid tracking-wider uppercase border border-success-solid/20 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]" data-icon="offline_pin">offline_pin</span> Offline
+                                                </span>
+</div>
+<h4 class="font-title-sm text-title-sm text-on-background line-clamp-2 group-hover:text-primary transition-colors">Lesson Plan: Circle Geometry Fundamentals</h4>
+</div>
+</div>
+<div class="mt-auto pt-space-3 border-t border-paper-200 flex justify-between items-center">
+<p class="font-caption text-caption text-ink-500">Mathematics • SS1</p>
+<p class="font-data-display text-data-display text-ink-500 text-[12px]">1.2 MB</p>
+</div>
+</div>
+<!-- Add Material Card (Ghost) -->
+<div class="bg-transparent border border-dashed border-outline-variant rounded-xl p-space-4 hover:border-primary hover:bg-surface-container-low transition-colors group cursor-pointer flex flex-col items-center justify-center h-full min-h-[160px] text-ink-500 hover:text-primary">
+<span class="material-symbols-outlined text-[32px] mb-space-2" data-icon="add_circle">add_circle</span>
+<h4 class="font-title-sm text-title-sm">Upload New Material</h4>
+<p class="font-caption text-caption text-center mt-1 max-w-[200px]">Drag and drop files here or click to browse.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #dbdad6;
+            border-radius: 20px;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

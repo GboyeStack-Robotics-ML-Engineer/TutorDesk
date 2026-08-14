@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Student Onboarding - TutorDesk</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Fraunces:wght@600&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#1a6a5f",
+                      "secondary-fixed-dim": "#ffb95b",
+                      "inverse-surface": "#2f312e",
+                      "inverse-on-surface": "#f2f1ed",
+                      "error": "#ba1a1a",
+                      "surface": "#faf9f5",
+                      "secondary-fixed": "#ffddb6",
+                      "on-tertiary-fixed-variant": "#2b4d48",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#e3e2df",
+                      "on-surface-variant": "#3f4946",
+                      "surface-container": "#efeeea",
+                      "on-secondary-fixed-variant": "#643f00",
+                      "success-solid": "#2E7D5B",
+                      "success-tint": "#E2F0E9",
+                      "paper-100": "#F1EFE8",
+                      "warning-tint": "#F8ECD3",
+                      "error-container": "#ffdad6",
+                      "ink-700": "#3A4441",
+                      "on-tertiary-fixed": "#00201d",
+                      "on-surface": "#1b1c1a",
+                      "on-secondary-container": "#724700",
+                      "tertiary-fixed": "#c5eae4",
+                      "surface-container-high": "#e9e8e4",
+                      "surface-dim": "#dbdad6",
+                      "warning-solid": "#B9791A",
+                      "outline": "#6f7976",
+                      "surface-container-highest": "#e3e2df",
+                      "paper-0": "#FFFFFF",
+                      "primary-fixed": "#a7f0e2",
+                      "paper-300": "#CFCABB",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "tertiary-container": "#446661",
+                      "danger-solid": "#BE3F2C",
+                      "on-primary-container": "#9fe9da",
+                      "on-background": "#1b1c1a",
+                      "inverse-primary": "#8bd4c6",
+                      "on-secondary-fixed": "#2a1800",
+                      "background": "#faf9f5",
+                      "tertiary": "#2c4e49",
+                      "danger-tint": "#F7E1DC",
+                      "primary-fixed-dim": "#8bd4c6",
+                      "ink-900": "#16211E",
+                      "primary-container": "#1c6b60",
+                      "on-primary-fixed-variant": "#005047",
+                      "paper-200": "#E5E2D8",
+                      "surface-bright": "#faf9f5",
+                      "on-primary-fixed": "#00201c",
+                      "ink-500": "#6A716C",
+                      "primary": "#005248",
+                      "surface-container-low": "#f4f4f0",
+                      "outline-variant": "#bec9c5",
+                      "on-tertiary-container": "#bde2dc",
+                      "tertiary-fixed-dim": "#a9cec8",
+                      "on-error": "#ffffff",
+                      "secondary": "#845400",
+                      "on-primary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "secondary-container": "#ffb54f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "base": "4px",
+                      "gutter-desktop": "24px",
+                      "gutter-mobile": "16px",
+                      "space-3": "12px",
+                      "space-1": "4px",
+                      "space-6": "24px",
+                      "space-4": "16px",
+                      "max-width": "1200px",
+                      "space-2": "8px",
+                      "space-8": "32px"
+              },
+              "fontFamily": {
+                      "data-display": [
+                              "IBM Plex Mono"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "title-lg": [
+                              "Fraunces"
+                      ],
+                      "display-lg": [
+                              "Fraunces"
+                      ],
+                      "caption": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-md": [
+                              "Fraunces"
+                      ],
+                      "title-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "label": [
+                              "Hanken Grotesk"
+                      ],
+                      "title-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "body": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "data-display": [
+                              "15px",
+                              {
+                                      "lineHeight": "22px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "30px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "44px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "38px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title-sm": [
+                              "17px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "title-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "26px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body": [
+                              "15px",
+                              {
+                                      "lineHeight": "22px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Custom Input Styles */
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select {
+            border: 1px solid theme('colors.paper-200');
+            background-color: theme('colors.paper-0');
+            transition: all 0.2s ease;
+        }
+        
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 1px theme('colors.primary');
+        }
+
+        /* Checkbox/Radio Custom Styling */
+        input[type="radio"]:checked,
+        input[type="checkbox"]:checked {
+            background-color: theme('colors.primary');
+            border-color: theme('colors.primary');
+        }
+        
+        input[type="radio"]:focus,
+        input[type="checkbox"]:focus {
+            --tw-ring-color: theme('colors.primary');
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body font-body antialiased min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="max-w-3xl w-full bg-paper-0 border border-paper-200 rounded-xl shadow-[0_4px_12px_rgba(22,33,30,0.06)] overflow-hidden">
+<!-- Header Section -->
+<div class="p-8 border-b border-paper-200 bg-surface-container-low text-center">
+<h1 class="font-display-md text-display-md text-primary mb-2">Welcome to TutorDesk</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto">
+                Let's get started by learning a bit more about the student. This helps us match them with the best resources and teaching style.
+            </p>
+</div>
+<!-- Form Section -->
+<form class="p-8 space-y-10">
+<!-- Student Information -->
+<section class="space-y-6">
+<div class="flex items-center gap-3 border-b border-paper-200 pb-2">
+<span class="material-symbols-outlined text-primary">person</span>
+<h2 class="font-title-md text-title-md text-on-surface">Student Information</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="block font-label text-label text-ink-700" for="student_name">Full Name</label>
+<input class="w-full rounded-DEFAULT px-4 py-3 font-body text-body text-on-surface placeholder-outline-variant" id="student_name" name="student_name" placeholder="e.g. Jane Doe" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="block font-label text-label text-ink-700" for="grade_level">Grade / Academic Level</label>
+<select class="w-full rounded-DEFAULT px-4 py-3 font-body text-body text-on-surface" id="grade_level" name="grade_level">
+<option disabled="" selected="" value="">Select level...</option>
+<option value="primary">Primary School</option>
+<option value="middle">Middle School / Junior High</option>
+<option value="high">High School / Senior Secondary</option>
+<option value="university">University / College</option>
+<option value="other">Other</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Academic Focus -->
+<section class="space-y-6">
+<div class="flex items-center gap-3 border-b border-paper-200 pb-2">
+<span class="material-symbols-outlined text-primary">book</span>
+<h2 class="font-title-md text-title-md text-on-surface">Academic Focus</h2>
+</div>
+<div class="space-y-4">
+<label class="block font-label text-label text-ink-700">Primary Subjects Needed</label>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<label class="flex items-center p-3 border border-paper-200 rounded-DEFAULT cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="h-4 w-4 text-primary border-paper-300 rounded" name="subjects" type="checkbox" value="math"/>
+<span class="ml-3 font-body text-body text-on-surface">Mathematics</span>
+</label>
+<label class="flex items-center p-3 border border-paper-200 rounded-DEFAULT cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="h-4 w-4 text-primary border-paper-300 rounded" name="subjects" type="checkbox" value="science"/>
+<span class="ml-3 font-body text-body text-on-surface">Sciences</span>
+</label>
+<label class="flex items-center p-3 border border-paper-200 rounded-DEFAULT cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="h-4 w-4 text-primary border-paper-300 rounded" name="subjects" type="checkbox" value="english"/>
+<span class="ml-3 font-body text-body text-on-surface">English/Lit</span>
+</label>
+<label class="flex items-center p-3 border border-paper-200 rounded-DEFAULT cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="h-4 w-4 text-primary border-paper-300 rounded" name="subjects" type="checkbox" value="history"/>
+<span class="ml-3 font-body text-body text-on-surface">History</span>
+</label>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block font-label text-label text-ink-700" for="weaknesses">Current Challenges / Weaknesses</label>
+<textarea class="w-full rounded-DEFAULT px-4 py-3 font-body text-body text-on-surface placeholder-outline-variant" id="weaknesses" name="weaknesses" placeholder="e.g. Struggles with algebra concepts, needs help organizing essays..." rows="3"></textarea>
+</div>
+<div class="space-y-2">
+<label class="block font-label text-label text-ink-700" for="goals">Primary Goals</label>
+<textarea class="w-full rounded-DEFAULT px-4 py-3 font-body text-body text-on-surface placeholder-outline-variant" id="goals" name="goals" placeholder="e.g. Improve overall grade to a B, prepare for upcoming national exams..." rows="3"></textarea>
+</div>
+</section>
+<!-- Learning Style -->
+<section class="space-y-6">
+<div class="flex items-center gap-3 border-b border-paper-200 pb-2">
+<span class="material-symbols-outlined text-primary">psychology</span>
+<h2 class="font-title-md text-title-md text-on-surface">Learning Style</h2>
+</div>
+<div class="space-y-4">
+<label class="block font-label text-label text-ink-700">How does the student learn best?</label>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<label class="relative flex flex-col p-4 border border-paper-200 rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="absolute right-4 top-4 h-4 w-4 text-primary border-paper-300" name="learning_style" type="radio" value="visual"/>
+<span class="material-symbols-outlined text-ink-500 mb-2" data-icon="visibility">visibility</span>
+<span class="font-title-sm text-title-sm text-on-surface mb-1">Visual</span>
+<span class="font-caption text-caption text-on-surface-variant">Learns through seeing images, charts, and diagrams.</span>
+</label>
+<label class="relative flex flex-col p-4 border border-paper-200 rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="absolute right-4 top-4 h-4 w-4 text-primary border-paper-300" name="learning_style" type="radio" value="auditory"/>
+<span class="material-symbols-outlined text-ink-500 mb-2" data-icon="hearing">hearing</span>
+<span class="font-title-sm text-title-sm text-on-surface mb-1">Auditory</span>
+<span class="font-caption text-caption text-on-surface-variant">Learns through listening and speaking out loud.</span>
+</label>
+<label class="relative flex flex-col p-4 border border-paper-200 rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="absolute right-4 top-4 h-4 w-4 text-primary border-paper-300" name="learning_style" type="radio" value="kinesthetic"/>
+<span class="material-symbols-outlined text-ink-500 mb-2" data-icon="touch_app">touch_app</span>
+<span class="font-title-sm text-title-sm text-on-surface mb-1">Kinesthetic</span>
+<span class="font-caption text-caption text-on-surface-variant">Learns through doing, moving, and touching.</span>
+</label>
+</div>
+</div>
+</section>
+<!-- Actions -->
+<div class="pt-6 flex justify-end gap-4 border-t border-paper-200">
+<button class="px-6 py-3 font-title-sm text-title-sm text-primary bg-paper-0 border border-primary rounded-DEFAULT hover:bg-surface-container-low transition-colors focus:ring-2 focus:ring-primary focus:ring-offset-2" type="button">
+                    Cancel
+                </button>
+<button class="px-6 py-3 font-title-sm text-title-sm text-on-primary bg-primary rounded-DEFAULT hover:bg-primary-container hover:text-on-primary-container transition-colors focus:ring-2 focus:ring-primary focus:ring-offset-2 shadow-sm" type="submit">
+                    Complete Onboarding
+                </button>
+</div>
+</form>
+</div>
+</body></html>

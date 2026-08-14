@@ -1,0 +1,211 @@
+.pageContainer {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gutter-mobile);
+}
+
+@media (min-width: 768px) {
+  .pageContainer {
+    padding: var(--gutter-desktop);
+  }
+}
+
+.mainContent {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brandHeader {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.brandHeader h1 {
+  color: var(--primary);
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink-500);
+  margin-top: var(--space-1);
+}
+
+.card {
+  width: 100%;
+  background-color: var(--paper-0);
+  border: 1px solid var(--paper-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: 0 4px 24px -4px rgba(22, 33, 30, 0.08);
+}
+
+.card h2 {
+  color: var(--on-surface);
+  margin-bottom: var(--space-2);
+  text-align: center;
+}
+
+.cardSubtitle {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink-500);
+  margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Phone Group specific styling */
+.label {
+  display: block;
+  font-family: var(--font-label);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--ink-700);
+  margin-bottom: var(--space-2);
+}
+
+.phoneGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.phoneInputWrapper {
+  display: flex;
+  position: relative;
+}
+
+.phonePrefix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-default) 0 0 var(--radius-default);
+  border: 1px solid var(--outline-variant);
+  border-right-width: 0;
+  background-color: var(--surface-container);
+  color: var(--ink-700);
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+.phoneInput {
+  flex: 1;
+  display: block;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 22px;
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 0 var(--radius-default) var(--radius-default) 0;
+  padding: 8px var(--space-3);
+  color: var(--ink-900);
+  transition: all 0.2s ease;
+  outline: none;
+  z-index: 10;
+  position: relative;
+}
+
+.phoneInput::placeholder {
+  color: var(--outline);
+}
+
+.phoneInput:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+/* Password Group specific styling */
+.passwordGroup {
+  position: relative;
+}
+
+.passwordInputSpacing {
+  padding-right: 40px;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 36px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--ink-500);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.passwordToggle:hover {
+  color: var(--ink-700);
+}
+
+.passwordHint {
+  font-family: var(--font-caption);
+  font-size: 12px;
+  color: var(--ink-500);
+  margin-top: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.submitContainer {
+  margin-top: var(--space-2);
+}
+
+.footer {
+  margin-top: var(--space-6);
+  text-align: center;
+}
+
+.footerText {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink-500);
+}
+
+.footerLink {
+  color: var(--primary);
+  font-weight: 500;
+  text-underline-offset: 4px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
+  color: var(--on-primary-fixed-variant);
+}
+
+.legalText {
+  font-family: var(--font-caption);
+  font-size: 12px;
+  color: var(--ink-500);
+  margin-top: var(--space-6);
+  text-align: center;
+  max-width: 320px;
+}
+
+.legalLink {
+  text-decoration: underline;
+  color: inherit;
+}
+
+.legalLink:hover {
+  color: var(--ink-700);
+}

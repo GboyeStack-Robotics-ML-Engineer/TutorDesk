@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Flagged Students - TutorDesk</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,600&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#1a6a5f",
+                    "secondary-fixed-dim": "#ffb95b",
+                    "inverse-surface": "#2f312e",
+                    "inverse-on-surface": "#f2f1ed",
+                    "error": "#ba1a1a",
+                    "surface": "#faf9f5",
+                    "secondary-fixed": "#ffddb6",
+                    "on-tertiary-fixed-variant": "#2b4d48",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-variant": "#e3e2df",
+                    "on-surface-variant": "#3f4946",
+                    "surface-container": "#efeeea",
+                    "on-secondary-fixed-variant": "#643f00",
+                    "success-solid": "#2E7D5B",
+                    "success-tint": "#E2F0E9",
+                    "paper-100": "#F1EFE8",
+                    "warning-tint": "#F8ECD3",
+                    "error-container": "#ffdad6",
+                    "ink-700": "#3A4441",
+                    "on-tertiary-fixed": "#00201d",
+                    "on-surface": "#1b1c1a",
+                    "on-secondary-container": "#724700",
+                    "tertiary-fixed": "#c5eae4",
+                    "surface-container-high": "#e9e8e4",
+                    "surface-dim": "#dbdad6",
+                    "warning-solid": "#B9791A",
+                    "outline": "#6f7976",
+                    "surface-container-highest": "#e3e2df",
+                    "paper-0": "#FFFFFF",
+                    "primary-fixed": "#a7f0e2",
+                    "paper-300": "#CFCABB",
+                    "on-tertiary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "tertiary-container": "#446661",
+                    "danger-solid": "#BE3F2C",
+                    "on-primary-container": "#9fe9da",
+                    "on-background": "#1b1c1a",
+                    "inverse-primary": "#8bd4c6",
+                    "on-secondary-fixed": "#2a1800",
+                    "background": "#faf9f5",
+                    "tertiary": "#2c4e49",
+                    "danger-tint": "#F7E1DC",
+                    "primary-fixed-dim": "#8bd4c6",
+                    "ink-900": "#16211E",
+                    "primary-container": "#1c6b60",
+                    "on-primary-fixed-variant": "#005047",
+                    "paper-200": "#E5E2D8",
+                    "surface-bright": "#faf9f5",
+                    "on-primary-fixed": "#00201c",
+                    "ink-500": "#6A716C",
+                    "primary": "#005248",
+                    "surface-container-low": "#f4f4f0",
+                    "outline-variant": "#bec9c5",
+                    "on-tertiary-container": "#bde2dc",
+                    "tertiary-fixed-dim": "#a9cec8",
+                    "on-error": "#ffffff",
+                    "secondary": "#845400",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#ffb54f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "4px",
+                    "gutter-desktop": "24px",
+                    "gutter-mobile": "16px",
+                    "space-3": "12px",
+                    "space-1": "4px",
+                    "space-6": "24px",
+                    "space-4": "16px",
+                    "max-width": "1200px",
+                    "space-2": "8px",
+                    "space-8": "32px"
+            },
+            "fontFamily": {
+                    "data-display": ["IBM Plex Mono"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "title-lg": ["Fraunces"],
+                    "display-lg": ["Fraunces"],
+                    "caption": ["Hanken Grotesk"],
+                    "display-md": ["Fraunces"],
+                    "title-sm": ["Hanken Grotesk"],
+                    "label": ["Hanken Grotesk"],
+                    "title-md": ["Hanken Grotesk"],
+                    "body": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "data-display": ["15px", {"lineHeight": "22px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "title-lg": ["24px", {"lineHeight": "30px", "fontWeight": "600"}],
+                    "display-lg": ["40px", {"lineHeight": "44px", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "display-md": ["32px", {"lineHeight": "38px", "fontWeight": "600"}],
+                    "title-sm": ["17px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "title-md": ["20px", {"lineHeight": "26px", "fontWeight": "700"}],
+                    "body": ["15px", {"lineHeight": "22px", "fontWeight": "400"}]
+            }
+          },
+        }
+      }
+    </script>
+<style>
+        /* Custom Utilities for Hairline and Paper aesthetic */
+        .hairline-border { border-width: 1px; }
+        .elev-1 { box-shadow: 0 4px 6px -1px rgba(22, 33, 30, 0.06), 0 2px 4px -1px rgba(22, 33, 30, 0.04); }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex">
+<!-- SideNavBar (Desktop Only) -->
+<aside class="hidden md:flex flex-col h-screen sticky top-0 left-0 h-full w-64 border-r border-paper-200 bg-surface-container-low">
+<!-- Header -->
+<div class="p-space-6 border-b border-paper-200">
+<div class="flex items-center gap-space-3">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-paper-0">
+<span class="material-symbols-outlined font-title-lg" style="font-variation-settings: 'FILL' 1;">school</span>
+</div>
+<div>
+<h1 class="font-title-lg text-title-lg text-primary tracking-tight">TutorDesk</h1>
+<p class="font-caption text-caption text-ink-500">Academic Operations</p>
+</div>
+</div>
+<button class="mt-space-6 w-full py-2 px-4 bg-primary text-on-primary rounded font-label text-label hover:bg-primary-container hover:text-on-primary-container transition-colors duration-150 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+                New Session
+            </button>
+</div>
+<!-- Main Navigation -->
+<nav class="flex-1 overflow-y-auto py-space-4 px-space-2 space-y-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-lg text-body-lg">Dashboard</span>
+</a>
+<!-- Active State: Students -->
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-3 py-2 opacity-80 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-body-lg text-body-lg">Students</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-lg text-body-lg">Schedule</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-lg text-body-lg">Payments</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="font-body-lg text-body-lg">Resources</span>
+</a>
+</nav>
+<!-- Footer Navigation -->
+<div class="p-space-2 border-t border-paper-200">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-lg text-body-lg">Settings</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-body-lg text-body-lg">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- Page Header -->
+<header class="pt-space-8 px-gutter-desktop pb-space-4 border-b hairline-border border-paper-200 bg-surface">
+<div class="max-w-[1200px] mx-auto flex items-end justify-between">
+<div>
+<div class="flex items-center gap-2 text-ink-500 mb-space-1">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+<span class="font-label text-label">Back to Directory</span>
+</div>
+<h2 class="font-display-md text-display-md text-ink-900">Attention Required</h2>
+<p class="font-body text-body text-ink-500 mt-1">Review flagged students needing immediate follow-up.</p>
+</div>
+<div class="flex items-center gap-space-3">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-ink-500 text-sm">search</span>
+<input class="pl-9 pr-4 py-2 bg-paper-0 border hairline-border border-paper-300 rounded font-body text-body focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary-fixed-dim w-64 placeholder-ink-500" placeholder="Search flagged..." type="text"/>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-paper-0 border hairline-border border-paper-300 rounded font-label text-label text-ink-700 hover:bg-paper-100 transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                        Filter
+                    </button>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 overflow-y-auto p-gutter-desktop bg-surface-container-low">
+<div class="max-w-[1200px] mx-auto">
+<!-- Summary Metrics (Bento style) -->
+<div class="grid grid-cols-3 gap-space-4 mb-space-8">
+<div class="bg-paper-0 p-space-4 rounded-lg border hairline-border border-paper-200 elev-1">
+<div class="flex items-center gap-2 text-danger-solid mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="font-label text-label uppercase tracking-wider">High Priority</span>
+</div>
+<p class="font-display-lg text-display-lg text-ink-900">12</p>
+<p class="font-caption text-caption text-ink-500">Requires contact today</p>
+</div>
+<div class="bg-paper-0 p-space-4 rounded-lg border hairline-border border-paper-200 elev-1">
+<div class="flex items-center gap-2 text-warning-solid mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">schedule</span>
+<span class="font-label text-label uppercase tracking-wider">Missed Sessions</span>
+</div>
+<p class="font-display-lg text-display-lg text-ink-900">8</p>
+<p class="font-caption text-caption text-ink-500">2+ consecutive absences</p>
+</div>
+<div class="bg-paper-0 p-space-4 rounded-lg border hairline-border border-paper-200 elev-1">
+<div class="flex items-center gap-2 text-secondary mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">trending_down</span>
+<span class="font-label text-label uppercase tracking-wider">Performance Drop</span>
+</div>
+<p class="font-display-lg text-display-lg text-ink-900">5</p>
+<p class="font-caption text-caption text-ink-500">&gt;15% score decrease</p>
+</div>
+</div>
+<!-- List Header -->
+<div class="flex items-center justify-between mb-space-4 px-space-2">
+<h3 class="font-title-md text-title-md text-ink-900">Flagged Roster</h3>
+<div class="flex items-center gap-2 font-label text-label text-ink-500">
+<span>Sorted by:</span>
+<button class="flex items-center text-primary hover:text-primary-container font-semibold">
+                            Severity <span class="material-symbols-outlined text-sm ml-1">arrow_downward</span>
+</button>
+</div>
+</div>
+<!-- Flagged Students List -->
+<div class="flex flex-col gap-space-2">
+<!-- High Priority Row 1 -->
+<div class="bg-paper-0 border hairline-border border-danger-tint rounded-lg p-space-4 flex items-center justify-between hover:bg-surface-bright transition-colors group relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-danger-solid"></div>
+<div class="flex items-center gap-space-6 flex-1 ml-2">
+<div class="flex items-center gap-space-3 w-1/3">
+<img class="w-12 h-12 rounded-full object-cover border hairline-border border-paper-200" data-alt="A professional headshot of a young Nigerian student looking slightly concerned but determined, warm natural lighting, modern minimalist background with subtle academic elements." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDojqvMboU77avA5sVB4W-FdN4g2ELFW0W-nGeaI8s9hcE5Ywmy9ECMXz6oD65Zd1aqcr8HP1z6atZaexHKk9kDIWsMIEpguo1deHBQlD3-mpQ-42y2HIOHVSHY5XwidUyH3-waWKKg_GvdEJKAkVot9GdJibj7yw8v3ceTm9djLLad2eh8utfPYHtW5F0hiz4csyXtEy7wYaxJIioWcvoqpXYqiytwOwtvX9C7ALMCMhqp2dlCiw3H"/>
+<div>
+<p class="font-title-sm text-title-sm text-ink-900 group-hover:text-primary transition-colors cursor-pointer">Chinedu Okeke</p>
+<p class="font-caption text-caption text-ink-500">Grade 11 Mathematics</p>
+</div>
+</div>
+<div class="flex-1 flex gap-2">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-danger-tint text-danger-solid font-label text-label">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                    Missed 3 Sessions
+                                </span>
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-warning-tint text-warning-solid font-label text-label">
+<span class="material-symbols-outlined text-[14px]">trending_down</span>
+                                    Score: 45% (was 68%)
+                                </span>
+</div>
+<div class="text-right w-1/5 pr-4">
+<p class="font-data-display text-data-display text-ink-700">Last contact:</p>
+<p class="font-caption text-caption text-error font-semibold">7 days ago</p>
+</div>
+</div>
+<div class="flex items-center gap-space-3">
+<button class="p-2 text-ink-500 hover:text-primary transition-colors border hairline-border border-transparent hover:border-paper-300 rounded bg-paper-0" title="View History">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="px-4 py-2 bg-paper-0 border hairline-border border-primary text-primary rounded font-label text-label hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">call</span>
+                                Follow Up
+                            </button>
+</div>
+</div>
+<!-- High Priority Row 2 -->
+<div class="bg-paper-0 border hairline-border border-danger-tint rounded-lg p-space-4 flex items-center justify-between hover:bg-surface-bright transition-colors group relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-danger-solid"></div>
+<div class="flex items-center gap-space-6 flex-1 ml-2">
+<div class="flex items-center gap-space-3 w-1/3">
+<div class="w-12 h-12 rounded-full bg-paper-200 flex items-center justify-center font-title-lg text-ink-500">AO</div>
+<div>
+<p class="font-title-sm text-title-sm text-ink-900 group-hover:text-primary transition-colors cursor-pointer">Aisha Olayinka</p>
+<p class="font-caption text-caption text-ink-500">A-Level Physics</p>
+</div>
+</div>
+<div class="flex-1 flex gap-2">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-danger-tint text-danger-solid font-label text-label">
+<span class="material-symbols-outlined text-[14px]">payments</span>
+                                    Payment Overdue (14d)
+                                </span>
+</div>
+<div class="text-right w-1/5 pr-4">
+<p class="font-data-display text-data-display text-ink-700">Last contact:</p>
+<p class="font-caption text-caption text-error font-semibold">15 days ago</p>
+</div>
+</div>
+<div class="flex items-center gap-space-3">
+<button class="p-2 text-ink-500 hover:text-primary transition-colors border hairline-border border-transparent hover:border-paper-300 rounded bg-paper-0">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="px-4 py-2 bg-paper-0 border hairline-border border-primary text-primary rounded font-label text-label hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">mail</span>
+                                Send Reminder
+                            </button>
+</div>
+</div>
+<!-- Medium Priority Row 1 -->
+<div class="bg-paper-0 border hairline-border border-paper-200 rounded-lg p-space-4 flex items-center justify-between hover:bg-surface-bright transition-colors group relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-warning-solid"></div>
+<div class="flex items-center gap-space-6 flex-1 ml-2">
+<div class="flex items-center gap-space-3 w-1/3">
+<img class="w-12 h-12 rounded-full object-cover border hairline-border border-paper-200" data-alt="A thoughtful portrait of a male teenager in a quiet study environment, warm paper-toned lighting, crisp focus on the face with a gently blurred background of books." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjiJdKrWJkqNlP7DrVu6_FDn7vzSxfgauU7dL76hyp7CKUUp6QTeAMuPDZbpfsn8aD5vKpJzG3RVJb7nd_5J-zfGI2r_HclQYgxJ1TpraMdQeMOTkc7Lox0gWSDqMxr4LvgC-wCHAu4cOkjZ_F9RpTs4Jbyg7db69Qm1NPX7f9gfJahMR1S261JZ_a21H9pypNDzu_p019zM8LkI5FBlyr8Y3GGC1FQvV3M5Zs_rjiLEu8xGAGU64j"/>
+<div>
+<p class="font-title-sm text-title-sm text-ink-900 group-hover:text-primary transition-colors cursor-pointer">Emmanuel Bassey</p>
+<p class="font-caption text-caption text-ink-500">Grade 9 English</p>
+</div>
+</div>
+<div class="flex-1 flex gap-2">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-warning-tint text-warning-solid font-label text-label">
+<span class="material-symbols-outlined text-[14px]">assignment_late</span>
+                                    Incomplete Assignments
+                                </span>
+</div>
+<div class="text-right w-1/5 pr-4">
+<p class="font-data-display text-data-display text-ink-700">Last contact:</p>
+<p class="font-caption text-caption text-ink-500">2 days ago</p>
+</div>
+</div>
+<div class="flex items-center gap-space-3">
+<button class="p-2 text-ink-500 hover:text-primary transition-colors border hairline-border border-transparent hover:border-paper-300 rounded bg-paper-0">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="px-4 py-2 bg-paper-0 border hairline-border border-ink-500 text-ink-700 rounded font-label text-label hover:bg-paper-100 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">chat</span>
+                                Message
+                            </button>
+</div>
+</div>
+</div>
+<!-- Pagination / Load More (Simple tactile approach) -->
+<div class="mt-space-6 flex justify-center">
+<button class="px-6 py-2 bg-paper-0 border hairline-border border-paper-300 rounded-full font-label text-label text-ink-700 hover:bg-paper-100 transition-colors shadow-sm">
+                        Load More Flagged Students
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

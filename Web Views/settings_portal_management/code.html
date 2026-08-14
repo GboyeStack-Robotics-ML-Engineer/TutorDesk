@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - Portal Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-error-container": "#93000a",
+                            "warning-solid": "#B9791A",
+                            "surface-tint": "#1a6a5f",
+                            "secondary-fixed-dim": "#ffb95b",
+                            "danger-solid": "#BE3F2C",
+                            "surface-dim": "#dbdad6",
+                            "surface-container-low": "#f4f4f0",
+                            "outline": "#6f7976",
+                            "on-secondary-container": "#724700",
+                            "surface-container": "#efeeea",
+                            "paper-200": "#E5E2D8",
+                            "error": "#ba1a1a",
+                            "inverse-on-surface": "#f2f1ed",
+                            "on-tertiary-fixed-variant": "#2b4d48",
+                            "outline-variant": "#bec9c5",
+                            "surface": "#faf9f5",
+                            "on-surface": "#1b1c1a",
+                            "surface-variant": "#e3e2df",
+                            "secondary-container": "#ffb54f",
+                            "primary-container": "#1c6b60",
+                            "ink-700": "#3A4441",
+                            "background": "#faf9f5",
+                            "primary-fixed-dim": "#8bd4c6",
+                            "surface-container-high": "#e9e8e4",
+                            "on-tertiary-container": "#bde2dc",
+                            "on-secondary-fixed-variant": "#643f00",
+                            "on-surface-variant": "#3f4946",
+                            "secondary": "#845400",
+                            "primary-fixed": "#a7f0e2",
+                            "on-tertiary": "#ffffff",
+                            "surface-container-lowest": "#ffffff",
+                            "secondary-fixed": "#ffddb6",
+                            "tertiary-fixed": "#c5eae4",
+                            "primary": "#005248",
+                            "on-tertiary-fixed": "#00201d",
+                            "tertiary-fixed-dim": "#a9cec8",
+                            "surface-bright": "#faf9f5",
+                            "ink-900": "#16211E",
+                            "paper-100": "#F1EFE8",
+                            "on-primary-fixed": "#00201c",
+                            "tertiary-container": "#446661",
+                            "paper-0": "#FFFFFF",
+                            "warning-tint": "#F8ECD3",
+                            "on-secondary-fixed": "#2a1800",
+                            "paper-300": "#CFCABB",
+                            "on-primary-fixed-variant": "#005047",
+                            "on-secondary": "#ffffff",
+                            "on-background": "#1b1c1a",
+                            "tertiary": "#2c4e49",
+                            "inverse-surface": "#2f312e",
+                            "on-primary-container": "#9fe9da",
+                            "on-error": "#ffffff",
+                            "success-tint": "#E2F0E9",
+                            "surface-container-highest": "#e3e2df",
+                            "error-container": "#ffdad6",
+                            "danger-tint": "#F7E1DC",
+                            "inverse-primary": "#8bd4c6",
+                            "on-primary": "#ffffff",
+                            "ink-500": "#6A716C",
+                            "success-solid": "#2E7D5B"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "space-4": "16px",
+                            "space-8": "32px",
+                            "space-2": "8px",
+                            "base": "4px",
+                            "space-1": "4px",
+                            "gutter-mobile": "16px",
+                            "space-6": "24px",
+                            "max-width": "1200px",
+                            "space-3": "12px",
+                            "gutter-desktop": "24px"
+                    },
+                    "fontFamily": {
+                            "title-sm": ["Hanken Grotesk"],
+                            "data-display": ["IBM Plex Mono"],
+                            "display-md": ["Fraunces"],
+                            "body": ["Hanken Grotesk"],
+                            "label": ["Hanken Grotesk"],
+                            "body-lg": ["Hanken Grotesk"],
+                            "title-lg": ["Fraunces"],
+                            "caption": ["Hanken Grotesk"],
+                            "display-lg": ["Fraunces"],
+                            "title-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                            "title-sm": ["17px", {"lineHeight": "24px", "fontWeight": "600"}],
+                            "data-display": ["15px", {"lineHeight": "22px", "fontWeight": "500"}],
+                            "display-md": ["32px", {"lineHeight": "38px", "fontWeight": "600"}],
+                            "body": ["15px", {"lineHeight": "22px", "fontWeight": "400"}],
+                            "label": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "title-lg": ["24px", {"lineHeight": "30px", "fontWeight": "600"}],
+                            "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                            "display-lg": ["40px", {"lineHeight": "44px", "fontWeight": "600"}],
+                            "title-md": ["20px", {"lineHeight": "26px", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+    </style>
+</head>
+<body class="font-body text-body bg-background antialiased min-h-screen">
+<div class="flex h-screen overflow-hidden">
+<!-- Main Content -->
+<div class="flex-1 flex flex-col h-screen overflow-y-auto">
+<header class="w-full border-b border-paper-200 dark:border-outline-variant flex justify-between items-center h-16 px-6 sticky top-0 z-40 bg-surface dark:bg-background">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-title-md text-title-md font-bold text-primary dark:text-primary-fixed-dim">TutorDesk</span>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm" href="#">Classroom</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm" href="#">Exams</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm" href="#">Reports</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<main class="flex-1 p-gutter-mobile md:p-gutter-desktop max-w-[1200px] mx-auto w-full">
+<div class="mb-space-8">
+<h1 class="font-display-md text-display-md text-ink-900 mb-space-2">Portal Management</h1>
+<p class="text-ink-500 font-body text-body">Control what parents and students see in their portal view.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-6 items-start">
+<div class="lg:col-span-2 space-y-space-6">
+<!-- Link Card -->
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 shadow-[0_2px_4px_rgba(22,33,30,0.02)]">
+<h2 class="font-title-sm text-title-sm text-ink-900 mb-space-4">Portal Access Link</h2>
+<p class="text-ink-500 font-body text-body mb-space-4">Share this unique link with parents so they can access the student portal.</p>
+<div class="flex items-center gap-space-2 mt-space-2">
+<div class="flex-1 bg-surface-container-low border border-paper-200 rounded px-space-3 py-space-2 font-data-display text-data-display text-ink-700 truncate">
+                                    https://tutordesk.app/portal/tutor_xyz123
+                                </div>
+<button class="bg-paper-0 border border-primary text-primary hover:bg-paper-100 px-space-4 py-space-2 rounded font-label text-label transition-colors whitespace-nowrap flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+                                    Copy Link
+                                </button>
+</div>
+</div>
+<!-- Visibility Toggles Card -->
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 shadow-[0_2px_4px_rgba(22,33,30,0.02)]">
+<h2 class="font-title-sm text-title-sm text-ink-900 mb-space-6">Visibility Settings</h2>
+<div class="space-y-space-6">
+<div class="flex items-start justify-between">
+<div>
+<h3 class="font-label text-label text-ink-900 mb-1">Show Progress Reports</h3>
+<p class="text-ink-500 font-caption text-caption">Allow parents to view detailed session notes and progress grades.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<hr class="border-paper-200"/>
+<div class="flex items-start justify-between">
+<div>
+<h3 class="font-label text-label text-ink-900 mb-1">Show Attendance</h3>
+<p class="text-ink-500 font-caption text-caption">Display session attendance records and tardiness logs.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<hr class="border-paper-200"/>
+<div class="flex items-start justify-between">
+<div>
+<h3 class="font-label text-label text-ink-900 mb-1">Enable 'I've Paid' Button</h3>
+<p class="text-ink-500 font-caption text-caption">Allow parents to self-report bank transfers for manual reconciliation.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar -->
+<div class="space-y-space-6">
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 shadow-[0_2px_4px_rgba(22,33,30,0.02)]">
+<div class="flex justify-between items-center mb-space-4">
+<h2 class="font-title-sm text-title-sm text-ink-900">Invited Parents</h2>
+<button class="text-primary hover:text-primary-fixed-dim transition-colors">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+</button>
+</div>
+<div class="space-y-space-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-title-sm text-title-sm">
+                                            A
+                                        </div>
+<div>
+<p class="font-label text-label text-ink-900">Adebayo Family</p>
+<p class="font-caption text-caption text-ink-500">Active</p>
+</div>
+</div>
+<button class="text-ink-500 hover:text-ink-900 transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-ink-700 flex items-center justify-center font-title-sm text-title-sm">
+                                            O
+                                        </div>
+<div>
+<p class="font-label text-label text-ink-900">Okafor Family</p>
+<p class="font-caption text-caption text-warning-solid">Pending</p>
+</div>
+</div>
+<button class="text-ink-500 hover:text-ink-900 transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

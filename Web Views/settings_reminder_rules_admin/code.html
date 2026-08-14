@@ -1,0 +1,461 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Reminder Rules - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#faf9f5",
+                        "error-container": "#ffdad6",
+                        "paper-100": "#F1EFE8",
+                        "inverse-surface": "#2f312e",
+                        "secondary-fixed": "#ffddb6",
+                        "on-surface-variant": "#3f4946",
+                        "on-primary-fixed": "#00201c",
+                        "tertiary-fixed": "#c5eae4",
+                        "secondary-container": "#ffb54f",
+                        "surface-container-low": "#f4f4f0",
+                        "primary-fixed-dim": "#8bd4c6",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#00201d",
+                        "tertiary-container": "#446661",
+                        "primary-fixed": "#a7f0e2",
+                        "paper-300": "#CFCABB",
+                        "primary": "#005248",
+                        "background": "#faf9f5",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#faf9f5",
+                        "surface-container-high": "#e9e8e4",
+                        "surface-dim": "#dbdad6",
+                        "danger-tint": "#F7E1DC",
+                        "tertiary-fixed-dim": "#a9cec8",
+                        "on-background": "#1b1c1a",
+                        "on-tertiary-fixed-variant": "#2b4d48",
+                        "warning-tint": "#F8ECD3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#9fe9da",
+                        "paper-200": "#E5E2D8",
+                        "success-tint": "#E2F0E9",
+                        "ink-900": "#16211E",
+                        "on-error": "#ffffff",
+                        "surface-container": "#efeeea",
+                        "secondary-fixed-dim": "#ffb95b",
+                        "ink-500": "#6A716C",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "on-secondary-fixed": "#2a1800",
+                        "outline-variant": "#bec9c5",
+                        "inverse-on-surface": "#f2f1ed",
+                        "warning-solid": "#B9791A",
+                        "on-surface": "#1b1c1a",
+                        "secondary": "#845400",
+                        "outline": "#6f7976",
+                        "inverse-primary": "#8bd4c6",
+                        "on-secondary-container": "#724700",
+                        "on-tertiary": "#ffffff",
+                        "paper-0": "#FFFFFF",
+                        "surface-tint": "#1a6a5f",
+                        "success-solid": "#2E7D5B",
+                        "on-primary-fixed-variant": "#005047",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#2c4e49",
+                        "danger-solid": "#BE3F2C",
+                        "surface-container-highest": "#e3e2df",
+                        "surface-variant": "#e3e2df",
+                        "ink-700": "#3A4441",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#1c6b60",
+                        "on-tertiary-container": "#bde2dc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-mobile": "16px",
+                        "space-6": "24px",
+                        "space-4": "16px",
+                        "gutter-desktop": "24px",
+                        "space-3": "12px",
+                        "space-8": "32px",
+                        "max-width": "1200px",
+                        "base": "4px",
+                        "space-2": "8px",
+                        "space-1": "4px"
+                    },
+                    "fontFamily": {
+                        "label": ["Hanken Grotesk"],
+                        "data-display": ["IBM Plex Mono"],
+                        "display-lg": ["Fraunces"],
+                        "body": ["Hanken Grotesk"],
+                        "title-lg": ["Fraunces"],
+                        "title-sm": ["Hanken Grotesk"],
+                        "caption": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "title-md": ["Hanken Grotesk"],
+                        "display-md": ["Fraunces"]
+                    },
+                    "fontSize": {
+                        "label": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "data-display": ["15px", { "lineHeight": "22px", "fontWeight": "500" }],
+                        "display-lg": ["40px", { "lineHeight": "44px", "fontWeight": "600" }],
+                        "body": ["15px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "title-lg": ["24px", { "lineHeight": "30px", "fontWeight": "600" }],
+                        "title-sm": ["17px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "title-md": ["20px", { "lineHeight": "26px", "fontWeight": "700" }],
+                        "display-md": ["32px", { "lineHeight": "38px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .elev-1 {
+            box-shadow: 0 4px 6px -1px rgba(22, 33, 30, 0.06), 0 2px 4px -2px rgba(22, 33, 30, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex">
+<!-- SideNav -->
+<nav class="h-screen w-64 fixed left-0 top-0 overflow-y-auto border-r border-outline-variant bg-primary dark:bg-on-primary-fixed text-primary-fixed dark:text-primary-fixed-dim flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<div class="font-title-lg text-title-lg font-bold text-primary-fixed mb-1">TutorDesk</div>
+<div class="font-label text-label opacity-80">Independent Educator</div>
+</div>
+<div class="flex-1 overflow-y-auto">
+<ul class="space-y-1">
+<li>
+<a class="text-primary-fixed-dim hover:text-primary-fixed mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/20 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label text-label">Students</span>
+</a>
+</li>
+<li>
+<a class="text-primary-fixed-dim hover:text-primary-fixed mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/20 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label text-label">Schedule</span>
+</a>
+</li>
+<li>
+<a class="text-primary-fixed-dim hover:text-primary-fixed mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/20 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">video_chat</span>
+<span class="font-label text-label">Classroom</span>
+</a>
+</li>
+<li>
+<a class="text-primary-fixed-dim hover:text-primary-fixed mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/20 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label text-label">Payments</span>
+</a>
+</li>
+<li>
+<a class="text-primary-fixed-dim hover:text-primary-fixed mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/20 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">library_books</span>
+<span class="font-label text-label">Materials</span>
+</a>
+</li>
+</ul>
+</div>
+<div class="mt-auto pt-4 border-t border-primary-fixed/20">
+<ul class="space-y-1">
+<li>
+<!-- ACTIVE STATE FOR SETTINGS -->
+<a class="bg-primary-container text-on-primary-container rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3 opacity-90 scale-[0.98] transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-label text-label">Settings</span>
+</a>
+</li>
+<li>
+<a class="text-primary-fixed-dim hover:text-primary-fixed mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-primary-container/20 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label text-label">Support</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="ml-64 flex-1 flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-paper-0 dark:bg-surface-container-low text-primary dark:text-primary-fixed-dim docked full-width top-0 sticky z-40 border-b border-paper-200 dark:border-outline-variant flex justify-between items-center px-gutter-desktop h-16">
+<div class="font-display-md text-display-md text-primary dark:text-primary-fixed-dim hidden md:block">
+<!-- Branding handled by SideNav on desktop, but placeholder for structure -->
+</div>
+<div class="flex-1 flex justify-end items-center gap-4">
+<button class="p-2 text-ink-500 hover:bg-paper-100 rounded-full transition-all focus-within:ring-1 focus-within:ring-primary">
+<span class="material-symbols-outlined">cloud_done</span>
+</button>
+<button class="p-2 text-ink-500 hover:bg-paper-100 rounded-full transition-all focus-within:ring-1 focus-within:ring-primary relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-danger-solid rounded-full"></span>
+</button>
+<button class="p-2 text-ink-500 hover:bg-paper-100 rounded-full transition-all focus-within:ring-1 focus-within:ring-primary">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-gutter-mobile md:p-gutter-desktop max-w-[max-width] mx-auto w-full">
+<!-- Page Header -->
+<div class="mb-space-8 flex flex-col md:flex-row md:items-end justify-between gap-space-4">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<a class="text-ink-500 hover:text-primary font-label text-label flex items-center gap-1 transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                            Settings
+                        </a>
+<span class="text-ink-500 text-label">/</span>
+<span class="text-primary font-label text-label">Automated Billing</span>
+</div>
+<h1 class="font-title-lg text-title-lg text-on-surface">Reminder Rules</h1>
+<p class="font-body text-body text-ink-500 mt-1 max-w-2xl">Configure automated messaging rules to chase pending and overdue payments from students.</p>
+</div>
+<div class="flex gap-space-3">
+<button class="bg-paper-0 border border-primary text-primary px-4 py-2 rounded font-label text-label hover:bg-paper-50 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                        View Logs
+                    </button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded font-label text-label hover:bg-on-primary-fixed transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Rule
+                    </button>
+</div>
+</div>
+<!-- Rules Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-6">
+<!-- Main Rules List (Left Column) -->
+<div class="lg:col-span-8 flex flex-col gap-space-4">
+<!-- Pre-Due Rule -->
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 elev-1 relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-tertiary-container"></div>
+<div class="flex justify-between items-start mb-space-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<h3 class="font-title-sm text-title-sm text-on-surface">Upcoming Payment Heads-up</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-data-display text-caption text-ink-500 bg-paper-100 px-2 py-0.5 rounded">T-3 DAYS</span>
+<span class="w-1 h-1 rounded-full bg-ink-500"></span>
+<span class="font-caption text-caption text-ink-500">Triggers 3 days before due date</span>
+</div>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value="">
+<div class="w-9 h-5 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-success-solid"></div>
+</label>
+</div>
+<div class="border-t border-paper-200 pt-space-4 mt-space-2">
+<div class="flex flex-wrap gap-4">
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label text-label text-ink-700 mb-2">Delivery Channels</label>
+<div class="flex gap-2">
+<div class="bg-paper-100 border border-paper-300 px-3 py-1.5 rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-ink-700">mail</span>
+<span class="font-caption text-caption text-ink-900">Email</span>
+</div>
+<div class="bg-paper-100 border border-paper-300 px-3 py-1.5 rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-ink-700">chat</span>
+<span class="font-caption text-caption text-ink-900">WhatsApp</span>
+</div>
+</div>
+</div>
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label text-label text-ink-700 mb-2">Message Template</label>
+<button class="w-full text-left bg-surface border border-paper-200 px-3 py-2 rounded hover:border-primary transition-colors flex justify-between items-center group-hover:bg-paper-50">
+<span class="font-body text-body text-ink-900 truncate">"Friendly Reminder: Upcoming Invoice..."</span>
+<span class="material-symbols-outlined text-ink-500">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- On Due Date Rule -->
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 elev-1 relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-warning-solid"></div>
+<div class="flex justify-between items-start mb-space-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-warning-tint flex items-center justify-center text-warning-solid">
+<span class="material-symbols-outlined">event</span>
+</div>
+<div>
+<h3 class="font-title-sm text-title-sm text-on-surface">Due Date Notice</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-data-display text-caption text-ink-500 bg-paper-100 px-2 py-0.5 rounded">T-0 DAYS</span>
+<span class="w-1 h-1 rounded-full bg-ink-500"></span>
+<span class="font-caption text-caption text-ink-500">Triggers on the due date at 9:00 AM</span>
+</div>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value="">
+<div class="w-9 h-5 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-success-solid"></div>
+</label>
+</div>
+<div class="border-t border-paper-200 pt-space-4 mt-space-2">
+<div class="flex flex-wrap gap-4">
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label text-label text-ink-700 mb-2">Delivery Channels</label>
+<div class="flex gap-2">
+<div class="bg-paper-100 border border-paper-300 px-3 py-1.5 rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-ink-700">mail</span>
+<span class="font-caption text-caption text-ink-900">Email</span>
+</div>
+<div class="bg-paper-100 border border-paper-300 px-3 py-1.5 rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-ink-700">chat</span>
+<span class="font-caption text-caption text-ink-900">WhatsApp</span>
+</div>
+<div class="bg-paper-100 border border-paper-300 px-3 py-1.5 rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-ink-700">sms</span>
+<span class="font-caption text-caption text-ink-900">SMS</span>
+</div>
+</div>
+</div>
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label text-label text-ink-700 mb-2">Message Template</label>
+<button class="w-full text-left bg-surface border border-paper-200 px-3 py-2 rounded hover:border-primary transition-colors flex justify-between items-center group-hover:bg-paper-50">
+<span class="font-body text-body text-ink-900 truncate">"Today is the day! Invoice #{{ID}}..."</span>
+<span class="material-symbols-outlined text-ink-500">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Overdue Rule (Danger State) -->
+<div class="bg-danger-tint/20 border border-danger-tint rounded-lg p-space-6 elev-1 relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-danger-solid"></div>
+<div class="flex justify-between items-start mb-space-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-danger-tint flex items-center justify-center text-danger-solid">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<div>
+<h3 class="font-title-sm text-title-sm text-danger-solid">Overdue Escalation</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-data-display text-caption text-danger-solid bg-danger-tint px-2 py-0.5 rounded">T+2 DAYS</span>
+<span class="w-1 h-1 rounded-full bg-danger-solid opacity-50"></span>
+<span class="font-caption text-caption text-danger-solid opacity-90">Triggers 2 days after due date</span>
+</div>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value="">
+<div class="w-9 h-5 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-danger-solid"></div>
+</label>
+</div>
+<div class="border-t border-danger-tint/50 pt-space-4 mt-space-2">
+<div class="flex flex-wrap gap-4">
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label text-label text-danger-solid opacity-90 mb-2">Delivery Channels</label>
+<div class="flex gap-2">
+<div class="bg-paper-0 border border-danger-tint px-3 py-1.5 rounded flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-danger-solid">sms</span>
+<span class="font-caption text-caption text-danger-solid font-bold">SMS (Priority)</span>
+</div>
+<div class="bg-paper-0 border border-danger-tint/50 px-3 py-1.5 rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-ink-700">mail</span>
+<span class="font-caption text-caption text-ink-900">Email</span>
+</div>
+</div>
+</div>
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label text-label text-danger-solid opacity-90 mb-2">Message Template</label>
+<button class="w-full text-left bg-paper-0 border border-danger-tint px-3 py-2 rounded hover:border-danger-solid transition-colors flex justify-between items-center group-hover:shadow-sm">
+<span class="font-body text-body text-ink-900 truncate">"URGENT: Payment Overdue for..."</span>
+<span class="material-symbols-outlined text-danger-solid">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Rule Button Dropzone -->
+<button class="w-full border-2 border-dashed border-paper-300 hover:border-primary text-ink-500 hover:text-primary rounded-lg p-space-6 flex flex-col items-center justify-center gap-2 transition-colors bg-surface-container-low/50 hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-[24px]">add_circle</span>
+<span class="font-label text-label">Add a new reminder stage</span>
+</button>
+</div>
+<!-- Preview / Settings Sidebar (Right Column) -->
+<div class="lg:col-span-4 flex flex-col gap-space-4">
+<!-- Template Preview Card -->
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 elev-1 sticky top-24">
+<div class="flex items-center gap-2 mb-space-4 border-b border-paper-200 pb-2">
+<span class="material-symbols-outlined text-primary">visibility</span>
+<h3 class="font-title-sm text-title-sm text-on-surface">Template Preview</h3>
+</div>
+<div class="bg-surface-container-low rounded-lg p-4 mb-4">
+<div class="flex items-center gap-2 mb-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-fixed">person</span>
+</div>
+<div>
+<div class="font-label text-label text-ink-900">WhatsApp Message</div>
+<div class="font-caption text-caption text-ink-500">Previewing: Due Date Notice</div>
+</div>
+</div>
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-3 rounded-tl-none relative shadow-sm">
+<p class="font-body text-body text-ink-900">
+                                    Hi <span class="bg-secondary-fixed/50 px-1 rounded font-data-display text-caption">StudentName</span>, 👋<br><br>
+                                    This is a reminder that your payment for <span class="bg-secondary-fixed/50 px-1 rounded font-data-display text-caption">Month/Subject</span> is due today.<br><br>
+                                    Amount: <span class="font-data-display text-body font-bold">₦25,000</span><br><br>
+                                    Please use the link below to pay or upload your transfer receipt to maintain access to class materials.
+                                </p>
+<div class="mt-3 pt-3 border-t border-paper-200">
+<a class="text-primary font-label text-label flex items-center gap-1 hover:underline" href="#">
+                                        Pay Now <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-space-6">
+<h4 class="font-label text-label text-ink-700 mb-2">Available Variables</h4>
+<div class="flex flex-wrap gap-2">
+<span class="font-data-display text-caption bg-paper-100 text-ink-700 px-2 py-1 rounded border border-paper-200 hover:border-primary cursor-pointer transition-colors">{{StudentName}}</span>
+<span class="font-data-display text-caption bg-paper-100 text-ink-700 px-2 py-1 rounded border border-paper-200 hover:border-primary cursor-pointer transition-colors">{{AmountDue}}</span>
+<span class="font-data-display text-caption bg-paper-100 text-ink-700 px-2 py-1 rounded border border-paper-200 hover:border-primary cursor-pointer transition-colors">{{DueDate}}</span>
+<span class="font-data-display text-caption bg-paper-100 text-ink-700 px-2 py-1 rounded border border-paper-200 hover:border-primary cursor-pointer transition-colors">{{PaymentLink}}</span>
+</div>
+</div>
+</div>
+<!-- Global Settings -->
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 elev-1 mt-space-4">
+<h3 class="font-title-sm text-title-sm text-on-surface mb-space-4">Global Preferences</h3>
+<div class="space-y-4">
+<div class="flex items-start justify-between">
+<div>
+<div class="font-label text-label text-ink-900">Quiet Hours</div>
+<div class="font-caption text-caption text-ink-500 max-w-[200px]">Don't send messages between 9PM and 8AM</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value="">
+<div class="w-9 h-5 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-start justify-between pt-4 border-t border-paper-200">
+<div>
+<div class="font-label text-label text-ink-900">Auto-Pause on Dispute</div>
+<div class="font-caption text-caption text-ink-500 max-w-[200px]">Stop reminders if student marks as "Paid" pending verification</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value="">
+<div class="w-9 h-5 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

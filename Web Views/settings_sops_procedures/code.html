@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-background antialiased" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SOP Settings - TutorDesk</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e9e8e4",
+                        "on-secondary-container": "#724700",
+                        "primary-container": "#1c6b60",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#9fe9da",
+                        "on-tertiary": "#ffffff",
+                        "background": "#faf9f5",
+                        "tertiary-fixed-dim": "#a9cec8",
+                        "danger-tint": "#F7E1DC",
+                        "secondary-container": "#ffb54f",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c1a",
+                        "inverse-surface": "#2f312e",
+                        "secondary-fixed": "#ffddb6",
+                        "warning-tint": "#F8ECD3",
+                        "on-error": "#ffffff",
+                        "primary": "#005248",
+                        "inverse-primary": "#8bd4c6",
+                        "surface-bright": "#faf9f5",
+                        "primary-fixed-dim": "#8bd4c6",
+                        "on-primary-fixed-variant": "#005047",
+                        "surface": "#faf9f5",
+                        "on-tertiary-fixed": "#00201d",
+                        "inverse-on-surface": "#f2f1ed",
+                        "surface-dim": "#dbdad6",
+                        "on-secondary-fixed": "#2a1800",
+                        "paper-100": "#F1EFE8",
+                        "on-surface": "#1b1c1a",
+                        "error": "#ba1a1a",
+                        "warning-solid": "#B9791A",
+                        "on-primary-fixed": "#00201c",
+                        "on-tertiary-fixed-variant": "#2b4d48",
+                        "outline-variant": "#bec9c5",
+                        "paper-300": "#CFCABB",
+                        "surface-container": "#efeeea",
+                        "tertiary-fixed": "#c5eae4",
+                        "success-solid": "#2E7D5B",
+                        "tertiary-container": "#446661",
+                        "surface-tint": "#1a6a5f",
+                        "error-container": "#ffdad6",
+                        "paper-0": "#FFFFFF",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e3e2df",
+                        "tertiary": "#2c4e49",
+                        "surface-container-low": "#f4f4f0",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "ink-900": "#16211E",
+                        "surface-container-highest": "#e3e2df",
+                        "ink-500": "#6A716C",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#845400",
+                        "on-tertiary-container": "#bde2dc",
+                        "danger-solid": "#BE3F2C",
+                        "primary-fixed": "#a7f0e2",
+                        "ink-700": "#3A4441",
+                        "outline": "#6f7976",
+                        "paper-200": "#E5E2D8",
+                        "secondary-fixed-dim": "#ffb95b",
+                        "success-tint": "#E2F0E9",
+                        "on-surface-variant": "#3f4946"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "space-2": "8px",
+                        "max-width": "1200px",
+                        "space-6": "24px",
+                        "space-4": "16px",
+                        "gutter-desktop": "24px",
+                        "gutter-mobile": "16px",
+                        "space-3": "12px",
+                        "space-1": "4px",
+                        "space-8": "32px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Hanken Grotesk"],
+                        "title-md": ["Hanken Grotesk"],
+                        "display-md": ["Fraunces"],
+                        "title-sm": ["Hanken Grotesk"],
+                        "caption": ["Hanken Grotesk"],
+                        "display-lg": ["Fraunces"],
+                        "label": ["Hanken Grotesk"],
+                        "body": ["Hanken Grotesk"],
+                        "title-lg": ["Fraunces"],
+                        "data-display": ["IBM Plex Mono"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="h-full bg-background flex flex-col md:flex-row overflow-hidden">
+<!-- Mobile Nav Header -->
+<header class="md:hidden flex items-center justify-between p-gutter-mobile border-b border-paper-200 bg-paper-0">
+<div class="flex items-center gap-space-2">
+<span class="material-symbols-outlined text-primary text-[28px]">school</span>
+<span class="font-display-md text-[24px] font-bold text-primary-fixed">TutorDesk</span>
+</div>
+<button class="p-space-2 rounded-full hover:bg-surface-container-low text-ink-700">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<!-- SideNavBar (Desktop) -->
+<aside class="hidden md:flex flex-col h-screen py-space-6 w-64 fixed left-0 top-0 overflow-y-auto bg-primary border-r border-outline-variant z-50">
+<div class="px-space-4 mb-space-8 flex flex-col items-center">
+<div class="w-16 h-16 rounded-full overflow-hidden bg-primary-container mb-space-3 flex items-center justify-center border-2 border-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a confident tutor in a bright, modern light-mode setting. They are wearing a neat button-down shirt. The background is a softly blurred modern office or study with subtle academic props like books or a clean white board. Warm, inviting lighting emphasizing trust and competence. High contrast between the crisp subject and the soft background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXHFrJFeTOfRa7vKh5-Ua3lMDYhINEBxkJo-3CjjIsdhuoY4klzJnob9Fu0ZjFVDQcG-wzGNTy77fE5YI8fEfZuP4LQagHiYw8_fIdl1DUtU5m0YOV4_yntMkSDtnPW0CCkMIY658Q9sXSc6AC7VM0jbuTy6Ijfcb55ekmDF4X2-aUpf0_NV-zTwTBvISOe8Rn-Mcb_og38gb1JdL2EV8-0z_tpO9mtWdm22lf7AxJv0gGDr_Zziqn"/>
+</div>
+<h1 class="font-display-md text-display-md font-bold text-primary-fixed">TutorDesk</h1>
+<p class="font-label text-label text-primary-fixed-dim mt-space-1">Independent Operations</p>
+</div>
+<nav class="flex-1 flex flex-col gap-space-1 px-space-2">
+<a class="flex items-center gap-space-3 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-150 group-active:scale-[0.99]">dashboard</span>
+<span class="font-body text-body">Dashboard</span>
+</a>
+<a class="flex items-center gap-space-3 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-150 group-active:scale-[0.99]">group</span>
+<span class="font-body text-body">Students</span>
+</a>
+<a class="flex items-center gap-space-3 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-150 group-active:scale-[0.99]">calendar_today</span>
+<span class="font-body text-body">Schedule</span>
+</a>
+<a class="flex items-center gap-space-3 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-150 group-active:scale-[0.99]">school</span>
+<span class="font-body text-body">Classroom</span>
+</a>
+<a class="flex items-center gap-space-3 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-150 group-active:scale-[0.99]">payments</span>
+<span class="font-body text-body">Payments</span>
+</a>
+<a class="flex items-center gap-space-3 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-150 group-active:scale-[0.99]">folder_open</span>
+<span class="font-body text-body">Library</span>
+</a>
+<a class="flex items-center gap-space-3 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-150 group-active:scale-[0.99]">chat_bubble</span>
+<span class="font-body text-body">Messages</span>
+</a>
+</nav>
+<div class="mt-auto px-space-2 mb-space-4">
+<button class="w-full flex items-center justify-center gap-space-2 bg-secondary-container text-on-secondary-container font-label text-label py-space-3 rounded-lg hover:brightness-105 transition-all">
+<span class="w-2 h-2 rounded-full bg-paper-0 animate-pulse"></span>
+                Start Class
+            </button>
+</div>
+<nav class="flex flex-col gap-space-1 px-space-2 pt-space-4 border-t border-primary-container">
+<a class="flex items-center gap-space-3 bg-tertiary-container text-on-tertiary-container transition-transform duration-150 active:scale-[0.99] mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body text-body font-semibold">Settings</span>
+</a>
+<a class="flex items-center gap-space-3 text-primary-fixed-dim hover:text-primary-fixed hover:bg-primary-fixed-variant/20 transition-colors mx-2 my-1 px-space-3 py-space-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-150 group-active:scale-[0.99]">help</span>
+<span class="font-body text-body">Help</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 flex flex-col h-screen overflow-hidden bg-background">
+<!-- TopNavBar -->
+<div class="hidden md:flex justify-between items-center px-gutter-desktop w-full h-16 fixed top-0 right-0 left-64 z-40 bg-background border-b border-paper-200">
+<div class="flex items-center gap-space-4">
+<div class="flex items-center gap-space-2 text-ink-500 hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+<span class="font-label text-label">Settings</span>
+</div>
+<div class="w-px h-6 bg-paper-200"></div>
+<span class="font-label text-label text-primary font-bold">Standard Operating Procedures</span>
+</div>
+<div class="flex items-center gap-space-4">
+<button class="p-space-2 rounded-full hover:bg-surface-container-low transition-colors text-ink-500 group">
+<span class="material-symbols-outlined group-active:opacity-70 transition-opacity">sync</span>
+</button>
+<button class="p-space-2 rounded-full hover:bg-surface-container-low transition-colors text-ink-500 group relative">
+<span class="material-symbols-outlined group-active:opacity-70 transition-opacity">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-danger-solid"></span>
+</button>
+<button class="p-space-2 rounded-full hover:bg-surface-container-low transition-colors text-ink-500 group">
+<span class="material-symbols-outlined group-active:opacity-70 transition-opacity">account_circle</span>
+</button>
+</div>
+</div>
+<!-- Scrollable Canvas -->
+<div class="flex-1 overflow-y-auto md:pt-16 p-gutter-mobile md:p-gutter-desktop">
+<div class="max-w-[1000px] mx-auto flex flex-col gap-space-6">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-4 mb-space-4">
+<div>
+<h1 class="font-display-md text-display-md text-on-background mb-space-2">Practice Manual</h1>
+<p class="font-body text-body text-ink-500 max-w-2xl">Define and standardize your operational procedures to ensure consistent quality across all client interactions. These documents serve as your practice's internal truth.</p>
+</div>
+<button class="self-start md:self-auto bg-primary text-on-primary font-label text-label px-space-4 py-space-3 rounded-DEFAULT hover:bg-surface-tint transition-colors flex items-center gap-space-2 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Procedure
+                    </button>
+</div>
+<!-- Bento Layout for SOPs -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-6">
+<!-- Left Column (Nav/Overview) -->
+<div class="md:col-span-4 flex flex-col gap-space-4">
+<div class="bg-paper-0 border border-paper-200 rounded-lg p-space-4 shadow-[0_2px_8px_rgba(22,33,30,0.06)]">
+<h2 class="font-title-sm text-title-sm text-on-background mb-space-4 flex items-center gap-space-2">
+<span class="material-symbols-outlined text-primary text-[20px]">library_books</span>
+                                Categories
+                            </h2>
+<ul class="flex flex-col gap-space-1">
+<li>
+<button class="w-full text-left flex items-center justify-between px-space-3 py-space-2 rounded-DEFAULT bg-surface-container-low text-primary font-label text-label border border-paper-200">
+<span>Enquiry &amp; Onboarding</span>
+<span class="bg-paper-0 px-2 py-0.5 rounded-full text-[11px] border border-paper-200">3 Docs</span>
+</button>
+</li>
+<li>
+<button class="w-full text-left flex items-center justify-between px-space-3 py-space-2 rounded-DEFAULT hover:bg-surface-container-lowest text-ink-700 font-label text-label transition-colors">
+<span>Payment Reconciliation</span>
+<span class="bg-surface-container-high px-2 py-0.5 rounded-full text-[11px]">1 Doc</span>
+</button>
+</li>
+<li>
+<button class="w-full text-left flex items-center justify-between px-space-3 py-space-2 rounded-DEFAULT hover:bg-surface-container-lowest text-ink-700 font-label text-label transition-colors">
+<span>Classroom Protocol</span>
+<span class="bg-surface-container-high px-2 py-0.5 rounded-full text-[11px]">2 Docs</span>
+</button>
+</li>
+<li>
+<button class="w-full text-left flex items-center justify-between px-space-3 py-space-2 rounded-DEFAULT hover:bg-surface-container-lowest text-ink-700 font-label text-label transition-colors">
+<span>Complaint Resolution</span>
+<span class="bg-surface-container-high px-2 py-0.5 rounded-full text-[11px]">1 Doc</span>
+</button>
+</li>
+</ul>
+</div>
+<!-- Quick Stats / Status -->
+<div class="bg-surface-container-low border border-paper-200 rounded-lg p-space-4">
+<div class="flex items-center gap-space-3 mb-space-3">
+<div class="w-8 h-8 rounded-full bg-success-tint flex items-center justify-center text-success-solid">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+</div>
+<div>
+<p class="font-label text-label text-ink-900">System Synced</p>
+<p class="font-caption text-caption text-ink-500">Last updated 2m ago</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (Document Editor/List) -->
+<div class="md:col-span-8 flex flex-col gap-space-4">
+<div class="bg-paper-0 border border-paper-200 rounded-lg shadow-[0_2px_8px_rgba(22,33,30,0.06)] overflow-hidden flex flex-col h-[600px]">
+<!-- Editor Header -->
+<div class="border-b border-paper-200 p-space-4 flex items-start justify-between bg-surface-bright">
+<div>
+<div class="flex items-center gap-space-2 mb-space-1">
+<span class="font-caption text-caption text-ink-500 uppercase tracking-wider">Enquiry &amp; Onboarding</span>
+<span class="w-1 h-1 rounded-full bg-paper-300"></span>
+<span class="font-caption text-caption text-ink-500">Draft</span>
+</div>
+<input class="font-title-md text-title-md text-on-background border-none p-0 focus:ring-0 bg-transparent w-full" placeholder="Procedure Title" type="text" value="Initial Client Consultation Flow"/>
+</div>
+<div class="flex gap-space-2">
+<button class="px-space-3 py-space-2 border border-paper-300 rounded-DEFAULT text-ink-700 font-label text-label hover:bg-surface-container-low transition-colors">Cancel</button>
+<button class="px-space-3 py-space-2 bg-primary text-on-primary rounded-DEFAULT font-label text-label hover:bg-surface-tint transition-colors">Save Changes</button>
+</div>
+</div>
+<!-- Editor Toolbar -->
+<div class="flex items-center gap-space-2 px-space-4 py-space-2 border-b border-paper-200 bg-surface-container-lowest">
+<button class="p-1 rounded hover:bg-surface-container-low text-ink-700"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-ink-700"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-ink-700"><span class="material-symbols-outlined text-[18px]">format_underlined</span></button>
+<div class="w-px h-4 bg-paper-200 mx-1"></div>
+<button class="p-1 rounded hover:bg-surface-container-low text-ink-700"><span class="material-symbols-outlined text-[18px]">format_list_bulleted</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-ink-700"><span class="material-symbols-outlined text-[18px]">format_list_numbered</span></button>
+<div class="w-px h-4 bg-paper-200 mx-1"></div>
+<button class="p-1 rounded hover:bg-surface-container-low text-ink-700 flex items-center gap-1 text-[13px] font-label"><span class="material-symbols-outlined text-[16px]">add_link</span> Link</button>
+</div>
+<!-- Editor Canvas -->
+<div class="flex-1 p-space-6 overflow-y-auto bg-paper-0">
+<div class="font-body text-body text-on-surface-variant max-w-prose space-y-4">
+<p>When a prospective client first reaches out via WhatsApp or the booking form, follow this sequence to ensure a professional and standardized onboarding experience.</p>
+<h3 class="font-title-sm text-title-sm text-on-background mt-space-6 mb-space-2">1. Initial Response (Within 2 Hours)</h3>
+<p>Reply with the standard greeting template. Ensure you request the following details if not already provided:</p>
+<ul class="list-disc pl-5 space-y-1">
+<li>Student's current grade level</li>
+<li>Primary subjects requiring assistance</li>
+<li>Preferred days of the week</li>
+</ul>
+<h3 class="font-title-sm text-title-sm text-on-background mt-space-6 mb-space-2">2. Assessment Scheduling</h3>
+<p>Offer two distinct time slots for a 15-minute diagnostic assessment call. Use the Calendly link or propose times directly. Note: Do not confirm a regular slot until the assessment is complete.</p>
+<div class="bg-surface-container p-space-4 border-l-4 border-primary rounded-r-DEFAULT my-space-4">
+<p class="font-data-display text-data-display text-primary text-sm"><strong>Script snippet:</strong> "To best understand [Student Name]'s needs, I'd like to schedule a brief 15-minute diagnostic call. Would Tuesday at 4 PM or Wednesday at 5 PM work better for you?"</p>
+</div>
+<p>Document any specific learning challenges mentioned during this phase in the student's preliminary profile note.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,21 @@
+Hello Ai, you have been tasked to help create a proffessional website named "TutorDesk" .
+You will be provided with figma designs of how the app should be .
+The figma designs are currently in the file "TutorDesk\Web Views" 
+Each folder represents a view of how a screen should look. The folders are named after the corresponding views.
+You are to create this views in a very modern, clean and proffessional manner. The website should be fully responsive on all devices.
+
+Use the following tools to help you create this website (mainly for the frontend):
+- HTML
+- CSS
+- JAVASCRIPT
+- REACT
+Infact , make sure you use frameworks that make the app look modern and proffessional
+Your code has to be clear, structured, modular, and easily readable and properly implemented.
+use best practices.
+
+Edit UI elements based on the Figma designs. and make them look much more elegant and proffessional
+
+Do not run any commands unless the user explicitly tells you to do so.
+Make sure.
+
+Create a folder for both frontend and backend. Do all frontend works and store them in the frontend folder and also do the same for the backend

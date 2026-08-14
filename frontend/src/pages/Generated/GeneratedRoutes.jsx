@@ -1,0 +1,106 @@
+
+import React from 'react';
+import { Route } from 'react-router-dom';
+import { AddEditStudentDesktop } from './AddEditStudentDesktop';
+import { AiPromptLibraryDesktop } from './AiPromptLibraryDesktop';
+import { ClassroomPostClassWrap } from './ClassroomPostClassWrap';
+import { CreateEditClassDesktop } from './CreateEditClassDesktop';
+import { CreateEditInvoiceDesktop } from './CreateEditInvoiceDesktop';
+import { DiagnosticAssessmentEntryDesktop } from './DiagnosticAssessmentEntryDesktop';
+import { FlaggedStudentsDirectoryView } from './FlaggedStudentsDirectoryView';
+import { GlobalSearchResultsDesktop } from './GlobalSearchResultsDesktop';
+import { InvoiceDetailDesktop } from './InvoiceDetailDesktop';
+import { LessonTemplatesLibraryDesktop } from './LessonTemplatesLibraryDesktop';
+import { LessonTemplateEditorDesktop } from './LessonTemplateEditorDesktop';
+import { LessonTemplateEditorDesktopAdmin } from './LessonTemplateEditorDesktopAdmin';
+import { MaterialsLibraryDesktop } from './MaterialsLibraryDesktop';
+import { MaterialViewerDesktop } from './MaterialViewerDesktop';
+import { MessagesDesktop } from './MessagesDesktop';
+import { MonthlyReportGeneratorDesktop } from './MonthlyReportGeneratorDesktop';
+import { NotificationsCenterDesktop } from './NotificationsCenterDesktop';
+import { OnboardingAvailabilitySetup } from './OnboardingAvailabilitySetup';
+import { ParentPortalHome } from './ParentPortalHome';
+import { PortalContactTutor1 } from './PortalContactTutor1';
+import { PortalContactTutor2 } from './PortalContactTutor2';
+import { PortalContactTutor3 } from './PortalContactTutor3';
+import { PortalPaymentsInvoices } from './PortalPaymentsInvoices';
+import { PortalProgressReports } from './PortalProgressReports';
+import { QuizBuilderDesktop } from './QuizBuilderDesktop';
+import { QuizBuilderDesktopAdmin } from './QuizBuilderDesktopAdmin';
+import { RecordPaymentDesktop } from './RecordPaymentDesktop';
+import { ReportsInsightsDesktop } from './ReportsInsightsDesktop';
+import { ReportDetailIncomeAnalysis } from './ReportDetailIncomeAnalysis';
+import { RescheduleCancelClassDesktop } from './RescheduleCancelClassDesktop';
+import { SettingsAccountSecurity } from './SettingsAccountSecurity';
+import { SettingsAutomationRules } from './SettingsAutomationRules';
+import { SettingsAutomationRules1 } from './SettingsAutomationRules1';
+import { SettingsAutomationRules2 } from './SettingsAutomationRules2';
+import { SettingsCommunicationHours } from './SettingsCommunicationHours';
+import { SettingsCommunicationHours1 } from './SettingsCommunicationHours1';
+import { SettingsCommunicationHours2 } from './SettingsCommunicationHours2';
+import { SettingsDataSyncPreferences } from './SettingsDataSyncPreferences';
+import { SettingsHubDesktop } from './SettingsHubDesktop';
+import { SettingsPaymentDetails } from './SettingsPaymentDetails';
+import { SettingsPortalManagement } from './SettingsPortalManagement';
+import { SettingsProfileBio } from './SettingsProfileBio';
+import { SettingsReminderRulesAdmin } from './SettingsReminderRulesAdmin';
+import { SettingsSopsProcedures } from './SettingsSopsProcedures';
+import { SettingsTermsOfService } from './SettingsTermsOfService';
+import { SetupChecklistHomeVariant } from './SetupChecklistHomeVariant';
+import { SplashLoadingState } from './SplashLoadingState';
+import { StudentOnboardingFormDesktop } from './StudentOnboardingFormDesktop';
+import { SubscriptionsPlansDesktop } from './SubscriptionsPlansDesktop';
+import { VerificationEmailPhone } from './VerificationEmailPhone';
+
+export const generatedRoutes = [
+  { path: "/view/add-edit-student-desktop", component: AddEditStudentDesktop },
+  { path: "/view/ai-prompt-library-desktop", component: AiPromptLibraryDesktop },
+  { path: "/view/classroom-post-class-wrap", component: ClassroomPostClassWrap },
+  { path: "/view/create-edit-class-desktop", component: CreateEditClassDesktop },
+  { path: "/view/create-edit-invoice-desktop", component: CreateEditInvoiceDesktop },
+  { path: "/view/diagnostic-assessment-entry-desktop", component: DiagnosticAssessmentEntryDesktop },
+  { path: "/view/flagged-students-directory-view", component: FlaggedStudentsDirectoryView },
+  { path: "/view/global-search-results-desktop", component: GlobalSearchResultsDesktop },
+  { path: "/view/invoice-detail-desktop", component: InvoiceDetailDesktop },
+  { path: "/view/lesson-templates-library-desktop", component: LessonTemplatesLibraryDesktop },
+  { path: "/view/lesson-template-editor-desktop", component: LessonTemplateEditorDesktop },
+  { path: "/view/lesson-template-editor-desktop-admin", component: LessonTemplateEditorDesktopAdmin },
+  { path: "/view/materials-library-desktop", component: MaterialsLibraryDesktop },
+  { path: "/view/material-viewer-desktop", component: MaterialViewerDesktop },
+  { path: "/view/messages-desktop", component: MessagesDesktop },
+  { path: "/view/monthly-report-generator-desktop", component: MonthlyReportGeneratorDesktop },
+  { path: "/view/notifications-center-desktop", component: NotificationsCenterDesktop },
+  { path: "/view/onboarding-availability-setup", component: OnboardingAvailabilitySetup },
+  { path: "/view/parent-portal-home", component: ParentPortalHome },
+  { path: "/view/portal-contact-tutor-1", component: PortalContactTutor1 },
+  { path: "/view/portal-contact-tutor-2", component: PortalContactTutor2 },
+  { path: "/view/portal-contact-tutor-3", component: PortalContactTutor3 },
+  { path: "/view/portal-payments-invoices", component: PortalPaymentsInvoices },
+  { path: "/view/portal-progress-reports", component: PortalProgressReports },
+  { path: "/view/quiz-builder-desktop", component: QuizBuilderDesktop },
+  { path: "/view/quiz-builder-desktop-admin", component: QuizBuilderDesktopAdmin },
+  { path: "/view/record-payment-desktop", component: RecordPaymentDesktop },
+  { path: "/view/reports-insights-desktop", component: ReportsInsightsDesktop },
+  { path: "/view/report-detail-income-analysis", component: ReportDetailIncomeAnalysis },
+  { path: "/view/reschedule-cancel-class-desktop", component: RescheduleCancelClassDesktop },
+  { path: "/view/settings-account-security", component: SettingsAccountSecurity },
+  { path: "/view/settings-automation-rules", component: SettingsAutomationRules },
+  { path: "/view/settings-automation-rules-1", component: SettingsAutomationRules1 },
+  { path: "/view/settings-automation-rules-2", component: SettingsAutomationRules2 },
+  { path: "/view/settings-communication-hours", component: SettingsCommunicationHours },
+  { path: "/view/settings-communication-hours-1", component: SettingsCommunicationHours1 },
+  { path: "/view/settings-communication-hours-2", component: SettingsCommunicationHours2 },
+  { path: "/view/settings-data-sync-preferences", component: SettingsDataSyncPreferences },
+  { path: "/view/settings-hub-desktop", component: SettingsHubDesktop },
+  { path: "/view/settings-payment-details", component: SettingsPaymentDetails },
+  { path: "/view/settings-portal-management", component: SettingsPortalManagement },
+  { path: "/view/settings-profile-bio", component: SettingsProfileBio },
+  { path: "/view/settings-reminder-rules-admin", component: SettingsReminderRulesAdmin },
+  { path: "/view/settings-sops-procedures", component: SettingsSopsProcedures },
+  { path: "/view/settings-terms-of-service", component: SettingsTermsOfService },
+  { path: "/view/setup-checklist-home-variant", component: SetupChecklistHomeVariant },
+  { path: "/view/splash-loading-state", component: SplashLoadingState },
+  { path: "/view/student-onboarding-form-desktop", component: StudentOnboardingFormDesktop },
+  { path: "/view/subscriptions-plans-desktop", component: SubscriptionsPlansDesktop },
+  { path: "/view/verification-email-phone", component: VerificationEmailPhone },
+];

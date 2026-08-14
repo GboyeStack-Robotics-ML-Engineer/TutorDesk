@@ -1,0 +1,411 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Communication Hours - TutorDesk</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#dbdad6",
+                        "secondary-fixed-dim": "#ffb95b",
+                        "on-secondary-container": "#724700",
+                        "warning-solid": "#B9791A",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "tertiary-fixed": "#c5eae4",
+                        "surface-bright": "#faf9f5",
+                        "paper-300": "#CFCABB",
+                        "secondary-container": "#ffb54f",
+                        "secondary": "#845400",
+                        "on-error": "#ffffff",
+                        "tertiary": "#2c4e49",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1b1c1a",
+                        "outline": "#6f7976",
+                        "ink-900": "#16211E",
+                        "inverse-primary": "#8bd4c6",
+                        "on-tertiary-fixed": "#00201d",
+                        "ink-500": "#6A716C",
+                        "primary": "#005248",
+                        "success-solid": "#2E7D5B",
+                        "on-primary-fixed-variant": "#005047",
+                        "on-tertiary-fixed-variant": "#2b4d48",
+                        "on-background": "#1b1c1a",
+                        "surface-container-high": "#e9e8e4",
+                        "on-tertiary-container": "#bde2dc",
+                        "on-primary": "#ffffff",
+                        "success-tint": "#E2F0E9",
+                        "secondary-fixed": "#ffddb6",
+                        "paper-100": "#F1EFE8",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#9fe9da",
+                        "surface-container-low": "#f4f4f0",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "surface": "#faf9f5",
+                        "on-surface-variant": "#3f4946",
+                        "outline-variant": "#bec9c5",
+                        "primary-fixed": "#a7f0e2",
+                        "tertiary-fixed-dim": "#a9cec8",
+                        "on-primary-fixed": "#00201c",
+                        "ink-700": "#3A4441",
+                        "paper-0": "#FFFFFF",
+                        "surface-tint": "#1a6a5f",
+                        "danger-solid": "#BE3F2C",
+                        "primary-fixed-dim": "#8bd4c6",
+                        "surface-container-highest": "#e3e2df",
+                        "background": "#faf9f5",
+                        "inverse-surface": "#2f312e",
+                        "tertiary-container": "#446661",
+                        "paper-200": "#E5E2D8",
+                        "primary-container": "#1c6b60",
+                        "surface-variant": "#e3e2df",
+                        "surface-container": "#efeeea",
+                        "on-error-container": "#93000a",
+                        "warning-tint": "#F8ECD3",
+                        "on-secondary": "#ffffff",
+                        "danger-tint": "#F7E1DC",
+                        "on-secondary-fixed": "#2a1800",
+                        "inverse-on-surface": "#f2f1ed"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "gutter-mobile": "16px",
+                        "space-1": "4px",
+                        "space-2": "8px",
+                        "space-6": "24px",
+                        "space-4": "16px",
+                        "space-8": "32px",
+                        "space-3": "12px",
+                        "max-width": "1200px",
+                        "gutter-desktop": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Hanken Grotesk"],
+                        "display-lg": ["Fraunces"],
+                        "title-md": ["Hanken Grotesk"],
+                        "display-md": ["Fraunces"],
+                        "data-display": ["IBM Plex Mono"],
+                        "title-sm": ["Hanken Grotesk"],
+                        "title-lg": ["Fraunces"],
+                        "label": ["Hanken Grotesk"],
+                        "caption": ["Hanken Grotesk"],
+                        "body": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["40px", { "lineHeight": "44px", "fontWeight": "600" }],
+                        "title-md": ["20px", { "lineHeight": "26px", "fontWeight": "700" }],
+                        "display-md": ["32px", { "lineHeight": "38px", "fontWeight": "600" }],
+                        "data-display": ["15px", { "lineHeight": "22px", "fontWeight": "500" }],
+                        "title-sm": ["17px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "title-lg": ["24px", { "lineHeight": "30px", "fontWeight": "600" }],
+                        "label": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body": ["15px", { "lineHeight": "22px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body font-body text-body min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-screen sticky top-0 left-0 w-64 border-r border-paper-200 dark:border-outline-variant bg-surface-container-low dark:bg-inverse-surface z-50">
+<!-- Header -->
+<div class="p-6 border-b border-paper-200 dark:border-outline-variant flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-title-lg text-title-lg">
+                T
+            </div>
+<div>
+<h1 class="font-title-lg text-title-lg text-primary dark:text-primary-fixed-dim">TutorDesk</h1>
+<p class="font-caption text-caption text-on-surface-variant">Academic Operations</p>
+</div>
+</div>
+<!-- CTA -->
+<div class="p-4">
+<button class="w-full bg-primary text-on-primary py-2 px-4 rounded-lg font-title-sm text-title-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+                New Session
+            </button>
+</div>
+<!-- Main Tabs -->
+<div class="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 dark:hover:bg-surface-variant rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-lg text-body-lg">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 dark:hover:bg-surface-variant rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-lg text-body-lg">Students</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 dark:hover:bg-surface-variant rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-lg text-body-lg">Schedule</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 dark:hover:bg-surface-variant rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-body-lg text-body-lg">Payments</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 dark:hover:bg-surface-variant rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span class="font-body-lg text-body-lg">Resources</span>
+</a>
+</div>
+<!-- Footer Tabs -->
+<div class="p-3 border-t border-paper-200 dark:border-outline-variant flex flex-col gap-1">
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-3 py-2 opacity-80 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-body-lg text-body-lg">Settings</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-paper-100 dark:hover:bg-surface-variant rounded-lg px-3 py-2 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-body-lg text-body-lg">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col min-h-screen relative w-full max-w-full">
+<!-- TopAppBar (Mobile Fallback & Desktop Header) -->
+<header class="flex justify-between items-center h-16 px-6 sticky top-0 z-40 bg-surface dark:bg-background border-b border-paper-200 dark:border-outline-variant w-full">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm" href="#">Classroom</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm" href="#">Exams</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 border border-paper-300 rounded-full px-3 py-1 bg-surface-container-low hidden sm:flex">
+<div class="w-2 h-2 rounded-full bg-success-solid"></div>
+<span class="font-caption text-caption text-on-surface-variant">Sync Status</span>
+</div>
+<button class="bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full font-title-sm text-title-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                    Start Class
+                </button>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<button class="hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-gutter-mobile md:p-gutter-desktop max-w-max-width mx-auto w-full">
+<div class="mb-space-8">
+<div class="flex items-center gap-2 text-on-surface-variant mb-2">
+<a class="font-label text-label hover:text-primary" href="#">Settings</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label text-label text-primary">Communication Hours</span>
+</div>
+<h2 class="font-display-md text-display-md text-on-surface mb-2">Communication Hours</h2>
+<p class="font-body text-body text-on-surface-variant max-w-2xl">Manage when students can expect a response from you, and configure automated replies for off-hours inquiries.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-6 items-start">
+<!-- Left Column: Settings Configuration -->
+<div class="lg:col-span-7 flex flex-col gap-space-6">
+<!-- Availability Card -->
+<section class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 shadow-[0_2px_4px_rgba(22,33,30,0.02)]">
+<div class="flex items-center justify-between mb-space-6 border-b border-paper-200 pb-space-4">
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Weekly Availability</h3>
+<p class="font-caption text-caption text-on-surface-variant mt-1">Set your standard response windows.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value="">
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+<span class="ml-3 font-label text-label text-on-surface">Enable Hours</span>
+</label>
+</div>
+<div class="flex flex-col gap-space-4">
+<!-- Mon-Fri Row -->
+<div class="grid grid-cols-12 gap-4 items-center">
+<div class="col-span-4 sm:col-span-3">
+<span class="font-label text-label text-on-surface">Weekdays</span>
+<p class="font-caption text-caption text-on-surface-variant">Mon - Fri</p>
+</div>
+<div class="col-span-8 sm:col-span-9 flex items-center gap-2">
+<div class="relative flex-1">
+<input class="w-full bg-surface-container-low border border-paper-300 rounded focus:ring-1 focus:ring-primary focus:border-primary font-data-display text-data-display px-3 py-2 text-on-surface" type="time" value="09:00">
+</div>
+<span class="font-body text-body text-on-surface-variant px-1">to</span>
+<div class="relative flex-1">
+<input class="w-full bg-surface-container-low border border-paper-300 rounded focus:ring-1 focus:ring-primary focus:border-primary font-data-display text-data-display px-3 py-2 text-on-surface" type="time" value="17:00">
+</div>
+<button class="text-on-surface-variant hover:text-danger-solid p-2 ml-1">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+</div>
+<!-- Sat Row -->
+<div class="grid grid-cols-12 gap-4 items-center opacity-60 hover:opacity-100 transition-opacity">
+<div class="col-span-4 sm:col-span-3">
+<span class="font-label text-label text-on-surface">Saturday</span>
+</div>
+<div class="col-span-8 sm:col-span-9 flex items-center gap-2">
+<button class="w-full bg-surface border border-dashed border-paper-300 rounded font-label text-label text-on-surface-variant py-2 flex justify-center items-center gap-2 hover:border-primary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span> Add Hours
+                                    </button>
+</div>
+</div>
+<!-- Sun Row -->
+<div class="grid grid-cols-12 gap-4 items-center opacity-60 hover:opacity-100 transition-opacity">
+<div class="col-span-4 sm:col-span-3">
+<span class="font-label text-label text-on-surface">Sunday</span>
+</div>
+<div class="col-span-8 sm:col-span-9 flex items-center gap-2">
+<button class="w-full bg-surface border border-dashed border-paper-300 rounded font-label text-label text-on-surface-variant py-2 flex justify-center items-center gap-2 hover:border-primary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span> Add Hours
+                                    </button>
+</div>
+</div>
+</div>
+<div class="mt-space-6 flex items-start gap-3 bg-surface-container-low p-4 rounded-lg border border-paper-200">
+<span class="material-symbols-outlined text-primary mt-0.5">info</span>
+<div>
+<p class="font-label text-label text-on-surface mb-1">Timezone Handling</p>
+<p class="font-caption text-caption text-on-surface-variant">Hours are based on your current timezone (WAT). Students will see these hours converted to their local time automatically.</p>
+</div>
+</div>
+</section>
+<!-- Auto-Reply Card -->
+<section class="bg-paper-0 border border-paper-200 rounded-lg p-space-6 shadow-[0_2px_4px_rgba(22,33,30,0.02)]">
+<div class="flex items-center justify-between mb-space-6 border-b border-paper-200 pb-space-4">
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Out of Office Auto-Reply</h3>
+<p class="font-caption text-caption text-on-surface-variant mt-1">Message sent automatically outside active hours.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value="">
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+<span class="ml-3 font-label text-label text-on-surface">Enable Reply</span>
+</label>
+</div>
+<div class="flex flex-col gap-space-4">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label text-on-surface">Message Subject</label>
+<input class="w-full bg-surface-container-low border border-paper-300 rounded focus:ring-1 focus:ring-primary focus:border-primary font-body text-body px-3 py-2 text-on-surface" type="text" value="Thanks for reaching out! (Out of Office)">
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label text-on-surface flex justify-between">
+<span>Message Body</span>
+<span class="text-on-surface-variant font-caption">Use {NextAvailable} to insert next active time</span>
+</label>
+<textarea class="w-full bg-surface-container-low border border-paper-300 rounded focus:ring-1 focus:ring-primary focus:border-primary font-body text-body px-3 py-2 text-on-surface resize-none" rows="4">Hello! 
+
+Thanks for your message. I am currently outside of my standard communication hours. I will review your inquiry and get back to you by {NextAvailable}. 
+
+For urgent technical issues regarding an upcoming session, please refer to the Resource Hub.
+
+Best,
+Professor</textarea>
+</div>
+</div>
+</section>
+<!-- Save Actions -->
+<div class="flex justify-end gap-3 pt-space-2">
+<button class="px-6 py-2 border border-paper-300 rounded bg-paper-0 text-on-surface font-title-sm text-title-sm hover:bg-surface-container-low transition-colors">Discard Changes</button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded font-title-sm text-title-sm hover:bg-opacity-90 transition-colors shadow-sm">Save Preferences</button>
+</div>
+</div>
+<!-- Right Column: Student Portal Preview -->
+<div class="lg:col-span-5 sticky top-24">
+<h3 class="font-title-sm text-title-sm text-on-surface-variant mb-space-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                        Student Portal Preview
+                    </h3>
+<div class="bg-surface-dim rounded-xl p-space-4 sm:p-space-6 border border-paper-200">
+<!-- Simulated Chat Interface -->
+<div class="bg-paper-0 rounded-lg border border-paper-300 shadow-sm overflow-hidden flex flex-col h-[400px]">
+<!-- Chat Header -->
+<div class="bg-surface-container-low p-4 border-b border-paper-200 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a female academic tutor in her late 30s, smiling warmly, wearing a neat blouse, set against a bright, minimalist office background with soft natural light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDB45czMp3vACyu3_AjXlKA9ShFyo1L9xoAd7RXaA_N4z7_8VFcSd_HHAnZvOMWrlcd_hrK3PwXzuTYKoUtauQ7FuZbgHUMgcrA9-olAsvsSB_2-FxITs5qQEsW916VJFTkLeMT95d4zAhz7kLPWYoDhGAqJaSzrIWQQlL4Svihp7LPWQgmfYsFXSNCX6vaLv_FrfPmZ6e4CMQeN6c0TVM7NiRDldcIX8fqihnfmyrCJsoup0zqKJF4">
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface">Prof. Adebayo</p>
+<div class="flex items-center gap-1.5 mt-0.5">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<p class="font-caption text-caption text-on-surface-variant">Away</p>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</div>
+<!-- Chat Body -->
+<div class="flex-1 p-4 bg-surface flex flex-col gap-4 overflow-y-auto">
+<div class="flex flex-col items-center my-2">
+<span class="bg-paper-200 text-on-surface-variant px-3 py-1 rounded-full font-caption text-caption">Today, 7:30 PM</span>
+</div>
+<!-- Student Message -->
+<div class="flex justify-end">
+<div class="bg-tertiary-container text-on-tertiary-container rounded-2xl rounded-tr-none px-4 py-2.5 max-w-[85%]">
+<p class="font-body text-body text-[14px]">Hi Professor, I had a quick question about the assignment due on Friday. Do we need to include primary sources for the second section?</p>
+</div>
+</div>
+<!-- Auto Reply Preview -->
+<div class="flex justify-start">
+<div class="flex gap-2 max-w-[85%]">
+<div class="w-6 h-6 rounded-full bg-primary-container shrink-0 mt-1 flex items-center justify-center text-on-primary-container font-label text-[10px]">
+<span class="material-symbols-outlined text-[14px]">smart_toy</span>
+</div>
+<div class="bg-surface-container-highest text-on-surface rounded-2xl rounded-tl-none px-4 py-2.5">
+<p class="font-label text-label text-primary mb-1 border-b border-outline-variant pb-1">Automated Reply</p>
+<p class="font-body text-body text-[14px] whitespace-pre-wrap">Hello! 
+
+Thanks for your message. I am currently outside of my standard communication hours. I will review your inquiry and get back to you by <strong class="font-title-sm">Tomorrow at 9:00 AM</strong>. 
+
+For urgent technical issues regarding an upcoming session, please refer to the Resource Hub.
+
+Best,
+Professor</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Chat Input Disabled -->
+<div class="p-3 border-t border-paper-200 bg-surface-container-low flex items-center gap-2">
+<div class="flex-1 bg-surface border border-paper-300 rounded-full px-4 py-2 flex items-center justify-between opacity-70">
+<span class="font-body text-body text-on-surface-variant text-[14px]">Type a message...</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">send</span>
+</div>
+</div>
+</div>
+<!-- Status Indicator Context -->
+<div class="mt-space-4 flex items-start gap-3 bg-surface p-3 rounded border border-paper-300 border-l-4 border-l-warning-solid">
+<span class="material-symbols-outlined text-warning-solid text-[20px] mt-0.5">schedule</span>
+<p class="font-caption text-caption text-on-surface-variant">
+                                During offline hours, your profile badge changes from <span class="text-success-solid font-label">Active</span> to <span class="text-outline font-label">Away</span>, setting clear expectations before students even open the chat.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
