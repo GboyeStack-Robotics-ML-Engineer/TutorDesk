@@ -50,6 +50,7 @@ import { SetupChecklistHomeVariant } from './SetupChecklistHomeVariant';
 import { SplashLoadingState } from './SplashLoadingState';
 import { StudentOnboardingFormDesktop } from './StudentOnboardingFormDesktop';
 import { SubscriptionsPlansDesktop } from './SubscriptionsPlansDesktop';
+import { TheOrganizedDesk } from './TheOrganizedDesk';
 import { VerificationEmailPhone } from './VerificationEmailPhone';
 
 export const generatedRoutes = [
@@ -102,5 +103,6 @@ export const generatedRoutes = [
   { path: "/view/splash-loading-state", component: SplashLoadingState },
   { path: "/view/student-onboarding-form-desktop", component: StudentOnboardingFormDesktop },
   { path: "/view/subscriptions-plans-desktop", component: SubscriptionsPlansDesktop },
+  { path: "/view/the-organized-desk", component: TheOrganizedDesk },
   { path: "/view/verification-email-phone", component: VerificationEmailPhone },
 ];

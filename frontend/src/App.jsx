@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import Splash from './pages/Splash';
 import { Login } from './pages/Login/Login';
 import { SignUp } from './pages/SignUp/SignUp';
 import { ForgotPassword } from './pages/ForgotPassword/ForgotPassword';
@@ -12,7 +13,8 @@ function App() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Splash />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
