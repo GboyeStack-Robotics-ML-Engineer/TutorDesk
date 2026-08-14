@@ -8,6 +8,7 @@ import { ResetPassword } from './pages/ResetPassword/ResetPassword';
 import { PortalLayout } from './components/layout/PortalLayout/PortalLayout';
 import { MySchedule } from './pages/Portal/MySchedule/MySchedule';
 import { generatedRoutes } from './pages/Generated/GeneratedRoutes';
+import { DemoIndex } from './demo/DemoIndex';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
 
       {/* Authenticated Portal Routes */}
       <Route path="/portal" element={<PortalLayout />}>
+        <Route path="demo" element={<DemoIndex />} />
         <Route path="schedule" element={<MySchedule />} />
         
         {/* Generated Views Routes (rendered inside PortalLayout) */}

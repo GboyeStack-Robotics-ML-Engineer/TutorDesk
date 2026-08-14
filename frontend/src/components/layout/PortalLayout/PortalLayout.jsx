@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '../Header/Header';
 import { Sidebar } from '../Sidebar/Sidebar';
+import { DemoFlowGuide } from '../../../demo/DemoFlowGuide';
 
 const pageVariants = {
   initial: { 
@@ -61,6 +62,8 @@ export const PortalLayout = () => {
           </div>
         </main>
       </div>
+
+      <DemoFlowGuide />
     </div>
   );
 };

@@ -11,9 +11,9 @@ export const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Implement actual login logic here
-    console.log('Login attempt:', { identifier, password });
-    // For now, let's just simulate successful login by redirecting to a dashboard or something later
+    // Demo: simulate a successful login and enter the portal at the start of
+    // the guided user story.
+    navigate('/portal/view/setup-checklist-home-variant');
   };
 
   return (
