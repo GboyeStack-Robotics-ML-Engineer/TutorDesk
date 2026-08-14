@@ -11,6 +11,7 @@ import { FlaggedStudentsDirectoryView } from './FlaggedStudentsDirectoryView';
 import { GlobalSearchResultsDesktop } from './GlobalSearchResultsDesktop';
 import { InvoiceDetailDesktop } from './InvoiceDetailDesktop';
 import { LessonTemplatesLibraryDesktop } from './LessonTemplatesLibraryDesktop';
+import { LiveClassroomDesktop } from './LiveClassroomDesktop';
 import { LessonTemplateEditorDesktop } from './LessonTemplateEditorDesktop';
 import { LessonTemplateEditorDesktopAdmin } from './LessonTemplateEditorDesktopAdmin';
 import { MaterialsLibraryDesktop } from './MaterialsLibraryDesktop';
@@ -64,6 +65,7 @@ export const generatedRoutes = [
   { path: "/view/global-search-results-desktop", component: GlobalSearchResultsDesktop },
   { path: "/view/invoice-detail-desktop", component: InvoiceDetailDesktop },
   { path: "/view/lesson-templates-library-desktop", component: LessonTemplatesLibraryDesktop },
+  { path: "/view/live-classroom-desktop", component: LiveClassroomDesktop },
   { path: "/view/lesson-template-editor-desktop", component: LessonTemplateEditorDesktop },
   { path: "/view/lesson-template-editor-desktop-admin", component: LessonTemplateEditorDesktopAdmin },
   { path: "/view/materials-library-desktop", component: MaterialsLibraryDesktop },

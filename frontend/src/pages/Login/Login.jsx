@@ -11,8 +11,6 @@ export const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Demo: simulate a successful login and enter the portal at the start of
-    // the guided user story.
     navigate('/portal/view/setup-checklist-home-variant');
   };
 

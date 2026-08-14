@@ -1,76 +1,30 @@
 // Demo flow configuration for TutorDesk.
 //
-// This defines the end-to-end user story as an ordered list of real pages that
-// already exist in the app. The DemoFlowGuide component reads this list and
-// renders a floating "Next step" control, so the whole story can be walked
-// (and screenshotted) by clicking through — without modifying the 52 page files.
-//
-// Each step maps a human-readable story beat to an actual route.
+// The end-to-end user story as an ordered list of real pages. Drives both the
+// floating flow guide and the demo index. The live classroom is included so the
+// call experience is part of the walked story.
 
 export const demoFlow = [
-  {
-    key: 'setup',
-    title: 'Tutor home / setup checklist',
-    caption: 'The tutor lands here after signing in.',
-    path: '/portal/view/setup-checklist-home-variant',
-  },
-  {
-    key: 'add-student',
-    title: 'Add a student',
-    caption: 'Tutor registers a new student and links the parent.',
-    path: '/portal/view/add-edit-student-desktop',
-  },
-  {
-    key: 'onboarding-form',
-    title: 'Student onboarding form',
-    caption: 'The profile, subjects and goals the parent completes.',
-    path: '/portal/view/student-onboarding-form-desktop',
-  },
-  {
-    key: 'schedule',
-    title: 'Schedule a class',
-    caption: 'Tutor books the class and generates the link.',
-    path: '/portal/view/create-edit-class-desktop',
-  },
-  {
-    key: 'my-schedule',
-    title: "Today's schedule",
-    caption: "The day's classes, times and student count.",
-    path: '/portal/schedule',
-  },
-  {
-    key: 'classroom',
-    title: 'Classroom / post-class wrap',
-    caption: 'Attendance and progress notes after the class.',
-    path: '/portal/view/classroom-post-class-wrap',
-  },
-  {
-    key: 'invoice',
-    title: 'Create an invoice',
-    caption: 'Tutor bills the parent for the month.',
-    path: '/portal/view/create-edit-invoice-desktop',
-  },
-  {
-    key: 'record-payment',
-    title: 'Record a payment',
-    caption: 'Payment is logged and reconciled.',
-    path: '/portal/view/record-payment-desktop',
-  },
-  {
-    key: 'report',
-    title: 'Monthly report',
-    caption: 'The progress report sent to the parent.',
-    path: '/portal/view/monthly-report-generator-desktop',
-  },
-  {
-    key: 'parent-portal',
-    title: 'Parent portal home',
-    caption: 'What the parent sees on their side.',
-    path: '/portal/view/parent-portal-home',
-  },
+  { key: 'setup', title: 'Tutor home / setup checklist', caption: 'The tutor lands here after signing in.', path: '/portal/view/setup-checklist-home-variant' },
+  { key: 'add-student', title: 'Add a student', caption: 'Tutor registers a student and links the parent.', path: '/portal/view/add-edit-student-desktop' },
+  { key: 'onboarding-form', title: 'Student onboarding form', caption: 'Profile, subjects and goals the parent completes.', path: '/portal/view/student-onboarding-form-desktop' },
+  { key: 'schedule', title: 'Schedule a class', caption: 'Tutor books the class and generates the link.', path: '/portal/view/create-edit-class-desktop' },
+  { key: 'my-schedule', title: "Today's schedule", caption: "The day's classes, times and student count.", path: '/portal/schedule' },
+  { key: 'live-class', title: 'Live classroom', caption: 'The call runs inside the app — video, chat, whiteboard.', path: '/portal/view/live-classroom-desktop' },
+  { key: 'classroom', title: 'Post-class wrap', caption: 'Attendance and progress notes after the class.', path: '/portal/view/classroom-post-class-wrap' },
+  { key: 'invoice', title: 'Create an invoice', caption: 'Tutor bills the parent for the month.', path: '/portal/view/create-edit-invoice-desktop' },
+  { key: 'record-payment', title: 'Record a payment', caption: 'Payment is logged and reconciled.', path: '/portal/view/record-payment-desktop' },
+  { key: 'report', title: 'Monthly report', caption: 'The progress report sent to the parent.', path: '/portal/view/monthly-report-generator-desktop' },
+  { key: 'parent-portal', title: 'Parent portal home', caption: 'What the parent sees on their side.', path: '/portal/view/parent-portal-home' },
 ];
 
-// All pages, grouped, for the demo index page (so every screen is reachable).
+// Map each flow step's page path -> next path, so in-page primary buttons can
+// advance the story. Used by the flow-link injector.
+export const nextInFlow = demoFlow.reduce((acc, step, i) => {
+  if (i < demoFlow.length - 1) acc[step.path] = demoFlow[i + 1].path;
+  return acc;
+}, {});
+
 export const allPagesByGroup = [
   {
     group: 'Auth & onboarding',
@@ -100,7 +54,8 @@ export const allPagesByGroup = [
       { label: 'Create / edit class', path: '/portal/view/create-edit-class-desktop' },
       { label: 'My schedule', path: '/portal/schedule' },
       { label: 'Reschedule / cancel class', path: '/portal/view/reschedule-cancel-class-desktop' },
-      { label: 'Classroom post-class wrap', path: '/portal/view/classroom-post-class-wrap' },
+      { label: 'Live classroom (call)', path: '/portal/view/live-classroom-desktop' },
+      { label: 'Post-class wrap', path: '/portal/view/classroom-post-class-wrap' },
     ],
   },
   {
