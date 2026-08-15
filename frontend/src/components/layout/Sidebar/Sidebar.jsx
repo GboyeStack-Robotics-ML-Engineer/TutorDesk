@@ -2,13 +2,14 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
-  { icon: 'space_dashboard', label: 'Home', path: '/portal/view/parent-portal-home' },
+  { icon: 'space_dashboard', label: 'Home', path: '/portal/view/setup-checklist-home-variant' },
   { icon: 'groups', label: 'Students', path: '/portal/view/flagged-students-directory-view' },
   { icon: 'calendar_month', label: 'Schedule', path: '/portal/schedule' },
-  { icon: 'school', label: 'Classroom', path: '/portal/view/classroom-post-class-wrap' },
-  { icon: 'account_balance_wallet', label: 'Payments', path: '/portal/view/portal-payments-invoices' },
-  { icon: 'folder_open', label: 'Materials', path: '/portal/view/materials-library-desktop' },
-  { icon: 'forum', label: 'Messages', path: '/portal/view/messages-desktop' },
+  { icon: 'video_camera_front', label: 'Classroom', path: '/portal/view/live-classroom-desktop' },
+  { icon: 'add_link', label: 'Class links', path: '/portal/view/meeting-generator' },
+  { icon: 'receipt_long', label: 'Invoices', path: '/portal/view/invoice-maker' },
+  { icon: 'quiz', label: 'Quizzes', path: '/portal/view/quiz-maker' },
+  { icon: 'folder_open', label: 'Materials', path: '/portal/view/google-embed' },
 ];
 
 export const Sidebar = ({ isCollapsed }) => {
