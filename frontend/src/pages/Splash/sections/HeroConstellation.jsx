@@ -40,9 +40,9 @@ const useNodeGeometry = () =>
 /**
  * The hero visual: every tool a tutor already uses, drawn into one desk.
  *
- * Motion is layered so it reads as a system coming together rather than a
- * carousel of effects — connectors draw inward, nodes settle, then the ring
- * drifts. Everything collapses to a static figure under prefers-reduced-motion.
+ * The centre hub (TutorDesk logo) is completely static — no floating or
+ * breathing. Only the surrounding integration nodes orbit the hub.
+ * Everything collapses to a static figure under prefers-reduced-motion.
  */
 const Constellation = () => {
   const nodes = useNodeGeometry();
@@ -54,7 +54,7 @@ const Constellation = () => {
       <div className="absolute inset-[8%] rounded-full border border-[#095D51]/[0.07]" aria-hidden="true" />
       <div className="absolute inset-[22%] rounded-full border border-[#095D51]/[0.06]" aria-hidden="true" />
 
-      {/* The orbit. Rotating this wrapper carries the connectors with it. */}
+      {/* The orbit. Rotating this wrapper carries the connectors & nodes with it. */}
       <motion.div
         className="absolute inset-0"
         animate={prefersReducedMotion ? undefined : { rotate: 360 }}
@@ -119,29 +119,43 @@ const Constellation = () => {
         ))}
       </motion.div>
 
-      {/* The hub — TutorDesk, holding it all together */}
-      <motion.div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
-        initial={{ opacity: 0, scale: 0.8 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      {/* The hub — TutorDesk logo, dead-centre and completely static. */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 10,
+        }}
       >
-        {/* Breathing halo */}
-        <motion.div
-          className="absolute inset-0 rounded-full bg-[#095D51]/10 blur-xl"
-          animate={prefersReducedMotion ? undefined : { scale: [1, 1.25, 1], opacity: [0.5, 0.85, 0.5] }}
-          transition={{ duration: 4.5, ease: 'easeInOut', repeat: Infinity }}
+        {/* Soft static halo */}
+        <div
+          className="absolute -inset-3 rounded-full blur-xl"
+          style={{ backgroundColor: 'rgba(9, 93, 81, 0.08)' }}
           aria-hidden="true"
         />
-        <motion.div
-          className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-white shadow-[0_12px_40px_rgba(9,93,81,0.18)] border border-white flex items-center justify-center"
-          animate={prefersReducedMotion ? undefined : { scale: [1, 1.03, 1] }}
-          transition={{ duration: 4.5, ease: 'easeInOut', repeat: Infinity }}
+        {/* The hub circle */}
+        <div
+          style={{
+            width: '128px',
+            height: '128px',
+            borderRadius: '50%',
+            backgroundColor: '#fff',
+            boxShadow: '0 12px 40px rgba(9,93,81,0.18)',
+            border: '1px solid #fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
-          <img src="/logo.png" alt="TutorDesk" className="w-12 sm:w-14 lg:w-16 object-contain" />
-        </motion.div>
-      </motion.div>
+          <img
+            src="/logo.png"
+            alt="TutorDesk"
+            style={{ width: '76px', height: 'auto', objectFit: 'contain' }}
+          />
+        </div>
+      </div>
     </div>
   );
 };

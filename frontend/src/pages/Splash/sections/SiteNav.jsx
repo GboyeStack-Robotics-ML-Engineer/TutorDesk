@@ -4,8 +4,11 @@ import { Link } from 'react-router-dom';
 export const SiteNav = () => (
   <nav className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-paper-200/70">
     <div className="flex items-center justify-between gap-6 px-6 py-4 max-w-7xl mx-auto">
-      <Link to="/" className="flex items-center gap-2 shrink-0">
-        <img src="/logo.png" alt="TutorDesk Logo" className="h-8 object-contain" />
+      <Link to="/" className="flex items-center gap-2.5 shrink-0">
+        <img src="/logo.png" alt="TutorDesk Logo" className="h-9 object-contain" />
+        <span className="font-bold text-[#095D51] tracking-tight text-base" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+          TutorDesk
+        </span>
       </Link>
 
       <div className="hidden md:flex items-center gap-8 text-ink-700 font-medium text-sm">

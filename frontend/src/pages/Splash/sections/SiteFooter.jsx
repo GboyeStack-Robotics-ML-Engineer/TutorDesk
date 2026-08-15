@@ -5,14 +5,13 @@ export const SiteFooter = () => (
   <footer className="bg-[#FAF9F5] border-t border-paper-200 py-12">
     <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
       <div className="flex flex-col items-center md:items-start gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <img
             src="/logo.png"
             alt="TutorDesk Logo"
-            className="w-6 h-6 rounded-md"
-            style={{ filter: 'grayscale(1) invert(1) brightness(1.5)', mixBlendMode: 'screen', backgroundColor: '#095D51' }}
+            className="h-8 object-contain"
           />
-          <span className="font-bold text-[#095D51] tracking-tight">TutorDesk</span>
+          <span className="font-bold text-[#095D51] tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>TutorDesk</span>
         </div>
         <p className="text-xs text-ink-500">Academic Operations. Order out of scatter.</p>
       </div>

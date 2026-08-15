@@ -19,6 +19,7 @@ export const Login = () => {
       <main className={styles.mainContent}>
         {/* Brand Header */}
         <div className={styles.brandHeader}>
+          <img src="/logo.png" alt="TutorDesk" className="mx-auto mb-2" style={{ height: '48px', objectFit: 'contain' }} />
           <h1 className="text-display-md text-primary">TutorDesk</h1>
         </div>
 
