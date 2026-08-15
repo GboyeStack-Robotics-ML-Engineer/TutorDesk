@@ -14,7 +14,7 @@ export const SignUp = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Sign Up attempt:', { fullName, email, phone, password });
+    navigate('/portal/view/verification-email-phone');
   };
 
   return (
