@@ -409,3 +409,19 @@ img[src=""] {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* ============================================
+   Landing Page — Hero Constellation
+   ============================================ */
+
+/* Pulls the dashes along each connector toward the TutorDesk hub. */
+@keyframes td-dash-flow {
+  from { stroke-dashoffset: 4; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="td-dash-flow"] {
+    animation: none !important;
+  }
+}
