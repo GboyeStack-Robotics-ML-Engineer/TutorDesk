@@ -20,70 +20,112 @@ const Splash = () => {
   // --- CONFIGURATION FOR DEVICE POSITIONS ---
   // Tweak x (horizontal offset), y (bottom offset), and z (stacking order) to perfectly position the devices.
   const devicePositions = {
-    desktop: { x: "50%", y: "48px", z: 10 },
-    tablet: { x: "32px", y: "48px", z: 20 },
-    mobile: { x: "48px", y: "48px", z: 30 },
+    desktop: { x: "50%", y: "40px", z: 10 },
+    tablet: { x: "0px", y: "0px", z: 20 },
+    mobile: { x: "0px", y: "0px", z: 30 },
   };
+
+  // Headline stats rendered in the strip directly beneath the hero band.
+  const heroStats = [
+    { icon: 'devices', value: '3', label: 'Devices synced' },
+    { icon: 'wifi_off', value: '24/7', label: 'Offline access' },
+    { icon: 'schedule', value: '10hrs', label: 'Saved weekly' },
+    { icon: 'cloud_done', value: '100%', label: 'Autosaved work' },
+  ];
 
   return (
     <div className="bg-[#FAF9F5] min-h-screen font-body text-ink-900 overflow-x-hidden">
       {/* Navigation */}
-      <nav className="flex items-center justify-between px-6 py-6 max-w-7xl mx-auto z-50 relative">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="TutorDesk Logo" className="h-8 object-contain" />
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-ink-700 font-medium text-sm">
-          <a href="#features" className="hover:text-primary transition-colors">Features</a>
-          <a href="#pricing" className="hover:text-primary transition-colors">Pricing</a>
-          <a href="#testimonials" className="hover:text-primary transition-colors">Testimonials</a>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/login" className="text-ink-700 font-medium hover:text-primary transition-colors text-sm">
-            Log in
+      <nav className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-paper-200/70">
+        <div className="flex items-center justify-between gap-6 px-6 py-4 max-w-7xl mx-auto">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <img src="/logo.png" alt="TutorDesk Logo" className="h-8 object-contain" />
           </Link>
-          <Link to="/signup" className="bg-[#C48037] hover:bg-[#B3702B] text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm shadow-sm">
-            Sign up
-          </Link>
+
+          <div className="hidden md:flex items-center gap-8 text-ink-700 font-medium text-sm">
+            <a href="#top" className="relative text-[#095D51] after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-[#095D51]">
+              Home
+            </a>
+            <a href="#features" className="hover:text-[#095D51] transition-colors">Features</a>
+            <a href="#testimonials" className="hover:text-[#095D51] transition-colors">Testimonials</a>
+            <a href="#pricing" className="hover:text-[#095D51] transition-colors">Pricing</a>
+          </div>
+
+          <div className="flex items-center gap-4 shrink-0">
+            <Link to="/login" className="text-ink-700 font-medium hover:text-[#095D51] transition-colors text-sm">
+              Log in
+            </Link>
+            <Link
+              to="/signup"
+              className="group bg-[#C48037] hover:bg-[#B3702B] text-white pl-4 pr-3 sm:pl-5 sm:pr-4 py-2.5 rounded-full font-medium transition-colors text-sm shadow-sm flex items-center gap-1.5 whitespace-nowrap"
+            >
+              Get started
+              <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+            </Link>
+          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 pt-12 pb-16 md:pt-16 md:pb-24 flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
-        <div className="max-w-xl w-full z-20">
-          <h1 className="text-4xl md:text-5xl lg:text-[56px] leading-[1.1] font-bold text-[#095D51] mb-6 tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            One desk. Three screens.
-          </h1>
-          <p className="text-lg text-ink-600 mb-8 leading-relaxed">
-            Show the same TutorDesk experience on web, mobile, and desktop. A calmer landing page that brings order to the chaos.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
-            <Link to="/signup" className="w-full sm:w-auto bg-[#C48037] hover:bg-[#B3702B] text-white font-medium px-6 py-3.5 rounded-lg transition-colors text-center shadow-sm">
-              Launch the desk
-            </Link>
-            <a href="#features" className="w-full sm:w-auto bg-white border border-paper-300 hover:bg-paper-50 text-ink-900 font-medium px-6 py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm">
-              See the experience
-            </a>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4 pt-6 border-t border-paper-200">
-             <div>
-                <strong className="block text-2xl font-bold text-[#095D51]" style={{ fontFamily: "'DM Sans', sans-serif" }}>3</strong>
-                <span className="text-xs text-ink-500 font-medium">platforms</span>
-              </div>
-              <div>
-                <strong className="block text-2xl font-bold text-[#095D51]" style={{ fontFamily: "'DM Sans', sans-serif" }}>1</strong>
-                <span className="text-xs text-ink-500 font-medium">workflow</span>
-              </div>
-              <div>
-                <strong className="block text-2xl font-bold text-[#095D51]" style={{ fontFamily: "'DM Sans', sans-serif" }}>24/7</strong>
-                <span className="text-xs text-ink-500 font-medium">access</span>
-              </div>
-          </div>
+      <section id="top" className="relative overflow-hidden">
+        {/* Soft brand-tinted band */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#D8EDE7] via-[#E7F4F0] to-[#F5FAF8]" aria-hidden="true" />
+
+        {/* Decorative geometry — echoes the arcs in the reference design */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div className="absolute -left-56 -top-24 w-[520px] h-[520px] rounded-full border-[56px] border-white/45" />
+          <div className="absolute -left-24 top-40 w-[260px] h-[260px] rounded-full border-[28px] border-white/35" />
+          <div className="absolute -right-40 -top-32 w-[560px] h-[560px] rounded-full bg-white/25" />
+          <div className="absolute right-10 bottom-0 w-[320px] h-[320px] rounded-full bg-[#095D51]/[0.04]" />
+          <svg className="absolute left-6 bottom-10 w-40 h-40 text-[#095D51]/25 hidden sm:block" viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="0.5 9" />
+          </svg>
         </div>
 
-        {/* Multi-Device Layered Mockup */}
-        <div className="relative w-full lg:w-[750px] h-[350px] sm:h-[450px] lg:h-[550px] flex items-center justify-center z-10 mt-12 lg:mt-0 mx-auto">
-          
+        <div className="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-10 lg:gap-12 items-end pt-14 md:pt-20">
+          {/* Copy column */}
+          <div className="max-w-xl w-full pb-2 lg:pb-24">
+            <span className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-white pl-1.5 pr-4 py-1.5 rounded-full shadow-sm mb-7">
+              <span className="w-6 h-6 rounded-full bg-[#095D51] text-white flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+              </span>
+              <span className="text-xs font-semibold text-[#095D51] tracking-tight">Built for tutors who run it all</span>
+            </span>
+
+            <h1
+              className="text-4xl md:text-5xl lg:text-[56px] leading-[1.08] font-bold text-ink-900 mb-5 tracking-tight"
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
+            >
+              Bring Order to Your
+              <br />
+              <span className="text-[#095D51]">Tutoring Practice</span>
+            </h1>
+
+            <p className="text-base md:text-lg text-ink-600 mb-8 leading-relaxed max-w-lg">
+              Classes, students, payments and reports in one calm workspace &mdash; on web, mobile and desktop, even when the network drops.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
+              <Link
+                to="/signup"
+                className="group bg-[#C48037] hover:bg-[#B3702B] text-white font-medium pl-7 pr-6 py-3.5 rounded-full transition-colors shadow-sm flex items-center justify-center gap-2"
+              >
+                Get started
+                <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+              </Link>
+              <a
+                href="#features"
+                className="group bg-white hover:bg-paper-100 text-ink-900 border border-white font-medium pl-7 pr-6 py-3.5 rounded-full transition-colors shadow-sm flex items-center justify-center gap-2"
+              >
+                See the experience
+                <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Multi-Device Layered Mockup — rises out of the band, like the reference photo */}
+          <div className="relative w-full h-[260px] sm:h-[400px] lg:h-[500px] z-10 mx-auto mb-10 md:mb-14 lg:mb-20">
+
           {/* Desktop Device (Back Center) */}
           <div 
             className="absolute -translate-x-1/2 w-[85%] max-w-[600px] aspect-[16/10] bg-[#1C1C1E] rounded-2xl shadow-2xl border border-paper-300 overflow-hidden flex flex-col transform transition-transform duration-500 hover:scale-[1.02] hover:-translate-y-2"
@@ -137,6 +179,24 @@ const Splash = () => {
             </div>
           </div>
 
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Stats Strip */}
+      <section className="bg-white border-b border-paper-200">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-paper-200">
+          {heroStats.map(({ icon, value, label }) => (
+            <div key={label} className="flex items-center justify-center gap-3 py-8 px-4">
+              <span className="material-symbols-outlined text-[32px] text-[#095D51]/80 shrink-0">{icon}</span>
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-[#095D51] leading-none" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  {value}
+                </div>
+                <div className="text-[11px] text-ink-500 font-semibold uppercase tracking-wider mt-1.5">{label}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
