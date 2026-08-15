@@ -22,6 +22,7 @@ export const SignUp = () => {
       <main className={styles.mainContent}>
         {/* Brand Wordmark */}
         <div className={styles.brandHeader}>
+          <img src="/logo.png" alt="TutorDesk" className="mx-auto mb-2" style={{ height: '48px', objectFit: 'contain' }} />
           <h1 className="text-display-md text-primary">TutorDesk</h1>
           <p className={styles.subtitle}>Independent Operations</p>
         </div>
