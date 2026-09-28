@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../../components/ui/Input/Input';
 import { Button } from '../../components/ui/Button/Button';
+import { useAuth } from '../../context/AuthContext';
+import { NetworkError } from '../../lib/api';
 import styles from './SignUp.module.css';
 
 export const SignUp = () => {
@@ -10,11 +12,31 @@ export const SignUp = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/portal/view/branding-settings');
+    setError('');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await signup({ name: fullName, email, phone: `+234${phone}`, password });
+      navigate('/portal/view/branding-settings');
+    } catch (err) {
+      setError(
+        err instanceof NetworkError
+          ? err.message
+          : err.message || 'Could not create your account. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -98,10 +120,16 @@ export const SignUp = () => {
               </p>
             </div>
 
+            {error && (
+              <p role="alert" className={styles.formError}>
+                {error}
+              </p>
+            )}
+
             {/* Submit Button */}
             <div className={styles.submitContainer}>
-              <Button type="submit" fullWidth>
-                Create account
+              <Button type="submit" fullWidth disabled={isSubmitting}>
+                {isSubmitting ? 'Creating account…' : 'Create account'}
               </Button>
             </div>
           </form>

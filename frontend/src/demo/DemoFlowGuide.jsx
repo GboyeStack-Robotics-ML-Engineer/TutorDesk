@@ -12,13 +12,32 @@ export const DemoFlowGuide = () => {
   const onFlow = idx !== -1;
   const current = onFlow ? demoFlow[idx] : null;
 
+  // Wired/live pages opt the interceptor out entirely (see the click handler
+  // below) — but the widget itself is a fixed bottom-right box that can sit
+  // directly over a real page's own bottom-right primary button (e.g. Add
+  // Student's submit), silently eating clicks a real user would make too.
+  // Auto-collapse to the small pill on those pages so it's never in the way
+  // of the thing it just stopped interfering with in JS.
+  useEffect(() => {
+    const isLivePage = document.querySelector('[data-live-page]') != null;
+    setMinimized(isLivePage);
+  }, [location.pathname]);
+
+  // Intercept clicks on likely primary buttons and advance the flow.
   useEffect(() => {
     if (!onFlow) return;
     const target = nextInFlow[location.pathname];
     if (!target) return;
     const handler = (e) => {
       const btn = e.target.closest('button, a');
-      if (!btn || btn.closest('[data-demo-guide]')) return;
+      if (!btn) return;
+      // Ignore our own guide controls.
+      if (btn.closest('[data-demo-guide]')) return;
+      // Pages wired to real onSubmit/onClick handlers opt out entirely — a
+      // delayed forced navigate() below would still race a real (possibly
+      // async) submit handler's own success redirect (e.g. Add Student's
+      // "Add student" button matches PRIMARY_LABELS).
+      if (btn.closest('[data-live-page]')) return;
       const label = (btn.textContent || '').trim().toLowerCase();
       if (!label) return;
       if (PRIMARY_LABELS.some((l) => label === l || label.startsWith(l) || label.includes(l))) {

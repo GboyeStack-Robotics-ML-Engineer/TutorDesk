@@ -1,17 +1,37 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Input } from '../../components/ui/Input/Input';
 import { Button } from '../../components/ui/Button/Button';
+import { useAuth } from '../../context/AuthContext';
+import { NetworkError } from '../../lib/api';
 import styles from './Login.module.css';
 
 export const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/portal/view/setup-checklist-home-variant');
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await login({ identifier, password });
+      const redirectTo = location.state?.from?.pathname || '/portal/view/setup-checklist-home-variant';
+      navigate(redirectTo, { replace: true });
+    } catch (err) {
+      setError(
+        err instanceof NetworkError
+          ? err.message
+          : err.message || 'Could not sign in. Check your details and try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,10 +76,16 @@ export const Login = () => {
               }
             />
 
+            {error && (
+              <p role="alert" className={styles.formError}>
+                {error}
+              </p>
+            )}
+
             {/* Submit Button */}
             <div className={styles.submitContainer}>
-              <Button type="submit" fullWidth>
-                Log in
+              <Button type="submit" fullWidth disabled={isSubmitting}>
+                {isSubmitting ? 'Signing in…' : 'Log in'}
               </Button>
             </div>
           </form>
