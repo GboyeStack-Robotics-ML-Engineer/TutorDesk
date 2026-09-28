@@ -99,6 +99,16 @@ class StudentSerializer(serializers.ModelSerializer):
         return list(obj.assignments.values_list('subject', flat=True))
 
 
+class CompleteOnboardingSerializer(serializers.Serializer):
+    """What the WhatsApp service PATCHes back once a parent finishes
+    onboarding — see ../whatsapp/app/conversation.py's _notify_backend_complete."""
+
+    subjects = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+    goals = serializers.CharField(required=False, allow_blank=True, default='')
+    availability = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+    reminderChannel = serializers.ChoiceField(choices=['whatsapp', 'sms', 'email'], default='whatsapp')
+
+
 # ---- classes ---------------------------------------------------------------
 
 class ClassCreateSerializer(serializers.Serializer):

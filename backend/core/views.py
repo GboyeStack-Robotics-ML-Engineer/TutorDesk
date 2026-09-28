@@ -1,4 +1,7 @@
+import os
+
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -10,6 +13,7 @@ from .models import Assignment, ClassSession, Student
 from .serializers import (
     ClassCreateSerializer,
     ClassSessionSerializer,
+    CompleteOnboardingSerializer,
     LoginSerializer,
     SignupSerializer,
     StudentCreateSerializer,
@@ -17,6 +21,8 @@ from .serializers import (
     UserSerializer,
 )
 from .services.whatsapp import trigger_onboarding
+
+INTERNAL_SERVICE_TOKEN = os.getenv('INTERNAL_SERVICE_TOKEN', 'dev-shared-secret-change-me')
 
 
 def _auth_payload(user):
@@ -138,3 +144,38 @@ class ClassListCreateView(APIView):
         )
 
         return Response(ClassSessionSerializer(session).data, status=status.HTTP_201_CREATED)
+
+
+# ---- WhatsApp service callback -----------------------------------------------
+
+class CompleteOnboardingView(APIView):
+    """Called by ../whatsapp/ once a parent finishes onboarding — not a
+    user-authenticated call, so it checks the shared internal token instead
+    of JWT. See core/services/whatsapp.py for the other half of this seam."""
+
+    permission_classes = [AllowAny]
+
+    def patch(self, request, student_id):
+        if request.headers.get('X-Internal-Token') != INTERNAL_SERVICE_TOKEN:
+            return Response({'detail': 'Invalid or missing internal token'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        student = get_object_or_404(Student, id=student_id)
+        serializer = CompleteOnboardingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        student.goals = data.get('goals') or student.goals
+        student.availability = data.get('availability') or student.availability
+        student.reminder_channel = data.get('reminderChannel', student.reminder_channel)
+        student.status = Student.Status.ACTIVE
+        student.save()
+
+        existing_subjects = set(student.assignments.values_list('subject', flat=True))
+        assignment = student.assignments.first()
+        tutor = assignment.tutor if assignment else None
+        if tutor:
+            for subject in data.get('subjects', []):
+                if subject and subject not in existing_subjects:
+                    Assignment.objects.create(student=student, tutor=tutor, subject=subject)
+
+        return Response(StudentSerializer(student).data)
