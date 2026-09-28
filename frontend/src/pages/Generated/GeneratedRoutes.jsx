@@ -1,6 +1,13 @@
 
 import React from 'react';
 import { Route } from 'react-router-dom';
+import { InvoiceMaker } from './InvoiceMaker';
+import { QuizMaker } from './QuizMaker';
+import { BrandSetup } from './BrandSetup';
+import { MeetingGenerator } from './MeetingGenerator';
+import { GoogleEmbed } from './GoogleEmbed';
+import { LiveClassroomDesktop } from './LiveClassroomDesktop';
+
 import { AddEditStudentDesktop } from './AddEditStudentDesktop';
 import { AiPromptLibraryDesktop } from './AiPromptLibraryDesktop';
 import { ClassroomPostClassWrap } from './ClassroomPostClassWrap';
@@ -11,7 +18,6 @@ import { FlaggedStudentsDirectoryView } from './FlaggedStudentsDirectoryView';
 import { GlobalSearchResultsDesktop } from './GlobalSearchResultsDesktop';
 import { InvoiceDetailDesktop } from './InvoiceDetailDesktop';
 import { LessonTemplatesLibraryDesktop } from './LessonTemplatesLibraryDesktop';
-import { LiveClassroomDesktop } from './LiveClassroomDesktop';
 import { LessonTemplateEditorDesktop } from './LessonTemplateEditorDesktop';
 import { LessonTemplateEditorDesktopAdmin } from './LessonTemplateEditorDesktopAdmin';
 import { MaterialsLibraryDesktop } from './MaterialsLibraryDesktop';
@@ -65,7 +71,6 @@ export const generatedRoutes = [
   { path: "/view/global-search-results-desktop", component: GlobalSearchResultsDesktop },
   { path: "/view/invoice-detail-desktop", component: InvoiceDetailDesktop },
   { path: "/view/lesson-templates-library-desktop", component: LessonTemplatesLibraryDesktop },
-  { path: "/view/live-classroom-desktop", component: LiveClassroomDesktop },
   { path: "/view/lesson-template-editor-desktop", component: LessonTemplateEditorDesktop },
   { path: "/view/lesson-template-editor-desktop-admin", component: LessonTemplateEditorDesktopAdmin },
   { path: "/view/materials-library-desktop", component: MaterialsLibraryDesktop },
@@ -107,4 +112,11 @@ export const generatedRoutes = [
   { path: "/view/subscriptions-plans-desktop", component: SubscriptionsPlansDesktop },
   { path: "/view/the-organized-desk", component: TheOrganizedDesk },
   { path: "/view/verification-email-phone", component: VerificationEmailPhone },
+
+  { path: "/view/invoice-maker", component: InvoiceMaker },
+  { path: "/view/quiz-maker", component: QuizMaker },
+  { path: "/view/branding-settings", component: BrandSetup },
+  { path: "/view/meeting-generator", component: MeetingGenerator },
+  { path: "/view/google-embed", component: GoogleEmbed },
+  { path: "/view/live-classroom-desktop", component: LiveClassroomDesktop },
 ];
