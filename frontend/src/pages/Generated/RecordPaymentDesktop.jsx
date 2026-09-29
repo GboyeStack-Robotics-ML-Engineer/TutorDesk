@@ -72,17 +72,14 @@ export const RecordPaymentDesktop = () => {
     }
   };
 
-  if (loading) return <p className="font-caption text-caption text-ink-500 p-space-6">Loading…</p>;
-  if (loadError) {
-    return (
-      <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3 m-space-6">
-        {loadError}
-      </p>
-    );
-  }
-
   return (
     <div data-live-page="record-payment">
+      {loading && <p className="font-caption text-caption text-ink-500 p-space-6">Loading…</p>}
+      {loadError && (
+        <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3 m-space-6">
+          {loadError}
+        </p>
+      )}
       <div className="p-space-6 overflow-y-auto flex-grow space-y-space-8">
         {invoice && (
           <p className="font-caption text-caption text-ink-500">

@@ -1,15 +1,65 @@
 from datetime import timedelta
 from unittest import mock
 
+import httpx
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Assignment, ClassSession, GuardianLink, Invoice, LoginOTP, Material, Quiz, Student
+from .models import Assignment, ClassSession, GoogleAccount, GuardianLink, Invoice, LoginOTP, Material, Quiz, Student
+from .services import google as google_service
 
 User = get_user_model()
+
+
+# ---- test doubles for Google's HTTP APIs -------------------------------------
+
+class FakeGoogleResponse:
+    def __init__(self, status_code=200, json_data=None):
+        self.status_code = status_code
+        self._json = json_data or {}
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise httpx.HTTPStatusError('error', request=None, response=self)
+
+    def json(self):
+        return self._json
+
+
+class FakeGoogleClient:
+    """Stands in for httpx.Client — google.py's functions each do
+    `with httpx.Client(...) as client: client.post(...)` (or get/patch/
+    delete), so this just needs the same shape. `responses` is consumed in
+    call order; `calls` records what was sent for assertions."""
+
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.calls = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def _handle(self, method, url, **kwargs):
+        self.calls.append((method, url, kwargs))
+        return self.responses.pop(0)
+
+    def post(self, url, **kwargs):
+        return self._handle('POST', url, **kwargs)
+
+    def get(self, url, **kwargs):
+        return self._handle('GET', url, **kwargs)
+
+    def patch(self, url, **kwargs):
+        return self._handle('PATCH', url, **kwargs)
+
+    def delete(self, url, **kwargs):
+        return self._handle('DELETE', url, **kwargs)
 
 
 class AuthTests(APITestCase):
@@ -446,3 +496,295 @@ class OtpLoginTests(APITestCase):
         response = self.client.post('/api/auth/otp/request/', {'phone': '2349990001111'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(LoginOTP.objects.filter(phone='2349990001111').exists())
+
+
+# ---- services/google.py — unit tests against a fake HTTP client -------------
+
+class GoogleServiceTests(APITestCase):
+    """Exercises services/google.py directly, against FakeGoogleClient
+    rather than a real Google account — see that module's docstring for
+    why (no real OAuth credentials exist in this environment yet)."""
+
+    def setUp(self):
+        self.tutor = User.objects.create_user(username='gt@example.com', email='gt@example.com', password='pw-1')
+        self.account = GoogleAccount.objects.create(
+            tutor=self.tutor, google_email='gt@gmail.com',
+            access_token='valid-token', refresh_token='refresh-token',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        self.student = Student.objects.create(name='Ada', guardian_name='G', guardian_whatsapp='+1')
+        self.session = ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(days=1),
+        )
+
+    def test_build_auth_url_and_resolve_state_roundtrip(self):
+        with mock.patch.object(google_service, 'GOOGLE_CLIENT_ID', 'test-client-id'):
+            url = google_service.build_auth_url(self.tutor.id)
+        self.assertIn('test-client-id', url)
+        self.assertIn('accounts.google.com', url)
+
+        state = url.split('state=')[1].split('&')[0]
+        from urllib.parse import unquote
+        self.assertEqual(google_service.resolve_state(unquote(state)), str(self.tutor.id))
+
+    def test_resolve_state_rejects_a_tampered_state(self):
+        self.assertIsNone(google_service.resolve_state('not-a-real-state-token'))
+
+    def test_exchange_code_returns_tokens_and_email(self):
+        fake_client = FakeGoogleClient([
+            FakeGoogleResponse(200, {'access_token': 'a', 'refresh_token': 'r', 'expires_in': 3600, 'scope': 'x'}),
+            FakeGoogleResponse(200, {'email': 'tutor@gmail.com'}),
+        ])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            result = google_service.exchange_code('auth-code')
+
+        self.assertEqual(result['access_token'], 'a')
+        self.assertEqual(result['email'], 'tutor@gmail.com')
+
+    def test_exchange_code_returns_none_on_failure(self):
+        fake_client = FakeGoogleClient([FakeGoogleResponse(400, {})])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            result = google_service.exchange_code('bad-code')
+        self.assertIsNone(result)
+
+    def test_create_event_stores_class_marker_and_returns_id(self):
+        fake_client = FakeGoogleClient([FakeGoogleResponse(200, {'id': 'evt-123'})])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            event_id = google_service.create_event(self.account, self.session)
+
+        self.assertEqual(event_id, 'evt-123')
+        sent_json = fake_client.calls[0][2]['json']
+        self.assertEqual(sent_json['extendedProperties']['private']['tutordeskClassId'], str(self.session.id))
+
+    def test_update_event_noop_without_a_stored_event_id(self):
+        fake_client = FakeGoogleClient([])  # would raise IndexError if called
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            google_service.update_event(self.account, self.session)  # no exception, no calls
+        self.assertEqual(fake_client.calls, [])
+
+    def test_delete_event_treats_already_gone_as_success(self):
+        self.session.google_event_id = 'evt-123'
+        fake_client = FakeGoogleClient([FakeGoogleResponse(404, {})])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            google_service.delete_event(self.account, self.session)  # must not raise
+
+    def test_create_task_with_due_date(self):
+        fake_client = FakeGoogleClient([FakeGoogleResponse(200, {'id': 'task-1'})])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            task_id = google_service.create_task(self.account, 'Follow up', due_date=timezone.now().date())
+        self.assertEqual(task_id, 'task-1')
+
+    def test_pull_class_event_changes_only_reconciles_tagged_events(self):
+        fake_client = FakeGoogleClient([FakeGoogleResponse(200, {
+            'items': [
+                {  # ours — moved
+                    'status': 'confirmed',
+                    'start': {'dateTime': '2026-02-01T10:00:00Z'},
+                    'extendedProperties': {'private': {'tutordeskClassId': str(self.session.id)}},
+                },
+                {  # ours — cancelled on the Google side
+                    'status': 'cancelled',
+                    'extendedProperties': {'private': {'tutordeskClassId': 'some-other-class-id'}},
+                },
+                {'status': 'confirmed', 'start': {'dateTime': '2026-02-01T12:00:00Z'}},  # not ours — ignored
+            ],
+            'nextSyncToken': 'sync-token-2',
+        })])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            changes = google_service.pull_class_event_changes(self.account)
+
+        self.assertEqual(len(changes), 2)
+        self.assertEqual(changes[0], (str(self.session.id), {'starts_at': '2026-02-01T10:00:00Z'}))
+        self.assertEqual(changes[1], ('some-other-class-id', {'cancelled': True}))
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.calendar_sync_token, 'sync-token-2')
+
+
+# ---- Google connect/callback/status/disconnect views -------------------------
+
+class GoogleConnectTests(AuthenticatedAPITestCase):
+    def test_connect_returns_501_when_not_configured(self):
+        with mock.patch.object(google_service, 'GOOGLE_CLIENT_ID', ''):
+            response = self.client.get('/api/google/connect/')
+        self.assertEqual(response.status_code, status.HTTP_501_NOT_IMPLEMENTED)
+
+    def test_connect_returns_an_auth_url_when_configured(self):
+        with mock.patch.object(google_service, 'GOOGLE_CLIENT_ID', 'x'), \
+             mock.patch.object(google_service, 'GOOGLE_CLIENT_SECRET', 'y'):
+            response = self.client.get('/api/google/connect/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('accounts.google.com', response.data['authUrl'])
+
+    def test_connect_requires_auth(self):
+        self.client.credentials()
+        response = self.client.get('/api/google/connect/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class GoogleCallbackTests(APITestCase):
+    def setUp(self):
+        self.tutor = User.objects.create_user(username='cb@example.com', email='cb@example.com', password='pw-1')
+
+    def test_missing_code_redirects_denied(self):
+        response = self.client.get('/api/google/callback/', {'state': 'whatever'})
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertIn('google=denied', response.url)
+
+    def test_invalid_state_redirects_error(self):
+        response = self.client.get('/api/google/callback/', {'code': 'abc', 'state': 'garbage'})
+        self.assertIn('google=error', response.url)
+
+    def test_valid_callback_creates_a_google_account(self):
+        state = google_service.build_auth_url(self.tutor.id).split('state=')[1].split('&')[0]
+        from urllib.parse import unquote
+        state = unquote(state)
+
+        fake_result = {
+            'access_token': 'a', 'refresh_token': 'r', 'expires_in': 3600,
+            'scope': 'calendar', 'email': 'cb@gmail.com',
+        }
+        with mock.patch.object(google_service, 'exchange_code', return_value=fake_result):
+            response = self.client.get('/api/google/callback/', {'code': 'abc', 'state': state})
+
+        self.assertIn('google=connected', response.url)
+        account = GoogleAccount.objects.get(tutor=self.tutor)
+        self.assertEqual(account.google_email, 'cb@gmail.com')
+
+    def test_exchange_failure_redirects_error(self):
+        state = google_service.build_auth_url(self.tutor.id).split('state=')[1].split('&')[0]
+        from urllib.parse import unquote
+        state = unquote(state)
+
+        with mock.patch.object(google_service, 'exchange_code', return_value=None):
+            response = self.client.get('/api/google/callback/', {'code': 'abc', 'state': state})
+        self.assertIn('google=error', response.url)
+
+
+class GoogleStatusAndDisconnectTests(AuthenticatedAPITestCase):
+    def test_status_when_not_connected(self):
+        response = self.client.get('/api/google/status/')
+        self.assertEqual(response.data, {'connected': False, 'email': ''})
+
+    def test_status_when_connected(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, google_email='t@gmail.com', access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        response = self.client.get('/api/google/status/')
+        self.assertEqual(response.data, {'connected': True, 'email': 't@gmail.com'})
+
+    def test_disconnect_removes_the_account(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, google_email='t@gmail.com', access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(google_service, 'revoke'):
+            response = self.client.post('/api/google/disconnect/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(GoogleAccount.objects.filter(tutor=self.tutor).exists())
+
+
+# ---- class lifecycle (reschedule / cancel / complete) + Google push sync ----
+
+class ClassLifecycleTests(AuthenticatedAPITestCase):
+    def setUp(self):
+        super().setUp()
+        self.student = Student.objects.create(name='Ada', guardian_name='G', guardian_whatsapp='+1')
+        Assignment.objects.create(student=self.student, tutor=self.tutor, subject='Mathematics')
+
+    def _create_session(self):
+        return self.client.post('/api/classes/', {
+            'studentId': str(self.student.id), 'subject': 'Mathematics',
+            'startsAt': (timezone.now() + timedelta(days=1)).isoformat(),
+        }, format='json')
+
+    def test_create_pushes_to_google_when_connected(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(google_service, 'create_event', return_value='evt-1') as mocked:
+            response = self._create_session()
+        mocked.assert_called_once()
+        self.assertTrue(response.data['googleSynced'])
+
+    def test_create_without_google_connected_does_not_sync(self):
+        response = self._create_session()
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertFalse(response.data['googleSynced'])
+
+    def test_reschedule_updates_time_and_syncs(self):
+        created = self._create_session()
+        class_id = created.data['id']
+        new_time = (timezone.now() + timedelta(days=3)).isoformat()
+
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(google_service, 'update_event') as mocked:
+            response = self.client.patch(f'/api/classes/{class_id}/', {'startsAt': new_time}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mocked.assert_called_once()
+
+    def test_reschedule_is_scoped_to_the_requesting_tutor(self):
+        created = self._create_session()
+        class_id = created.data['id']
+        other_tutor = User.objects.create_user(username='ot@example.com', email='ot@example.com', password='pw-1')
+        token = str(RefreshToken.for_user(other_tutor).access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+        response = self.client.patch(
+            f'/api/classes/{class_id}/', {'startsAt': timezone.now().isoformat()}, format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cancel_sets_status_and_clears_google_event(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(google_service, 'create_event', return_value='evt-1'):
+            created = self._create_session()
+        class_id = created.data['id']
+
+        with mock.patch.object(google_service, 'delete_event') as mocked:
+            response = self.client.post(f'/api/classes/{class_id}/cancel/', {'reason': 'Illness'}, format='json')
+
+        self.assertEqual(response.data['status'], 'cancelled')
+        self.assertEqual(response.data['cancelReason'], 'Illness')
+        self.assertFalse(response.data['googleSynced'])
+        mocked.assert_called_once()
+
+    def test_complete_without_homework_due_date_does_not_create_a_task(self):
+        created = self._create_session()
+        class_id = created.data['id']
+
+        with mock.patch.object(google_service, 'create_task') as mocked:
+            response = self.client.post(f'/api/classes/{class_id}/complete/', {
+                'attendance': 'present', 'notes': 'Great session',
+            }, format='json')
+
+        self.assertEqual(response.data['status'], 'completed')
+        self.assertEqual(response.data['attendance'], 'present')
+        mocked.assert_not_called()
+
+    def test_complete_with_homework_due_date_creates_a_google_task_when_connected(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(google_service, 'create_event', return_value='evt-1'):
+            created = self._create_session()
+        class_id = created.data['id']
+        due = (timezone.now().date() + timedelta(days=7)).isoformat()
+
+        with mock.patch.object(google_service, 'create_task', return_value='task-1') as mocked:
+            response = self.client.post(f'/api/classes/{class_id}/complete/', {
+                'attendance': 'present', 'notes': 'Covered fractions', 'homeworkDueAt': due,
+            }, format='json')
+
+        self.assertEqual(response.data['homeworkDueAt'], due)
+        mocked.assert_called_once()

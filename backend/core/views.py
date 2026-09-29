@@ -5,7 +5,7 @@ from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
@@ -17,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import (
     Assignment,
     ClassSession,
+    GoogleAccount,
     GuardianLink,
     Invoice,
     InvoiceItem,
@@ -30,9 +31,13 @@ from .models import (
 )
 from .serializers import (
     BrandSerializer,
+    ClassCancelSerializer,
+    ClassCompleteSerializer,
     ClassCreateSerializer,
+    ClassRescheduleSerializer,
     ClassSessionSerializer,
     CompleteOnboardingSerializer,
+    GoogleAccountSerializer,
     InvoiceCreateSerializer,
     InvoiceSerializer,
     LoginSerializer,
@@ -48,6 +53,7 @@ from .serializers import (
     StudentSerializer,
     UserSerializer,
 )
+from .services import google as google_service
 from .services.whatsapp import send_login_otp, trigger_onboarding
 
 INTERNAL_SERVICE_TOKEN = os.getenv('INTERNAL_SERVICE_TOKEN', 'dev-shared-secret-change-me')
@@ -123,6 +129,10 @@ class StudentListCreateView(APIView):
 
 # ---- classes -------------------------------------------------------------------
 
+def _google_account_for(tutor):
+    return GoogleAccount.objects.filter(tutor=tutor).first()
+
+
 class ClassListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -172,7 +182,96 @@ class ClassListCreateView(APIView):
             notes=data.get('notes', ''),
         )
 
+        account = _google_account_for(request.user)
+        if account:
+            event_id = google_service.create_event(account, session)
+            if event_id:
+                session.google_event_id = event_id
+                session.save(update_fields=['google_event_id'])
+
         return Response(ClassSessionSerializer(session).data, status=status.HTTP_201_CREATED)
+
+
+class ClassDetailView(APIView):
+    """Reschedule a class (PATCH) — see ClassCancelView / ClassCompleteView
+    for the other two class-lifecycle actions, split out because each has
+    a distinctly shaped payload and a different Google side-effect."""
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, class_id):
+        session = get_object_or_404(ClassSession, id=class_id, tutor=request.user)
+        serializer = ClassRescheduleSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        session.starts_at = data['startsAt']
+        if 'durationMinutes' in data:
+            session.duration_minutes = data['durationMinutes']
+        if 'notes' in data:
+            session.notes = data['notes']
+        session.save()
+
+        account = _google_account_for(request.user)
+        if account:
+            google_service.update_event(account, session)
+
+        return Response(ClassSessionSerializer(session).data)
+
+
+class ClassCancelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, class_id):
+        session = get_object_or_404(ClassSession, id=class_id, tutor=request.user)
+        serializer = ClassCancelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        session.status = ClassSession.Status.CANCELLED
+        session.cancel_reason = serializer.validated_data['reason']
+        session.save()
+
+        account = _google_account_for(request.user)
+        if account:
+            google_service.delete_event(account, session)
+            session.google_event_id = ''
+            session.save(update_fields=['google_event_id'])
+
+        return Response(ClassSessionSerializer(session).data)
+
+
+class ClassCompleteView(APIView):
+    """The post-class wrap-up: attendance, session notes, and an optional
+    homework due date, which becomes a Google Task when the tutor has
+    Calendar/Tasks connected (see services/google.py's create_task)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, class_id):
+        session = get_object_or_404(ClassSession, id=class_id, tutor=request.user)
+        serializer = ClassCompleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        session.status = ClassSession.Status.COMPLETED
+        session.attendance = data['attendance']
+        session.session_notes = data.get('notes', '')
+        session.homework_due_at = data.get('homeworkDueAt')
+        session.save()
+
+        account = _google_account_for(request.user)
+        if account and session.homework_due_at:
+            task_id = google_service.create_task(
+                account,
+                title=f'Follow up: {session.subject} with {session.student.name}',
+                notes=session.session_notes,
+                due_date=session.homework_due_at,
+            )
+            if task_id:
+                session.google_task_id = task_id
+                session.save(update_fields=['google_task_id'])
+
+        return Response(ClassSessionSerializer(session).data)
 
 
 # ---- WhatsApp service callback -----------------------------------------------
@@ -466,3 +565,83 @@ class OtpVerifyView(APIView):
             return Response({'detail': 'No account found for this phone number.'}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(_auth_payload(user))
+
+
+# ---- Google Calendar/Tasks connect (tutor-only) ------------------------------
+
+class GoogleConnectView(APIView):
+    """Step 1: the frontend fetches the consent URL and redirects the
+    browser to it itself — Google's OAuth screen can't be reached inside
+    an XHR/fetch response. See services/google.py's build_auth_url for
+    what the `state` param carries."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not google_service.is_configured():
+            return Response(
+                {'detail': 'Google integration is not configured on this server yet.'},
+                status=status.HTTP_501_NOT_IMPLEMENTED,
+            )
+        return Response({'authUrl': google_service.build_auth_url(request.user.id)})
+
+
+class GoogleCallbackView(APIView):
+    """Step 2: Google redirects the browser here directly (no auth header
+    of its own) after the tutor approves or denies access — see
+    services/google.py's resolve_state for how this is tied back to a
+    specific tutor. Always redirects back into the frontend rather than
+    returning JSON, since a browser lands here, not a fetch() caller."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        settings_url = f'{google_service.FRONTEND_BASE_URL}/portal/view/settings-data-sync-preferences'
+
+        error = request.query_params.get('error')
+        code = request.query_params.get('code')
+        state = request.query_params.get('state')
+        if error or not code or not state:
+            return redirect(f'{settings_url}?google=denied')
+
+        tutor_id = google_service.resolve_state(state)
+        if tutor_id is None:
+            return redirect(f'{settings_url}?google=error')
+
+        tokens = google_service.exchange_code(code)
+        if tokens is None:
+            return redirect(f'{settings_url}?google=error')
+
+        GoogleAccount.objects.update_or_create(
+            tutor_id=tutor_id,
+            defaults={
+                'google_email': tokens['email'],
+                'access_token': tokens['access_token'],
+                'refresh_token': tokens['refresh_token'],
+                'token_expires_at': timezone.now() + timedelta(seconds=tokens['expires_in']),
+                'scope': tokens['scope'],
+            },
+        )
+        return redirect(f'{settings_url}?google=connected')
+
+
+class GoogleStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        account = _google_account_for(request.user)
+        return Response(GoogleAccountSerializer({
+            'connected': account is not None,
+            'email': account.google_email if account else '',
+        }).data)
+
+
+class GoogleDisconnectView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        account = _google_account_for(request.user)
+        if account:
+            google_service.revoke(account)
+            account.delete()
+        return Response({'connected': False})

@@ -45,20 +45,18 @@ export const InvoiceDetailDesktop = () => {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (loading) return <p className="font-caption text-caption text-ink-500 p-space-6">Loading…</p>;
-  if (loadError) {
-    return (
-      <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3 m-space-6">
-        {loadError}
-      </p>
-    );
-  }
-  if (!invoice) return null;
-
-  const style = STATUS_STYLE[invoice.status] || STATUS_STYLE.unpaid;
+  const style = invoice ? (STATUS_STYLE[invoice.status] || STATUS_STYLE.unpaid) : null;
 
   return (
-    <div data-live-page="invoice-detail" className="flex-1 max-w-[1200px] w-full mx-auto px-gutter-mobile md:px-gutter-desktop py-space-6 md:py-space-8 grid grid-cols-1 lg:grid-cols-12 gap-space-6">
+    <div data-live-page="invoice-detail" className="flex-1 max-w-[1200px] w-full mx-auto px-gutter-mobile md:px-gutter-desktop py-space-6 md:py-space-8">
+      {loading && <p className="font-caption text-caption text-ink-500">Loading…</p>}
+      {loadError && (
+        <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3">
+          {loadError}
+        </p>
+      )}
+      {invoice && (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-6">
 
       <div className="lg:col-span-8 flex flex-col gap-space-4">
 
@@ -135,6 +133,8 @@ export const InvoiceDetailDesktop = () => {
           )}
         </div>
       </div>
+    </div>
+      )}
     </div>
   );
 };

@@ -114,14 +114,20 @@ export const MySchedule = () => {
                     </div>
                   )}
                 </div>
-                {i === 0 && (
-                  <div className={styles.cardAction}>
+                <div className={styles.cardAction}>
+                  {i === 0 && (
                     <button className={styles.joinButton}>
                       <span className="material-symbols-outlined text-[18px]">videocam</span>
                       Join Session
                     </button>
-                  </div>
-                )}
+                  )}
+                  <Link
+                    to={`/portal/view/reschedule-cancel-class-desktop?id=${session.id}`}
+                    className={styles.textButton}
+                  >
+                    Manage
+                  </Link>
+                </div>
               </div>
             </article>
           ))}
@@ -152,6 +158,16 @@ export const MySchedule = () => {
                   <h3 className="text-body-lg font-medium text-on-surface">{session.subject || 'Session'}</h3>
                   {session.studentName && <p className="text-body text-ink-500">{session.studentName}</p>}
                 </div>
+                {session.status === 'scheduled' && (
+                  <div className={styles.cardAction}>
+                    <Link
+                      to={`/portal/view/classroom-post-class-wrap?id=${session.id}`}
+                      className={styles.textButton}
+                    >
+                      Complete
+                    </Link>
+                  </div>
+                )}
               </article>
             );
           })}

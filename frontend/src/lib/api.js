@@ -25,6 +25,16 @@
 //   POST /api/classes/       { studentId, subject, startsAt,
 //                               durationMinutes, recurrence,
 //                               platform, notes }                   -> ClassSession
+//   PATCH /api/classes/{id}/ { startsAt, durationMinutes?, notes? }  -> ClassSession (reschedule)
+//   POST /api/classes/{id}/cancel/   { reason }                     -> ClassSession
+//   POST /api/classes/{id}/complete/ { attendance, notes,
+//                               homeworkDueAt? }                     -> ClassSession
+//                             (reschedule/cancel/complete each push to
+//                              Google Calendar/Tasks when connected —
+//                              see core/services/google.py)
+//   GET  /api/google/connect/                                       -> { authUrl }
+//   GET  /api/google/status/                                        -> { connected, email }
+//   POST /api/google/disconnect/                                    -> { connected: false }
 //   GET/PATCH /api/brand/    { logoDataUrl, primaryColor,
 //                               secondaryColor, invoiceName }        -> Brand
 //   GET  /api/invoices/                                             -> Invoice[]
@@ -132,6 +142,18 @@ export const api = {
         method: 'POST',
         body: { studentId, subject, startsAt, durationMinutes, recurrence, platform, notes },
       }),
+    reschedule: (id, { startsAt, durationMinutes, notes }) =>
+      request(`/classes/${id}/`, { method: 'PATCH', body: { startsAt, durationMinutes, notes } }),
+    cancel: (id, { reason }) =>
+      request(`/classes/${id}/cancel/`, { method: 'POST', body: { reason } }),
+    complete: (id, { attendance, notes, homeworkDueAt }) =>
+      request(`/classes/${id}/complete/`, { method: 'POST', body: { attendance, notes, homeworkDueAt } }),
+  },
+
+  google: {
+    connect: () => request('/google/connect/'),
+    status: () => request('/google/status/'),
+    disconnect: () => request('/google/disconnect/', { method: 'POST' }),
   },
 
   brand: {

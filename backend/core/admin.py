@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from .models import (
     Assignment,
     ClassSession,
+    GoogleAccount,
     GuardianLink,
     Invoice,
     InvoiceItem,
@@ -96,3 +97,11 @@ class QuizAdmin(admin.ModelAdmin):
 class LoginOTPAdmin(admin.ModelAdmin):
     list_display = ['phone', 'created_at', 'expires_at', 'consumed_at', 'attempts']
     readonly_fields = ['phone', 'code_hash', 'expires_at', 'consumed_at', 'attempts', 'created_at']
+
+
+@admin.register(GoogleAccount)
+class GoogleAccountAdmin(admin.ModelAdmin):
+    list_display = ['tutor', 'google_email', 'connected_at', 'token_expires_at']
+    # Tokens are live credentials, not debug data — never shown, even to staff.
+    readonly_fields = ['tutor', 'google_email', 'connected_at', 'token_expires_at', 'scope']
+    exclude = ['access_token', 'refresh_token', 'calendar_sync_token']

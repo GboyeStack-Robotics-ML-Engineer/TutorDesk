@@ -141,6 +141,11 @@ class ClassSession(models.Model):
         TUTORDESK = 'tutordesk', 'TutorDesk Space'
         EXTERNAL = 'external', 'External Link'
 
+    class Attendance(models.TextChoices):
+        PRESENT = 'present', 'Present'
+        ABSENT = 'absent', 'Absent'
+        LATE = 'late', 'Late'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tutor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='class_sessions')
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='class_sessions')
@@ -155,6 +160,19 @@ class ClassSession(models.Model):
     notes = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
     meet_link = models.URLField(blank=True)
+
+    # Post-class wrap-up (see ClassCompleteView) and cancellation reason —
+    # kept on ClassSession itself rather than a separate model, same
+    # lightweight approach as the rest of this schema.
+    attendance = models.CharField(max_length=10, choices=Attendance.choices, blank=True)
+    session_notes = models.TextField(blank=True)
+    homework_due_at = models.DateField(null=True, blank=True)
+    cancel_reason = models.TextField(blank=True)
+
+    # Google Calendar/Tasks sync (see services/google.py) — blank until a
+    # connected tutor's session is pushed/creates a follow-up task.
+    google_event_id = models.CharField(max_length=255, blank=True)
+    google_task_id = models.CharField(max_length=255, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -280,3 +298,23 @@ class LoginOTP(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class GoogleAccount(models.Model):
+    """A tutor's connected Google account — Calendar + Tasks scopes only
+    (see docs/PRD.md Section C and services/google.py). One per tutor;
+    reconnecting replaces the stored tokens rather than adding a row."""
+
+    tutor = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='google_account')
+    google_email = models.EmailField(blank=True)
+    access_token = models.TextField()
+    refresh_token = models.TextField()
+    token_expires_at = models.DateTimeField()
+    scope = models.TextField(blank=True)
+    # Google Calendar's incremental-sync cursor (see services.google.pull_class_event_changes)
+    # — blank until the first successful pull.
+    calendar_sync_token = models.TextField(blank=True)
+    connected_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.tutor} ({self.google_email or "no email on file"})'

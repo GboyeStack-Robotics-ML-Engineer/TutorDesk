@@ -136,10 +136,20 @@ class ClassSessionSerializer(serializers.ModelSerializer):
     studentName = serializers.CharField(source='student.name', read_only=True)
     startsAt = serializers.DateTimeField(source='starts_at', read_only=True)
     durationMinutes = serializers.IntegerField(source='duration_minutes', read_only=True)
+    sessionNotes = serializers.CharField(source='session_notes', read_only=True)
+    homeworkDueAt = serializers.DateField(source='homework_due_at', read_only=True)
+    cancelReason = serializers.CharField(source='cancel_reason', read_only=True)
+    googleSynced = serializers.SerializerMethodField()
 
     class Meta:
         model = ClassSession
-        fields = ['id', 'subject', 'studentName', 'startsAt', 'durationMinutes', 'status', 'platform']
+        fields = [
+            'id', 'subject', 'studentName', 'startsAt', 'durationMinutes', 'status', 'platform', 'notes',
+            'attendance', 'sessionNotes', 'homeworkDueAt', 'cancelReason', 'googleSynced',
+        ]
+
+    def get_googleSynced(self, obj):
+        return bool(obj.google_event_id)
 
 
 # ---- brand (tutor invoice branding) -----------------------------------------
@@ -249,3 +259,28 @@ class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = ['id', 'title', 'subject', 'source', 'questions']
+
+
+# ---- class reschedule / cancel / complete -----------------------------------
+
+class ClassRescheduleSerializer(serializers.Serializer):
+    startsAt = serializers.DateTimeField()
+    durationMinutes = serializers.IntegerField(required=False, min_value=1)
+    notes = serializers.CharField(required=False, allow_blank=True)
+
+
+class ClassCancelSerializer(serializers.Serializer):
+    reason = serializers.CharField(allow_blank=True, default='')
+
+
+class ClassCompleteSerializer(serializers.Serializer):
+    attendance = serializers.ChoiceField(choices=[c[0] for c in ClassSession.Attendance.choices])
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+    homeworkDueAt = serializers.DateField(required=False, allow_null=True)
+
+
+# ---- Google account ----------------------------------------------------------
+
+class GoogleAccountSerializer(serializers.Serializer):
+    connected = serializers.BooleanField()
+    email = serializers.CharField(required=False, allow_blank=True)
