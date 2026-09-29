@@ -14,6 +14,7 @@ from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -48,6 +49,8 @@ from .serializers import (
     MaterialSerializer,
     OtpRequestSerializer,
     OtpVerifySerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
     QuickMeetLinkRequestSerializer,
     QuizCreateSerializer,
     QuizSerializer,
@@ -58,6 +61,7 @@ from .serializers import (
     UserSerializer,
 )
 from .services import google as google_service
+from .services import password_reset as password_reset_service
 from .services import reports as reports_service
 from .services.whatsapp import send_login_otp, trigger_onboarding
 
@@ -74,6 +78,8 @@ def _auth_payload(user):
 
 class SignupView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'signup'
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
@@ -84,12 +90,57 @@ class SignupView(APIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login'
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         return Response(_auth_payload(user))
+
+
+class PasswordResetRequestView(APIView):
+    """Step 1 of tutor password reset: POST an email, get a reset link sent
+    to it if an account matches — always responds the same way either way
+    (see OtpRequestView for the same anti-enumeration pattern on the
+    parent/student side)."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'password_reset'
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        user = User.objects.filter(email__iexact=email, role=User.Role.TUTOR).first()
+        if user is not None:
+            password_reset_service.send_reset_email(user)
+
+        return Response({'sent': True})
+
+
+class PasswordResetConfirmView(APIView):
+    """Step 2: POST the token from the emailed link plus a new password."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'password_reset'
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        user = password_reset_service.resolve_reset_user(data['token'])
+        if user is None:
+            return Response({'detail': 'This reset link is invalid or has expired.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(data['password'])
+        user.save(update_fields=['password'])
+        return Response({'reset': True})
 
 
 # ---- students ----------------------------------------------------------------
@@ -304,9 +355,13 @@ class ClassCompleteView(APIView):
 class CompleteOnboardingView(APIView):
     """Called by ../whatsapp/ once a parent finishes onboarding — not a
     user-authenticated call, so it checks the shared internal token instead
-    of JWT. See core/services/whatsapp.py for the other half of this seam."""
+    of JWT. See core/services/whatsapp.py for the other half of this seam.
+    No throttling: this is our own WhatsApp service calling repeatedly
+    from one IP, not client-facing — the internal token is what protects
+    it, not request rate (same for ParentLookupView below)."""
 
     permission_classes = [AllowAny]
+    throttle_classes = []
 
     def patch(self, request, student_id):
         if request.headers.get('X-Internal-Token') != INTERNAL_SERVICE_TOKEN:
@@ -542,6 +597,8 @@ class OtpRequestView(APIView):
     the endpoint can't be used to enumerate registered numbers."""
 
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'otp_request'
 
     def post(self, request):
         serializer = OtpRequestSerializer(data=request.data)
@@ -565,6 +622,8 @@ class OtpVerifyView(APIView):
     """Step 2: POST the phone + code back, get a token like login/signup."""
 
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'otp_verify'
 
     def post(self, request):
         serializer = OtpVerifySerializer(data=request.data)
@@ -734,9 +793,11 @@ class ParentLookupView(APIView):
     onboarding flow asks about their balance or next class, and that
     service looks the answer up here rather than guessing. Internal-token
     protected, same pattern as CompleteOnboardingView; not a user login,
-    since the caller is the WhatsApp service, not a browser."""
+    since the caller is the WhatsApp service, not a browser. No throttling
+    — see CompleteOnboardingView's docstring for why."""
 
     permission_classes = [AllowAny]
+    throttle_classes = []
 
     def get(self, request):
         if request.headers.get('X-Internal-Token') != INTERNAL_SERVICE_TOKEN:

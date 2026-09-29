@@ -50,6 +50,11 @@ export const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
+            {location.state?.passwordReset && (
+              <p role="status" className={styles.formError} style={{ color: 'var(--success-solid)', backgroundColor: 'var(--success-tint)' }}>
+                Password reset — sign in with your new password.
+              </p>
+            )}
             {/* Email/Phone Field */}
             <Input
               id="identifier"

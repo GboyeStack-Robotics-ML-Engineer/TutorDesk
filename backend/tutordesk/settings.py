@@ -103,6 +103,25 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    # Global fallback rates for any AllowAny endpoint that doesn't declare
+    # its own throttle_scope, plus a floor for authenticated traffic.
+    # Sensitive endpoints (login, signup, OTP, password reset) declare a
+    # tighter 'throttle_scope' on the view itself — see core/views.py.
+    # Views the WhatsApp service calls internally (protected by
+    # INTERNAL_SERVICE_TOKEN, not by rate) opt out with throttle_classes = [].
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+        'signup': '10/hour',
+        'login': '20/hour',
+        'otp_request': '5/hour',
+        'otp_verify': '20/hour',
+        'password_reset': '5/hour',
+    },
 }
 
 # Long-lived access token, no refresh-token flow yet — the frontend
@@ -117,3 +136,21 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     o.strip() for o in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',') if o.strip()
 ]
+
+# How long a password reset link (core/services/password_reset.py) stays
+# valid — Django's own PasswordResetTokenGenerator reads this setting.
+# Default is 3 days; a reset link is more sensitive than most emailed
+# links, so this build uses 1 hour instead.
+PASSWORD_RESET_TIMEOUT = 60 * 60
+
+# Tutor password reset (core/services/password_reset.py) is the only thing
+# that sends real email in this build. Defaults to the console backend —
+# the reset link prints to the runserver log instead of being sent
+# anywhere, same "PROVIDER=dry" pattern as the WhatsApp service, until
+# real SMTP credentials are set (EMAIL_HOST/PORT/USER/PASSWORD below).
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'true').lower() == 'true'

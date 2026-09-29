@@ -58,6 +58,21 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
+# ---- tutor password reset ----------------------------------------------------
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
+
+
 # ---- passwordless OTP login (parent / student) ------------------------------
 
 class OtpRequestSerializer(serializers.Serializer):

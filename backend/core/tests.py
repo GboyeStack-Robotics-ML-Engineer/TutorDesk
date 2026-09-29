@@ -3,6 +3,8 @@ from unittest import mock
 
 import httpx
 from django.contrib.auth import get_user_model
+from django.core import mail
+from django.core.cache import cache
 from django.core.management import call_command
 from django.utils import timezone
 from rest_framework import status
@@ -11,6 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Assignment, ClassSession, GoogleAccount, GuardianLink, Invoice, LoginOTP, Material, Quiz, Student
 from .services import google as google_service
+from .services import password_reset as password_reset_service
 from .services import reports as reports_service
 
 User = get_user_model()
@@ -65,6 +68,14 @@ class FakeGoogleClient:
 
 
 class AuthTests(APITestCase):
+    def setUp(self):
+        # DRF's throttle counters live in Django's cache, which (unlike the
+        # DB) isn't reset between test methods by the test runner — without
+        # this, enough tests hitting a throttled AllowAny endpoint (signup/
+        # login here) in one run trips the real rate limit and fails
+        # unrelated tests. Same reasoning in OtpLoginTests / PasswordResetTests.
+        cache.clear()
+
     def test_signup_creates_tutor_and_returns_token(self):
         response = self.client.post('/api/auth/signup/', {
             'name': 'Test Tutor',
@@ -434,6 +445,7 @@ class OtpLoginTests(APITestCase):
     views.OtpRequestView / OtpVerifyView."""
 
     def setUp(self):
+        cache.clear()  # see AuthTests.setUp — otp_request is throttled at 5/hour
         self.parent = User.objects.create_user(
             username='parent-2348011112222', phone='2348011112222', role=User.Role.PARENT, first_name='Mrs Okoye',
         )
@@ -1282,3 +1294,173 @@ class ParentPortalTests(APITestCase):
         self.assertEqual(response.data['paymentInstructions'], 'GTB, Acc: 0123456789')
         self.assertEqual(response.data['tutorWhatsapp'], '2348022223333')
         self.assertEqual(response.data['tutorName'], 'Aisha Bello')
+
+
+# ---- tutor password reset ------------------------------------------------------
+
+class PasswordResetServiceTests(APITestCase):
+    def setUp(self):
+        self.tutor = User.objects.create_user(
+            username='prs-tutor@example.com', email='prs-tutor@example.com',
+            password='original-Passw0rd-1', role=User.Role.TUTOR,
+        )
+
+    def test_build_and_resolve_reset_token_roundtrip(self):
+        token = password_reset_service.build_reset_token(self.tutor)
+        self.assertEqual(password_reset_service.resolve_reset_user(token), self.tutor)
+
+    def test_resolve_reset_token_rejects_a_malformed_token(self):
+        self.assertIsNone(password_reset_service.resolve_reset_user('not-a-real-token'))
+
+    def test_resolve_reset_token_rejects_a_token_for_a_deleted_user(self):
+        token = password_reset_service.build_reset_token(self.tutor)
+        self.tutor.delete()
+        self.assertIsNone(password_reset_service.resolve_reset_user(token))
+
+    def test_token_self_invalidates_once_the_password_changes(self):
+        """The core replay-protection property: unlike a bare signed
+        token, this one is bound to the current password hash — it can't
+        be reused to reset the password a second time, and it can't be
+        used at all once the password has changed some other way."""
+        token = password_reset_service.build_reset_token(self.tutor)
+        self.tutor.set_password('changed-some-other-way-1')
+        self.tutor.save()
+        self.assertIsNone(password_reset_service.resolve_reset_user(token))
+
+
+class PasswordResetTests(APITestCase):
+    def setUp(self):
+        cache.clear()  # see AuthTests.setUp — password_reset is throttled at 5/hour
+        self.tutor = User.objects.create_user(
+            username='pr-tutor@example.com', email='pr-tutor@example.com',
+            password='original-Passw0rd-1', first_name='Aisha Bello', role=User.Role.TUTOR,
+        )
+
+    def test_request_for_a_known_email_sends_a_real_reset_email(self):
+        response = self.client.post('/api/auth/password-reset/request/', {'email': 'pr-tutor@example.com'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'sent': True})
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['pr-tutor@example.com'])
+        self.assertIn('/reset-password?token=', mail.outbox[0].body)
+
+    def test_request_for_an_unknown_email_still_returns_success_and_sends_nothing(self):
+        response = self.client.post('/api/auth/password-reset/request/', {'email': 'nobody@example.com'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'sent': True})
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_request_does_not_match_a_parent_or_student_account(self):
+        User.objects.create_user(username='p1', email='parent@example.com', role=User.Role.PARENT, phone='1')
+        response = self.client.post('/api/auth/password-reset/request/', {'email': 'parent@example.com'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_confirm_with_a_valid_token_changes_the_password(self):
+        token = password_reset_service.build_reset_token(self.tutor)
+        response = self.client.post('/api/auth/password-reset/confirm/', {
+            'token': token, 'password': 'a-brand-new-Passw0rd-1',
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.tutor.refresh_from_db()
+        self.assertTrue(self.tutor.check_password('a-brand-new-Passw0rd-1'))
+        self.assertFalse(self.tutor.check_password('original-Passw0rd-1'))
+
+    def test_confirm_rejects_an_invalid_token(self):
+        response = self.client.post('/api/auth/password-reset/confirm/', {
+            'token': 'garbage', 'password': 'a-brand-new-Passw0rd-1',
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.tutor.refresh_from_db()
+        self.assertTrue(self.tutor.check_password('original-Passw0rd-1'))
+
+    def test_confirm_rejects_a_weak_password(self):
+        token = password_reset_service.build_reset_token(self.tutor)
+        response = self.client.post('/api/auth/password-reset/confirm/', {
+            'token': token, 'password': '123',
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.tutor.refresh_from_db()
+        self.assertTrue(self.tutor.check_password('original-Passw0rd-1'))
+
+    def test_confirm_rejects_a_token_for_a_non_tutor_account(self):
+        parent = User.objects.create_user(username='p2', email='p2@example.com', role=User.Role.PARENT, phone='2')
+        token = password_reset_service.build_reset_token(parent)
+        response = self.client.post('/api/auth/password-reset/confirm/', {
+            'token': token, 'password': 'a-brand-new-Passw0rd-1',
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_the_old_login_stops_working_after_a_reset(self):
+        token = password_reset_service.build_reset_token(self.tutor)
+        self.client.post('/api/auth/password-reset/confirm/', {
+            'token': token, 'password': 'a-brand-new-Passw0rd-1',
+        }, format='json')
+
+        old_login = self.client.post('/api/auth/login/', {
+            'identifier': 'pr-tutor@example.com', 'password': 'original-Passw0rd-1',
+        }, format='json')
+        self.assertEqual(old_login.status_code, status.HTTP_400_BAD_REQUEST)
+
+        new_login = self.client.post('/api/auth/login/', {
+            'identifier': 'pr-tutor@example.com', 'password': 'a-brand-new-Passw0rd-1',
+        }, format='json')
+        self.assertEqual(new_login.status_code, status.HTTP_200_OK)
+
+    def test_a_used_reset_link_cannot_be_replayed(self):
+        """An intercepted reset email is a real threat model — the link
+        must not stay valid for repeat use for its full lifetime."""
+        token = password_reset_service.build_reset_token(self.tutor)
+        first = self.client.post('/api/auth/password-reset/confirm/', {
+            'token': token, 'password': 'a-brand-new-Passw0rd-1',
+        }, format='json')
+        self.assertEqual(first.status_code, status.HTTP_200_OK)
+
+        replay = self.client.post('/api/auth/password-reset/confirm/', {
+            'token': token, 'password': 'attacker-chosen-Passw0rd-1',
+        }, format='json')
+        self.assertEqual(replay.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.tutor.refresh_from_db()
+        self.assertTrue(self.tutor.check_password('a-brand-new-Passw0rd-1'))
+        self.assertFalse(self.tutor.check_password('attacker-chosen-Passw0rd-1'))
+
+
+# ---- throttling -----------------------------------------------------------------
+
+class ThrottlingTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_login_is_throttled_after_the_configured_rate(self):
+        User.objects.create_user(username='tt@example.com', email='tt@example.com', password='pw-1')
+        for _ in range(20):
+            self.client.post('/api/auth/login/', {'identifier': 'tt@example.com', 'password': 'wrong'}, format='json')
+
+        response = self.client.post('/api/auth/login/', {'identifier': 'tt@example.com', 'password': 'wrong'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_otp_request_is_throttled_after_the_configured_rate(self):
+        for _ in range(5):
+            self.client.post('/api/auth/otp/request/', {'phone': '2340000000000'}, format='json')
+
+        response = self.client.post('/api/auth/otp/request/', {'phone': '2340000000000'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_password_reset_request_is_throttled_after_the_configured_rate(self):
+        for _ in range(5):
+            self.client.post('/api/auth/password-reset/request/', {'email': 'nobody@example.com'}, format='json')
+
+        response = self.client.post('/api/auth/password-reset/request/', {'email': 'nobody@example.com'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_internal_endpoints_are_not_throttled(self):
+        # CompleteOnboardingView / ParentLookupView opt out of throttling —
+        # they're called repeatedly by ../whatsapp/ from one IP and are
+        # protected by the internal token instead. 6 calls exceeds every
+        # configured scope (all <= 5-20/hour) to prove none applies.
+        for _ in range(6):
+            response = self.client.get('/api/whatsapp/parent-lookup/', {'phone': '10000000000'}, HTTP_X_INTERNAL_TOKEN='wrong')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)  # never 429

@@ -16,6 +16,12 @@
 //   POST /api/auth/otp/verify/  { phone, code }                     -> { token, user }
 //                             (passwordless parent/student login, sent over
 //                              WhatsApp — see core/services/whatsapp.py)
+//   POST /api/auth/password-reset/request/ { email }                -> { sent: true }
+//   POST /api/auth/password-reset/confirm/ { token, password }      -> { reset: true }
+//                             (tutor-only — parents/students are
+//                              passwordless. Always responds { sent: true }
+//                              whether or not the email matched, same
+//                              anti-enumeration pattern as OTP request.)
 //   GET  /api/students/                                             -> Student[]
 //   POST /api/students/      { name, subject, parentName,
 //                               parentWhatsapp, reminderChannel }    -> Student
@@ -139,6 +145,10 @@ export const api = {
       request('/auth/otp/request/', { method: 'POST', body: { phone }, auth: false }),
     verifyOtp: ({ phone, code }) =>
       request('/auth/otp/verify/', { method: 'POST', body: { phone, code }, auth: false }),
+    requestPasswordReset: ({ email }) =>
+      request('/auth/password-reset/request/', { method: 'POST', body: { email }, auth: false }),
+    confirmPasswordReset: ({ token, password }) =>
+      request('/auth/password-reset/confirm/', { method: 'POST', body: { token, password }, auth: false }),
   },
 
   students: {

@@ -1,17 +1,61 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '../../components/ui/Input/Input';
 import { Button } from '../../components/ui/Button/Button';
+import { api, NetworkError } from '../../lib/api';
 import styles from './ResetPassword.module.css';
 
+// Real strength heuristic (length + character variety) rather than a
+// fixed "Fair" — cheap to compute honestly, so there's no reason to fake it.
+function passwordStrength(password) {
+  let score = 0;
+  if (password.length >= 8) score += 1;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
+  if (/\d/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  const labels = ['Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+  return { score, label: labels[score] };
+}
+
 export const ResetPassword = () => {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  const navigate = useNavigate();
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const strength = passwordStrength(newPassword);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Password reset submitted');
+    setError('');
+
+    if (!token) {
+      setError('This reset link is missing its token — please use the link from your email.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await api.auth.confirmPasswordReset({ token, password: newPassword });
+      navigate('/login', { replace: true, state: { passwordReset: true } });
+    } catch (err) {
+      setError(
+        err instanceof NetworkError
+          ? err.message
+          : err.message || 'Could not reset your password. The link may have expired — request a new one.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -59,15 +103,16 @@ export const ResetPassword = () => {
               </button>
 
               {/* Password Strength Meter */}
-              <div className={styles.strengthMeterContainer}>
-                <div className={styles.strengthBars}>
-                  <div className={`${styles.strengthBar} ${styles.strengthActive}`}></div>
-                  <div className={`${styles.strengthBar} ${styles.strengthActive}`}></div>
-                  <div className={styles.strengthBar}></div>
-                  <div className={styles.strengthBar}></div>
+              {newPassword && (
+                <div className={styles.strengthMeterContainer}>
+                  <div className={styles.strengthBars}>
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className={`${styles.strengthBar} ${i < strength.score ? styles.strengthActive : ''}`}></div>
+                    ))}
+                  </div>
+                  <p className={styles.strengthText}>{strength.label}</p>
                 </div>
-                <p className={styles.strengthText}>Fair</p>
-              </div>
+              )}
             </div>
 
             {/* Confirm Password Field */}
@@ -83,10 +128,16 @@ export const ResetPassword = () => {
               />
             </div>
 
+            {error && (
+              <p role="alert" className={styles.formError}>
+                {error}
+              </p>
+            )}
+
             {/* Submit Button */}
             <div className={styles.submitContainer}>
-              <Button type="submit" fullWidth className={styles.submitButton}>
-                <span>Set new password</span>
+              <Button type="submit" fullWidth className={styles.submitButton} disabled={isSubmitting}>
+                <span>{isSubmitting ? 'Saving…' : 'Set new password'}</span>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
               </Button>
             </div>
@@ -94,7 +145,7 @@ export const ResetPassword = () => {
 
           {/* Secondary Action */}
           <div className={styles.footer}>
-            <Link to="/" className={styles.backLink}>
+            <Link to="/login" className={styles.backLink}>
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
               Back to log in
             </Link>
