@@ -21,12 +21,26 @@ export const AuthProvider = ({ children }) => {
     return newUser;
   }, []);
 
+  // Passwordless parent/student login — see lib/api.js's auth.requestOtp /
+  // verifyOtp. requestOtp deliberately never reveals whether the phone
+  // matched an account (the backend responds the same way either way).
+  const requestOtp = useCallback(async ({ phone }) => {
+    await api.auth.requestOtp({ phone });
+  }, []);
+
+  const verifyOtp = useCallback(async ({ phone, code }) => {
+    const { token, user: loggedInUser } = await api.auth.verifyOtp({ phone, code });
+    setSession({ token, user: loggedInUser });
+    setUser(loggedInUser);
+    return loggedInUser;
+  }, []);
+
   const logout = useCallback(() => {
     clearSession();
     setUser(null);
   }, []);
 
-  const value = { user, isAuthenticated: Boolean(user), login, signup, logout };
+  const value = { user, isAuthenticated: Boolean(user), login, signup, requestOtp, verifyOtp, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

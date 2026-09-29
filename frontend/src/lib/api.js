@@ -12,6 +12,10 @@
 //
 //   POST /api/auth/signup/   { name, email, phone, password }       -> { token, user }
 //   POST /api/auth/login/    { identifier, password }               -> { token, user }
+//   POST /api/auth/otp/request/ { phone }                           -> { sent: true }
+//   POST /api/auth/otp/verify/  { phone, code }                     -> { token, user }
+//                             (passwordless parent/student login, sent over
+//                              WhatsApp — see core/services/whatsapp.py)
 //   GET  /api/students/                                             -> Student[]
 //   POST /api/students/      { name, subject, parentName,
 //                               parentWhatsapp, reminderChannel }    -> Student
@@ -100,6 +104,10 @@ export const api = {
       request('/auth/signup/', { method: 'POST', body: { name, email, phone, password }, auth: false }),
     login: ({ identifier, password }) =>
       request('/auth/login/', { method: 'POST', body: { identifier, password }, auth: false }),
+    requestOtp: ({ phone }) =>
+      request('/auth/otp/request/', { method: 'POST', body: { phone }, auth: false }),
+    verifyOtp: ({ phone, code }) =>
+      request('/auth/otp/verify/', { method: 'POST', body: { phone, code }, auth: false }),
   },
 
   students: {

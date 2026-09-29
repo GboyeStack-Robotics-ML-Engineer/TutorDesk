@@ -9,6 +9,8 @@ from .views import (
     LoginView,
     MaterialDetailView,
     MaterialListCreateView,
+    OtpRequestView,
+    OtpVerifyView,
     QuizDetailView,
     QuizListCreateView,
     RecordPaymentView,
@@ -22,6 +24,8 @@ from .views import (
 urlpatterns = [
     path('auth/signup/', SignupView.as_view(), name='auth-signup'),
     path('auth/login/', LoginView.as_view(), name='auth-login'),
+    path('auth/otp/request/', OtpRequestView.as_view(), name='auth-otp-request'),
+    path('auth/otp/verify/', OtpVerifyView.as_view(), name='auth-otp-verify'),
     path('students/', StudentListCreateView.as_view(), name='students'),
     path('students/<uuid:student_id>/complete-onboarding/', CompleteOnboardingView.as_view(), name='complete-onboarding'),
     path('classes/', ClassListCreateView.as_view(), name='classes'),

@@ -98,6 +98,12 @@ export const Login = () => {
                 Create account
               </Link>
             </p>
+            <p className={styles.footerText}>
+              Parent or student?{' '}
+              <Link to="/login/parent" className={styles.footerLink}>
+                Log in with WhatsApp
+              </Link>
+            </p>
           </div>
         </div>
       </main>

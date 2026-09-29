@@ -58,3 +58,27 @@ def trigger_onboarding(student):
         response.raise_for_status()
     except httpx.HTTPError:
         logger.exception('Failed to trigger WhatsApp onboarding for student %s', student.id)
+
+
+def send_login_otp(phone, code):
+    """Delivers a passwordless login code over WhatsApp — see
+    views.OtpRequestView. Sent as free-form text (send_text), which Meta
+    only delivers inside the 24h window after the user last messaged the
+    business; parents/students who onboarded recently are typically still
+    inside it, but this isn't guaranteed. A dedicated approved OTP template
+    (like the onboarding one) would remove that caveat — not done yet,
+    tracked alongside the other template-approval work in docs/PRD.md."""
+    if not WHATSAPP_SERVICE_URL:
+        logger.info('WHATSAPP_SERVICE_URL not set — skipping OTP send to %s', phone)
+        return
+
+    try:
+        response = httpx.post(
+            f'{WHATSAPP_SERVICE_URL}/otp/send',
+            json={'phone': phone, 'code': code},
+            headers={'X-Internal-Token': INTERNAL_SERVICE_TOKEN},
+            timeout=5,
+        )
+        response.raise_for_status()
+    except httpx.HTTPError:
+        logger.exception('Failed to send login OTP to %s', phone)

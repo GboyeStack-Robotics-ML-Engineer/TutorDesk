@@ -153,6 +153,19 @@ def test_onboarding_start_requires_the_internal_token(app_modules):
     assert db.get_session(PARENT) is not None
 
 
+def test_otp_send_requires_the_internal_token(app_modules):
+    conv, db, wa, main = app_modules
+    body = {"phone": PARENT, "code": "123456"}
+
+    with TestClient(main.app) as client:
+        unauthenticated = client.post("/otp/send", json=body)
+        assert unauthenticated.status_code == 401
+
+        authenticated = client.post("/otp/send", json=body, headers={"X-Internal-Token": "test-token"})
+    assert authenticated.status_code == 200
+    assert authenticated.json() == {"sent": True}
+
+
 def test_webhook_verification_handshake(app_modules):
     conv, db, wa, main = app_modules
     with TestClient(main.app) as client:

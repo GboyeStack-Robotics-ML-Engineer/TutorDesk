@@ -1,7 +1,12 @@
 import os
+import secrets
+from datetime import timedelta
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,7 +14,20 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Assignment, ClassSession, Invoice, InvoiceItem, Material, Payment, Question, Quiz, Student
+from .models import (
+    Assignment,
+    ClassSession,
+    GuardianLink,
+    Invoice,
+    InvoiceItem,
+    LoginOTP,
+    Material,
+    Payment,
+    Question,
+    Quiz,
+    Student,
+    normalize_phone,
+)
 from .serializers import (
     BrandSerializer,
     ClassCreateSerializer,
@@ -20,6 +38,8 @@ from .serializers import (
     LoginSerializer,
     MaterialCreateSerializer,
     MaterialSerializer,
+    OtpRequestSerializer,
+    OtpVerifySerializer,
     QuizCreateSerializer,
     QuizSerializer,
     RecordPaymentSerializer,
@@ -28,9 +48,10 @@ from .serializers import (
     StudentSerializer,
     UserSerializer,
 )
-from .services.whatsapp import trigger_onboarding
+from .services.whatsapp import send_login_otp, trigger_onboarding
 
 INTERNAL_SERVICE_TOKEN = os.getenv('INTERNAL_SERVICE_TOKEN', 'dev-shared-secret-change-me')
+User = get_user_model()
 
 
 def _auth_payload(user):
@@ -186,7 +207,42 @@ class CompleteOnboardingView(APIView):
                 if subject and subject not in existing_subjects:
                     Assignment.objects.create(student=student, tutor=tutor, subject=subject)
 
+        _provision_family_accounts(student)
+
         return Response(StudentSerializer(student).data)
+
+
+def _provision_family_accounts(student):
+    """Realizes the university-portal account model (see docs/PRD.md):
+    a completed onboarding provisions real logins, not just an updated
+    roster row. Both accounts are passwordless (see OtpRequestView) — no
+    password is set here, matching User.objects.create_user's own
+    behaviour when password=None."""
+    parent_phone = normalize_phone(student.guardian_whatsapp)
+    if parent_phone:
+        parent = User.objects.filter(phone=parent_phone, role=User.Role.PARENT).first()
+        if parent is None:
+            parent = User.objects.create_user(
+                username=f'parent-{parent_phone}',
+                phone=parent_phone,
+                role=User.Role.PARENT,
+                first_name=student.guardian_name,
+            )
+        GuardianLink.objects.get_or_create(parent=parent, student=student)
+
+    if student.phone and student.user_id is None:
+        student_phone = normalize_phone(student.phone)
+        if student_phone:
+            student_user = User.objects.filter(phone=student_phone, role=User.Role.STUDENT).first()
+            if student_user is None:
+                student_user = User.objects.create_user(
+                    username=f'student-{student_phone}',
+                    phone=student_phone,
+                    role=User.Role.STUDENT,
+                    first_name=student.name,
+                )
+            student.user = student_user
+            student.save(update_fields=['user'])
 
 
 # ---- brand ---------------------------------------------------------------------
@@ -347,3 +403,66 @@ class QuizDetailView(APIView):
     def get(self, request, quiz_id):
         quiz = get_object_or_404(Quiz, id=quiz_id, tutor=request.user)
         return Response(QuizSerializer(quiz).data)
+
+
+# ---- passwordless OTP login (parent / student) ------------------------------
+
+OTP_TTL_MINUTES = 10
+OTP_MAX_ATTEMPTS = 5
+
+
+class OtpRequestView(APIView):
+    """Step 1 of parent/student login: POST a phone number, get a 6-digit
+    code sent over WhatsApp (see services.whatsapp.send_login_otp). Always
+    responds the same way whether or not that phone matches an account, so
+    the endpoint can't be used to enumerate registered numbers."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = OtpRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone = normalize_phone(serializer.validated_data['phone'])
+
+        user = User.objects.filter(phone=phone, role__in=[User.Role.PARENT, User.Role.STUDENT]).first()
+        if user is not None:
+            code = f'{secrets.randbelow(1_000_000):06d}'
+            LoginOTP.objects.create(
+                phone=phone,
+                code_hash=make_password(code),
+                expires_at=timezone.now() + timedelta(minutes=OTP_TTL_MINUTES),
+            )
+            send_login_otp(phone, code)
+
+        return Response({'sent': True})
+
+
+class OtpVerifyView(APIView):
+    """Step 2: POST the phone + code back, get a token like login/signup."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = OtpVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone = normalize_phone(serializer.validated_data['phone'])
+        code = serializer.validated_data['code']
+
+        otp = LoginOTP.objects.filter(
+            phone=phone, consumed_at__isnull=True, expires_at__gt=timezone.now(),
+        ).order_by('-created_at').first()
+
+        if otp is None or otp.attempts >= OTP_MAX_ATTEMPTS or not check_password(code, otp.code_hash):
+            if otp is not None:
+                otp.attempts += 1
+                otp.save(update_fields=['attempts'])
+            return Response({'detail': 'Invalid or expired code.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        otp.consumed_at = timezone.now()
+        otp.save(update_fields=['consumed_at'])
+
+        user = User.objects.filter(phone=phone, role__in=[User.Role.PARENT, User.Role.STUDENT]).first()
+        if user is None:
+            return Response({'detail': 'No account found for this phone number.'}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(_auth_payload(user))

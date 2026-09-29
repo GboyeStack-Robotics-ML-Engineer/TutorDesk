@@ -14,11 +14,20 @@ Data model for the resolved decisions in ../docs/PRD.md:
 - `GuardianLink` is parent<->student, many-to-many, for the
   university-portal account model (a parent can watch multiple children).
 """
+import re
 import uuid
 
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
+
+
+def normalize_phone(raw):
+    """Digits only, no '+' — matches the WhatsApp service's wa_id format
+    (see ../whatsapp/app/whatsapp.py's _bare_number). Used as the lookup key
+    for OTP login, so a phone typed as "+234 801 234 5678" on the web and
+    "2348012345678" on WhatsApp resolve to the same account."""
+    return re.sub(r'\D', '', raw or '')
 
 
 class User(AbstractUser):
@@ -254,3 +263,20 @@ class Question(models.Model):
 
     class Meta:
         ordering = ['order']
+
+
+class LoginOTP(models.Model):
+    """A one-time login code sent over WhatsApp — the passwordless login
+    path for parent/student accounts (see docs/PRD.md's account model;
+    tutors keep email+password). `phone` is normalize_phone()'d before
+    storing or querying."""
+
+    phone = models.CharField(max_length=32, db_index=True)
+    code_hash = models.CharField(max_length=128)
+    expires_at = models.DateTimeField()
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

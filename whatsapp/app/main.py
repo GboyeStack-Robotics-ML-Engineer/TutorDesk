@@ -6,6 +6,11 @@ FastAPI app exposing:
                             parent's WhatsApp onboarding. Protected by a
                             shared secret, not a user login — see config.py.
 
+  POST /otp/send            Django calls this (core/services/whatsapp.py's
+                            send_login_otp) to deliver a parent/student
+                            passwordless login code. Same shared-secret
+                            protection as /onboarding/start.
+
   GET  /webhook             Meta's verification handshake.
   POST /webhook             Meta's inbound messages. Signature-verified.
 
@@ -18,7 +23,7 @@ from pydantic import BaseModel
 
 from . import conversation, db
 from .config import settings
-from .whatsapp import parse_meta_json, verify_meta_signature
+from .whatsapp import parse_meta_json, send_text, verify_meta_signature
 
 app = FastAPI(title="TutorDesk WhatsApp")
 
@@ -70,6 +75,21 @@ def onboarding_start(body: OnboardingStartRequest, x_internal_token: str = Heade
         reminder_channel=body.reminderChannel,
     )
     return {"started": True}
+
+
+class OtpSendRequest(BaseModel):
+    phone: str
+    code: str
+
+
+@app.post("/otp/send")
+def otp_send(body: OtpSendRequest, x_internal_token: str = Header(default="")):
+    if x_internal_token != settings.INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid or missing internal token")
+
+    wa_id = _bare_number(body.phone)
+    send_text(wa_id, f"Your TutorDesk login code is {body.code}. It expires in 10 minutes.")
+    return {"sent": True}
 
 
 # --------------------------------------------------------------------------

@@ -58,6 +58,17 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
+# ---- passwordless OTP login (parent / student) ------------------------------
+
+class OtpRequestSerializer(serializers.Serializer):
+    phone = serializers.CharField()
+
+
+class OtpVerifySerializer(serializers.Serializer):
+    phone = serializers.CharField()
+    code = serializers.CharField()
+
+
 # ---- students ------------------------------------------------------------
 
 class StudentCreateSerializer(serializers.Serializer):

@@ -7,6 +7,7 @@ from .models import (
     GuardianLink,
     Invoice,
     InvoiceItem,
+    LoginOTP,
     Material,
     Payment,
     Question,
@@ -89,3 +90,9 @@ class QuizAdmin(admin.ModelAdmin):
     list_display = ['title', 'tutor', 'subject', 'source', 'created_at']
     list_filter = ['source']
     inlines = [QuestionInline]
+
+
+@admin.register(LoginOTP)
+class LoginOTPAdmin(admin.ModelAdmin):
+    list_display = ['phone', 'created_at', 'expires_at', 'consumed_at', 'attempts']
+    readonly_fields = ['phone', 'code_hash', 'expires_at', 'consumed_at', 'attempts', 'created_at']

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -6,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Assignment, ClassSession, Invoice, Material, Quiz, Student
+from .models import Assignment, ClassSession, GuardianLink, Invoice, LoginOTP, Material, Quiz, Student
 
 User = get_user_model()
 
@@ -186,6 +187,50 @@ class CompleteOnboardingTests(APITestCase):
             {'Mathematics', 'Physics'},
         )
 
+    def test_provisions_a_parent_account_and_guardian_link(self):
+        self._patch({'subjects': ['Mathematics']})
+
+        parent = User.objects.get(phone='1', role=User.Role.PARENT)
+        self.assertEqual(parent.first_name, 'Mrs O')
+        self.assertFalse(parent.has_usable_password())
+        self.assertTrue(GuardianLink.objects.filter(parent=parent, student=self.student).exists())
+
+    def test_reonboarding_reuses_the_same_parent_account(self):
+        self._patch({'subjects': ['Mathematics']})
+        first_parent_id = User.objects.get(phone='1', role=User.Role.PARENT).id
+
+        other_student = Student.objects.create(
+            name='Bode', guardian_name='Mrs O', guardian_whatsapp='+1',
+            status=Student.Status.PENDING_ONBOARDING,
+        )
+        Assignment.objects.create(student=other_student, tutor=self.tutor, subject='Physics')
+        self.client.patch(
+            f'/api/students/{other_student.id}/complete-onboarding/',
+            {'subjects': ['Physics']}, format='json', HTTP_X_INTERNAL_TOKEN=self.INTERNAL_TOKEN,
+        )
+
+        self.assertEqual(User.objects.filter(phone='1', role=User.Role.PARENT).count(), 1)
+        parent = User.objects.get(phone='1', role=User.Role.PARENT)
+        self.assertEqual(parent.id, first_parent_id)
+        self.assertEqual(GuardianLink.objects.filter(parent=parent).count(), 2)
+
+    def test_provisions_a_student_account_when_a_phone_is_on_file(self):
+        self.student.phone = '+2348099990000'
+        self.student.save()
+
+        self._patch({'subjects': ['Mathematics']})
+
+        self.student.refresh_from_db()
+        self.assertIsNotNone(self.student.user)
+        self.assertEqual(self.student.user.role, User.Role.STUDENT)
+        self.assertEqual(self.student.user.phone, '2348099990000')
+
+    def test_no_student_account_without_a_phone_on_file(self):
+        self._patch({'subjects': ['Mathematics']})
+
+        self.student.refresh_from_db()
+        self.assertIsNone(self.student.user)
+
 
 class BrandTests(AuthenticatedAPITestCase):
     def test_get_brand_returns_defaults(self):
@@ -321,3 +366,83 @@ class QuizTests(AuthenticatedAPITestCase):
         Quiz.objects.create(tutor=other_tutor, title='Not mine')
         response = self.client.get('/api/quizzes/')
         self.assertEqual(len(response.data), 0)
+
+
+class OtpLoginTests(APITestCase):
+    """Passwordless login for parent/student accounts — see
+    views.OtpRequestView / OtpVerifyView."""
+
+    def setUp(self):
+        self.parent = User.objects.create_user(
+            username='parent-2348011112222', phone='2348011112222', role=User.Role.PARENT, first_name='Mrs Okoye',
+        )
+
+    def _latest_otp_code(self):
+        return LoginOTP.objects.filter(phone='2348011112222').latest('created_at')
+
+    def test_request_otp_for_unknown_phone_still_returns_success(self):
+        response = self.client.post('/api/auth/otp/request/', {'phone': '+2340000000000'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'sent': True})
+        self.assertFalse(LoginOTP.objects.exists())
+
+    def test_request_otp_for_known_phone_creates_a_code(self):
+        response = self.client.post('/api/auth/otp/request/', {'phone': '+234 801 111 2222'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(LoginOTP.objects.filter(phone='2348011112222').count(), 1)
+
+    def test_verify_with_correct_code_returns_a_token(self):
+        with mock.patch('secrets.randbelow', return_value=123456):
+            self.client.post('/api/auth/otp/request/', {'phone': '2348011112222'}, format='json')
+
+        response = self.client.post(
+            '/api/auth/otp/verify/', {'phone': '2348011112222', 'code': '123456'}, format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+        self.assertEqual(response.data['user']['role'], 'parent')
+
+        otp = self._latest_otp_code()
+        self.assertIsNotNone(otp.consumed_at)
+
+    def test_verify_with_wrong_code_is_rejected_and_counts_as_an_attempt(self):
+        with mock.patch('secrets.randbelow', return_value=123456):
+            self.client.post('/api/auth/otp/request/', {'phone': '2348011112222'}, format='json')
+
+        response = self.client.post(
+            '/api/auth/otp/verify/', {'phone': '2348011112222', 'code': '000000'}, format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self._latest_otp_code().attempts, 1)
+
+    def test_verify_a_consumed_code_fails(self):
+        with mock.patch('secrets.randbelow', return_value=123456):
+            self.client.post('/api/auth/otp/request/', {'phone': '2348011112222'}, format='json')
+
+        self.client.post('/api/auth/otp/verify/', {'phone': '2348011112222', 'code': '123456'}, format='json')
+        second = self.client.post(
+            '/api/auth/otp/verify/', {'phone': '2348011112222', 'code': '123456'}, format='json',
+        )
+        self.assertEqual(second.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_verify_an_expired_code_fails(self):
+        with mock.patch('secrets.randbelow', return_value=123456):
+            self.client.post('/api/auth/otp/request/', {'phone': '2348011112222'}, format='json')
+
+        otp = self._latest_otp_code()
+        otp.expires_at = timezone.now() - timedelta(minutes=1)
+        otp.save(update_fields=['expires_at'])
+
+        response = self.client.post(
+            '/api/auth/otp/verify/', {'phone': '2348011112222', 'code': '123456'}, format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_a_tutor_cannot_log_in_via_otp(self):
+        User.objects.create_user(
+            username='tutor-otp@example.com', email='tutor-otp@example.com',
+            phone='2349990001111', role=User.Role.TUTOR, password='pw-1',
+        )
+        response = self.client.post('/api/auth/otp/request/', {'phone': '2349990001111'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(LoginOTP.objects.filter(phone='2349990001111').exists())
