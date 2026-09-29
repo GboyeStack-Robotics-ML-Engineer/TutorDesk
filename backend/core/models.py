@@ -45,6 +45,13 @@ class User(AbstractUser):
     brand_primary_color = models.CharField(max_length=7, default='#005248')
     brand_secondary_color = models.CharField(max_length=7, default='#C48037')
     invoice_name = models.CharField(max_length=255, blank=True)
+    # Free-text payment instructions (bank details, etc.) shown to parents
+    # on the Payments & Invoices page — deliberately free text rather than
+    # structured bank-account fields, since there's no real payment
+    # processor integration here to validate/route a bank account against.
+    # Blank until the tutor sets it (see BrandSetup.jsx); shown as an
+    # honest "not set yet" state until then, never fabricated.
+    payment_instructions = models.TextField(blank=True)
 
     def __str__(self):
         return self.get_full_name() or self.username

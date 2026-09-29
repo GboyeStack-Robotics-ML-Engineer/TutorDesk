@@ -43,7 +43,8 @@
 //                             (ad-hoc Google Meet link, not tied to a
 //                              scheduled class — requires Google connected)
 //   GET/PATCH /api/brand/    { logoDataUrl, primaryColor,
-//                               secondaryColor, invoiceName }        -> Brand
+//                               secondaryColor, invoiceName,
+//                               paymentInstructions }                -> Brand
 //   GET  /api/invoices/                                             -> Invoice[]
 //   POST /api/invoices/      { studentId, items, issuedAt,
 //                               dueAt, note }                        -> Invoice
@@ -56,12 +57,25 @@
 //   POST /api/quizzes/       { title, subject, source, materialId,
 //                               questions }                          -> Quiz
 //
+//   -- parent/student portal (real data for /parent/*) --
+//   GET  /api/parent/students/                                      -> [{ id, name, subjects, tutorName }]
+//   GET  /api/parent/dashboard/?studentId=                          -> { student, tutor, nextClass, balance,
+//                                                                          balanceDueDate, thisMonth, recentNote }
+//   GET  /api/parent/progress/?studentId=                           -> { attendancePercent, sessionsCompleted,
+//                                                                          monthlyTrend, recentNote }
+//   GET  /api/parent/reports/?studentId=                            -> { reports: [{ period, label, downloadUrl }] }
+//                             (downloadUrl is relative to API_BASE_URL's
+//                              origin, not auth-gated — same signed-token
+//                              link the WhatsApp monthly report sends)
+//   GET  /api/parent/invoices/?studentId=                           -> { invoices, paymentInstructions,
+//                                                                          tutorWhatsapp, tutorName }
+//
 // Adjust the paths here (not at every call site) once the real contract is
 // finalized with the backend track.
 
 import { getToken, clearSession } from './auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 export class ApiError extends Error {
   constructor(message, { status, payload } = {}) {
@@ -192,5 +206,13 @@ export const api = {
     get: (id) => request(`/quizzes/${id}/`),
     create: ({ title, subject, source, materialId, questions }) =>
       request('/quizzes/', { method: 'POST', body: { title, subject, source, materialId, questions } }),
+  },
+
+  parent: {
+    students: () => request('/parent/students/'),
+    dashboard: ({ studentId } = {}) => request(`/parent/dashboard/${studentId ? `?studentId=${studentId}` : ''}`),
+    progress: ({ studentId } = {}) => request(`/parent/progress/${studentId ? `?studentId=${studentId}` : ''}`),
+    reports: ({ studentId } = {}) => request(`/parent/reports/${studentId ? `?studentId=${studentId}` : ''}`),
+    invoices: ({ studentId } = {}) => request(`/parent/invoices/${studentId ? `?studentId=${studentId}` : ''}`),
   },
 };

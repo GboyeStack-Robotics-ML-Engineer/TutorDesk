@@ -302,6 +302,15 @@ class BrandTests(AuthenticatedAPITestCase):
         self.tutor.refresh_from_db()
         self.assertEqual(self.tutor.brand_primary_color, '#111111')
 
+    def test_patch_brand_updates_payment_instructions(self):
+        response = self.client.patch('/api/brand/', {
+            'paymentInstructions': 'GTB, Acc Name: Ada Tutoring, Acc No: 0123456789',
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['paymentInstructions'], 'GTB, Acc Name: Ada Tutoring, Acc No: 0123456789')
+        self.tutor.refresh_from_db()
+        self.assertEqual(self.tutor.payment_instructions, 'GTB, Acc Name: Ada Tutoring, Acc No: 0123456789')
+
 
 class InvoiceTests(AuthenticatedAPITestCase):
     def setUp(self):
@@ -1089,3 +1098,187 @@ class GoogleQuickMeetLinkTests(AuthenticatedAPITestCase):
         with mock.patch.object(google_service, 'create_quick_meet_link', return_value=None):
             response = self.client.post('/api/google/meet-link/', {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+
+
+# ---- parent portal (real data for /parent/*) ----------------------------------
+
+class ParentPortalTests(APITestCase):
+    def setUp(self):
+        self.tutor = User.objects.create_user(
+            username='pp-tutor@example.com', email='pp-tutor@example.com', password='pw-1',
+            first_name='Aisha Bello', phone='+2348022223333',
+        )
+        self.parent = User.objects.create_user(
+            username='parent-2348011112222', phone='2348011112222', role=User.Role.PARENT, first_name='Mrs Okoye',
+        )
+        self.student = Student.objects.create(name='Ada', guardian_name='Mrs Okoye', guardian_whatsapp='+2348011112222')
+        GuardianLink.objects.create(parent=self.parent, student=self.student)
+        Assignment.objects.create(student=self.student, tutor=self.tutor, subject='Mathematics')
+
+        token = str(RefreshToken.for_user(self.parent).access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+    def _as(self, user):
+        token = str(RefreshToken.for_user(user).access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+    # ---- students -------------------------------------------------------
+
+    def test_students_view_requires_auth(self):
+        self.client.credentials()
+        response = self.client.get('/api/parent/students/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_students_view_lists_linked_students_with_subjects_and_tutor(self):
+        response = self.client.get('/api/parent/students/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'Ada')
+        self.assertEqual(response.data[0]['subjects'], ['Mathematics'])
+        self.assertEqual(response.data[0]['tutorName'], 'Aisha Bello')
+
+    def test_a_parent_with_two_children_sees_both(self):
+        other = Student.objects.create(name='Bode', guardian_name='Mrs Okoye', guardian_whatsapp='+2348011112222')
+        GuardianLink.objects.create(parent=self.parent, student=other)
+        response = self.client.get('/api/parent/students/')
+        self.assertEqual({s['name'] for s in response.data}, {'Ada', 'Bode'})
+
+    def test_a_student_login_sees_only_themselves(self):
+        student_user = User.objects.create_user(username='student-1', phone='1', role=User.Role.STUDENT)
+        self.student.user = student_user
+        self.student.save()
+        self._as(student_user)
+        response = self.client.get('/api/parent/students/')
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'Ada')
+
+    # ---- student resolution / scoping -----------------------------------
+
+    def test_dashboard_404s_when_no_students_linked(self):
+        lonely_parent = User.objects.create_user(username='lonely', phone='999', role=User.Role.PARENT)
+        self._as(lonely_parent)
+        response = self.client.get('/api/parent/dashboard/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cannot_view_a_student_not_linked_to_this_parent(self):
+        other_parent = User.objects.create_user(username='other-parent', phone='888', role=User.Role.PARENT)
+        other_student = Student.objects.create(name='NotMine', guardian_name='X', guardian_whatsapp='+1')
+        GuardianLink.objects.create(parent=other_parent, student=other_student)
+
+        response = self.client.get(f'/api/parent/dashboard/?studentId={other_student.id}')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    # ---- dashboard --------------------------------------------------------
+
+    def test_dashboard_shows_next_scheduled_class_with_meet_link(self):
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(days=1), meet_link='https://meet.google.com/abc-defg-hij',
+        )
+        response = self.client.get('/api/parent/dashboard/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['nextClass']['subject'], 'Mathematics')
+        self.assertEqual(response.data['nextClass']['meetLink'], 'https://meet.google.com/abc-defg-hij')
+        self.assertEqual(response.data['tutor']['name'], 'Aisha Bello')
+
+    def test_dashboard_shows_null_next_class_when_none_scheduled(self):
+        response = self.client.get('/api/parent/dashboard/')
+        self.assertIsNone(response.data['nextClass'])
+
+    def test_dashboard_balance_reflects_unpaid_invoices(self):
+        invoice = Invoice.objects.create(tutor=self.tutor, student=self.student, issued_at=date.today(), due_at=date.today() + timedelta(days=5))
+        invoice.items.create(description='Session', qty=2, rate=5000)
+        response = self.client.get('/api/parent/dashboard/')
+        self.assertEqual(response.data['balance'], '10000.00')
+        self.assertEqual(response.data['balanceDueDate'], (date.today() + timedelta(days=5)).isoformat())
+
+    def test_dashboard_attendance_is_null_with_no_completed_sessions_this_month(self):
+        response = self.client.get('/api/parent/dashboard/')
+        self.assertIsNone(response.data['thisMonth']['attendancePercent'])
+        self.assertEqual(response.data['thisMonth']['sessionsCompleted'], 0)
+
+    def test_dashboard_attendance_percent_and_recent_note(self):
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() - timedelta(days=1), status=ClassSession.Status.COMPLETED,
+            attendance=ClassSession.Attendance.PRESENT, session_notes='Great progress on algebra.',
+        )
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() - timedelta(days=2), status=ClassSession.Status.COMPLETED,
+            attendance=ClassSession.Attendance.ABSENT,
+        )
+        response = self.client.get('/api/parent/dashboard/')
+        self.assertEqual(response.data['thisMonth']['attendancePercent'], 50)
+        self.assertEqual(response.data['thisMonth']['sessionsCompleted'], 2)
+        self.assertEqual(response.data['recentNote']['text'], 'Great progress on algebra.')
+        self.assertEqual(response.data['recentNote']['tutorName'], 'Aisha Bello')
+
+    # ---- progress -----------------------------------------------------------
+
+    def test_progress_returns_a_six_month_trend(self):
+        response = self.client.get('/api/parent/progress/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['monthlyTrend']), 6)
+        # oldest first, current month last
+        self.assertEqual(response.data['monthlyTrend'][-1]['period'], reports_service.recent_period_keys(1)[0])
+
+    def test_progress_current_month_matches_dashboard(self):
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() - timedelta(hours=2), status=ClassSession.Status.COMPLETED,
+            attendance=ClassSession.Attendance.PRESENT,
+        )
+        response = self.client.get('/api/parent/progress/')
+        self.assertEqual(response.data['attendancePercent'], 100)
+        self.assertEqual(response.data['sessionsCompleted'], 1)
+
+    # ---- reports --------------------------------------------------------
+
+    def test_reports_only_lists_periods_with_a_class(self):
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics', starts_at=timezone.now() - timedelta(hours=2),
+        )
+        response = self.client.get('/api/parent/reports/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['reports']), 1)
+        current_period = reports_service.recent_period_keys(1)[0]
+        self.assertEqual(response.data['reports'][0]['period'], current_period)
+
+    def test_reports_download_token_resolves_to_the_right_student_and_period(self):
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics', starts_at=timezone.now() - timedelta(hours=2),
+        )
+        response = self.client.get('/api/parent/reports/')
+        download_url = response.data['reports'][0]['downloadUrl']
+        token = download_url.rstrip('/').rsplit('/', 1)[-1]
+        resolved = reports_service.resolve_report_token(token)
+        self.assertEqual(resolved, (str(self.student.id), response.data['reports'][0]['period']))
+
+    def test_reports_empty_when_no_classes_in_recent_months(self):
+        response = self.client.get('/api/parent/reports/')
+        self.assertEqual(response.data['reports'], [])
+
+    # ---- invoices -------------------------------------------------------
+
+    def test_invoices_view_returns_the_students_invoices(self):
+        invoice = Invoice.objects.create(tutor=self.tutor, student=self.student, issued_at=date.today(), due_at=date.today())
+        invoice.items.create(description='Session', qty=1, rate=5000)
+
+        response = self.client.get('/api/parent/invoices/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['invoices']), 1)
+        self.assertEqual(response.data['invoices'][0]['total'], '5000.00')
+
+    def test_invoices_view_reports_no_payment_instructions_by_default(self):
+        response = self.client.get('/api/parent/invoices/')
+        self.assertEqual(response.data['paymentInstructions'], '')
+
+    def test_invoices_view_returns_payment_instructions_and_tutor_whatsapp_when_set(self):
+        self.tutor.payment_instructions = 'GTB, Acc: 0123456789'
+        self.tutor.save()
+
+        response = self.client.get('/api/parent/invoices/')
+        self.assertEqual(response.data['paymentInstructions'], 'GTB, Acc: 0123456789')
+        self.assertEqual(response.data['tutorWhatsapp'], '2348022223333')
+        self.assertEqual(response.data['tutorName'], 'Aisha Bello')

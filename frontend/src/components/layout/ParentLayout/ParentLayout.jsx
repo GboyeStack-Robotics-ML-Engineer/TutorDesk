@@ -1,11 +1,19 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 
 // Deliberately not PortalLayout: parents/students never see the tutor's
 // sidebar (Students, Classes, Invoices to send, etc.) — that's tutor-only
-// nav for tutor-only data. Just a header with who's signed in and a way
-// out, wrapping whichever parent-facing page is active.
+// nav for tutor-only data. Just a header with who's signed in, a way out,
+// and a simple tab row so the other 3 parent pages are actually reachable
+// (nothing else links to them — login lands on /parent/home only).
+const TABS = [
+  { to: '/parent/home', label: 'Home' },
+  { to: '/parent/progress-reports', label: 'Progress' },
+  { to: '/parent/contact-tutor', label: 'Contact Tutor' },
+  { to: '/parent/payments-invoices', label: 'Payments' },
+];
+
 export const ParentLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -32,6 +40,23 @@ export const ParentLayout = () => {
           </button>
         </div>
       </header>
+      <nav className="border-b border-paper-200 bg-paper-0 px-gutter-mobile md:px-gutter-desktop overflow-x-auto">
+        <div className="max-w-max-width mx-auto w-full flex gap-space-6">
+          {TABS.map((tab) => (
+            <NavLink
+              key={tab.to}
+              to={tab.to}
+              className={({ isActive }) =>
+                `py-space-3 font-label text-label whitespace-nowrap border-b-2 transition-colors ${
+                  isActive ? 'border-primary text-primary' : 'border-transparent text-ink-500 hover:text-ink-900'
+                }`
+              }
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
       <main className="flex-1 p-gutter-mobile md:p-gutter-desktop">
         <div className="max-w-max-width mx-auto w-full">
           <Outlet />

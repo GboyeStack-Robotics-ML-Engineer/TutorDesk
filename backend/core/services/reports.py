@@ -42,6 +42,20 @@ def previous_month_key(today=None):
     return f'{year:04d}-{month:02d}'
 
 
+def recent_period_keys(n, today=None):
+    """The current month plus the (n-1) before it, newest first —
+    e.g. recent_period_keys(3) in March 2026 -> ['2026-03', '2026-02', '2026-01']."""
+    today = today or date.today()
+    year, month = today.year, today.month
+    keys = []
+    for _ in range(n):
+        keys.append(f'{year:04d}-{month:02d}')
+        month -= 1
+        if month == 0:
+            year, month = year - 1, 12
+    return keys
+
+
 def period_label(period_key):
     year, month = (int(p) for p in period_key.split('-'))
     return date(year, month, 1).strftime('%B %Y')

@@ -161,6 +161,7 @@ class BrandSerializer(serializers.Serializer):
     primaryColor = serializers.CharField(source='brand_primary_color', required=False)
     secondaryColor = serializers.CharField(source='brand_secondary_color', required=False)
     invoiceName = serializers.CharField(source='invoice_name', required=False, allow_blank=True)
+    paymentInstructions = serializers.CharField(source='payment_instructions', required=False, allow_blank=True)
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():

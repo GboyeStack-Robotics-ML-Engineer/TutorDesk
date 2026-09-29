@@ -18,6 +18,7 @@ export const BrandSetup = () => {
   const [primary, setPrimary] = useState(DEFAULTS.primaryColor);
   const [secondary, setSecondary] = useState(DEFAULTS.secondaryColor);
   const [invoiceName, setInvoiceName] = useState(DEFAULTS.invoiceName);
+  const [paymentInstructions, setPaymentInstructions] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [extracting, setExtracting] = useState(false);
@@ -35,6 +36,7 @@ export const BrandSetup = () => {
         setPrimary(brand.primaryColor || DEFAULTS.primaryColor);
         setSecondary(brand.secondaryColor || DEFAULTS.secondaryColor);
         setInvoiceName(brand.invoiceName || '');
+        setPaymentInstructions(brand.paymentInstructions || '');
       })
       .catch((err) => {
         if (cancelled) return;
@@ -79,7 +81,7 @@ export const BrandSetup = () => {
     setSaving(true);
     setSaveError('');
     try {
-      await api.brand.update({ logoDataUrl, primaryColor: primary, secondaryColor: secondary, invoiceName });
+      await api.brand.update({ logoDataUrl, primaryColor: primary, secondaryColor: secondary, invoiceName, paymentInstructions });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
@@ -179,6 +181,22 @@ export const BrandSetup = () => {
             <span className="w-16 h-8" style={{ background: secondary }} />
           </div>
         </div>
+      </div>
+
+      {/* Payment instructions */}
+      <div className="bg-paper-0 border border-paper-200 rounded-xl p-space-5 flex flex-col gap-space-4">
+        <h2 className="font-label text-label text-ink-700">Payment instructions</h2>
+        <p className="font-caption text-caption text-ink-500">
+          Shown to parents on their Payments &amp; Invoices page — bank details, or however you'd like to be paid.
+          Left blank, parents see a note to contact you directly.
+        </p>
+        <textarea
+          value={paymentInstructions}
+          onChange={(e) => setPaymentInstructions(e.target.value)}
+          placeholder={'e.g. GTB, Account Name: Aisha Bello Tutorials, Account Number: 0123456789'}
+          rows="4"
+          className="w-full border border-paper-300 rounded-lg px-space-3 py-2 font-body text-body focus:outline-none focus:border-primary resize-y"
+        />
       </div>
 
       {saveError && (

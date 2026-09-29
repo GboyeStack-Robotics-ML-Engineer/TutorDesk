@@ -132,6 +132,18 @@ class StudentListCreateView(APIView):
         return Response(StudentSerializer(student).data, status=status.HTTP_201_CREATED)
 
 
+def _outstanding_balance(student):
+    """Sum of (invoice total - payments received) across a student's
+    not-yet-paid invoices. Shared by ParentLookupView (WhatsApp Q&A) and
+    the parent-portal views below — same real calculation, not
+    duplicated-and-drifted."""
+    invoices = Invoice.objects.filter(student=student).exclude(status=Invoice.Status.PAID).prefetch_related('items', 'payments')
+    return sum(
+        (inv.total - sum((p.amount for p in inv.payments.all()), start=Decimal('0')) for inv in invoices),
+        start=Decimal('0'),
+    ).quantize(Decimal('0.01'))
+
+
 # ---- classes -------------------------------------------------------------------
 
 def _google_account_for(tutor):
@@ -748,18 +760,245 @@ class ParentLookupView(APIView):
                 student=student, status=ClassSession.Status.SCHEDULED, starts_at__gte=now,
             ).order_by('starts_at').first()
 
-            outstanding = sum(
-                (inv.total - sum((p.amount for p in inv.payments.all()), start=Decimal('0'))
-                 for inv in Invoice.objects.filter(student=student).exclude(status=Invoice.Status.PAID).prefetch_related('items', 'payments')),
-                start=Decimal('0'),
-            ).quantize(Decimal('0.01'))
-
             student_payloads.append({
                 'name': student.name,
                 'nextClass': {
                     'subject': next_class.subject, 'startsAt': next_class.starts_at.isoformat(),
                 } if next_class else None,
-                'balance': str(outstanding),
+                'balance': str(_outstanding_balance(student)),
             })
 
         return Response({'parentName': parent.get_full_name(), 'tutorName': tutor_name, 'students': student_payloads})
+
+
+# ---- parent portal (real data for /parent/*) ---------------------------------
+
+def _allowed_students_for(user):
+    """A parent sees every student linked via GuardianLink (possibly more
+    than one child); a student login sees just their own roster record.
+    Anything else (shouldn't happen — RequireAuth already gates /parent/*
+    to these two roles) sees nothing rather than erroring."""
+    if user.role == User.Role.PARENT:
+        return Student.objects.filter(guardian_links__parent=user).distinct()
+    if user.role == User.Role.STUDENT:
+        return Student.objects.filter(user=user)
+    return Student.objects.none()
+
+
+def _resolve_student(request):
+    """Picks the student these parent-portal views should answer for:
+    the explicit ?studentId= if given (and actually linked to this user —
+    never trust a studentId belonging to someone else's child), otherwise
+    the first linked student alphabetically. Returns (student, None) or
+    (None, error_response)."""
+    allowed = _allowed_students_for(request.user)
+    student_id = request.query_params.get('studentId')
+    if student_id:
+        student = allowed.filter(id=student_id).first()
+        if student is None:
+            return None, Response({'detail': "That student isn't linked to your account."}, status=status.HTTP_404_NOT_FOUND)
+        return student, None
+    student = allowed.order_by('name').first()
+    if student is None:
+        return None, Response({'detail': 'No students linked to your account yet.'}, status=status.HTTP_404_NOT_FOUND)
+    return student, None
+
+
+def _active_tutor_for(student):
+    assignment = student.assignments.filter(status=Assignment.Status.ACTIVE).first()
+    return assignment.tutor if assignment else None
+
+
+class ParentStudentsView(APIView):
+    """Which student(s) this login can see — a parent may have more than
+    one child linked (see docs/PRD.md's account model); the other
+    parent-portal views take a ?studentId= from this list."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        students = _allowed_students_for(request.user).order_by('name')
+        payload = []
+        for student in students:
+            tutor = _active_tutor_for(student)
+            payload.append({
+                'id': str(student.id),
+                'name': student.name,
+                'subjects': list(student.assignments.values_list('subject', flat=True)),
+                'tutorName': tutor.get_full_name() if tutor else '',
+            })
+        return Response(payload)
+
+
+class ParentDashboardView(APIView):
+    """Backs ParentPortalHome.jsx — real next class (with the actual Meet
+    link, same as the tutor's Live Classroom), real outstanding balance,
+    real this-month attendance, and the most recent completed session's
+    actual notes. No fabricated numbers where the real ones don't exist
+    yet (e.g. a student with no completed sessions this month gets a null
+    attendance percent, not a fake one)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        student, error = _resolve_student(request)
+        if error:
+            return error
+        tutor = _active_tutor_for(student)
+
+        now = timezone.now()
+        next_class = ClassSession.objects.filter(
+            student=student, status=ClassSession.Status.SCHEDULED, starts_at__gte=now,
+        ).order_by('starts_at').first()
+
+        outstanding_invoices = Invoice.objects.filter(student=student).exclude(status=Invoice.Status.PAID)
+        next_due = outstanding_invoices.order_by('due_at').values_list('due_at', flat=True).first()
+
+        month_start = now.date().replace(day=1)
+        completed_this_month = ClassSession.objects.filter(
+            student=student, status=ClassSession.Status.COMPLETED,
+            starts_at__date__gte=month_start, starts_at__date__lte=now.date(),
+        )
+        completed_count = completed_this_month.count()
+        present_count = completed_this_month.filter(
+            attendance__in=[ClassSession.Attendance.PRESENT, ClassSession.Attendance.LATE],
+        ).count()
+
+        recent_session = ClassSession.objects.filter(
+            student=student, status=ClassSession.Status.COMPLETED,
+        ).exclude(session_notes='').order_by('-starts_at').first()
+
+        return Response({
+            'student': {'id': str(student.id), 'name': student.name},
+            'tutor': {
+                'name': tutor.get_full_name() if tutor else '',
+                'phone': tutor.phone if tutor else '',
+                'email': tutor.email if tutor else '',
+            },
+            'nextClass': {
+                'subject': next_class.subject, 'startsAt': next_class.starts_at.isoformat(),
+                'meetLink': next_class.meet_link,
+            } if next_class else None,
+            'balance': str(_outstanding_balance(student)),
+            'balanceDueDate': next_due.isoformat() if next_due else None,
+            'thisMonth': {
+                'attendancePercent': round(100 * present_count / completed_count) if completed_count else None,
+                'sessionsCompleted': completed_count,
+            },
+            'recentNote': {
+                'text': recent_session.session_notes,
+                'tutorName': tutor.get_full_name() if tutor else '',
+                'at': recent_session.starts_at.isoformat(),
+            } if recent_session else None,
+        })
+
+
+class ParentProgressView(APIView):
+    """Backs PortalProgressReports.jsx — real attendance rate for the
+    current month plus a 6-month trend, both computed from actual
+    ClassSession attendance, not a fabricated 'Avg Score' (there's no
+    per-session scoring anywhere in this build)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        student, error = _resolve_student(request)
+        if error:
+            return error
+
+        now = timezone.now()
+        month_start = now.date().replace(day=1)
+        this_month = ClassSession.objects.filter(
+            student=student, status=ClassSession.Status.COMPLETED,
+            starts_at__date__gte=month_start, starts_at__date__lte=now.date(),
+        )
+        this_month_count = this_month.count()
+        this_month_present = this_month.filter(
+            attendance__in=[ClassSession.Attendance.PRESENT, ClassSession.Attendance.LATE],
+        ).count()
+
+        trend = []
+        for period_key in reversed(reports_service.recent_period_keys(6)):
+            start, end = reports_service.period_bounds(period_key)
+            end = min(end, now.date())
+            sessions = ClassSession.objects.filter(
+                student=student, status=ClassSession.Status.COMPLETED,
+                starts_at__date__gte=start, starts_at__date__lte=end,
+            )
+            count = sessions.count()
+            present = sessions.filter(attendance__in=[ClassSession.Attendance.PRESENT, ClassSession.Attendance.LATE]).count()
+            trend.append({
+                'period': period_key,
+                'label': reports_service.period_label(period_key),
+                'attendancePercent': round(100 * present / count) if count else None,
+                'sessionsCompleted': count,
+            })
+
+        recent_session = ClassSession.objects.filter(
+            student=student, status=ClassSession.Status.COMPLETED,
+        ).exclude(session_notes='').order_by('-starts_at').first()
+        tutor = _active_tutor_for(student)
+
+        return Response({
+            'attendancePercent': round(100 * this_month_present / this_month_count) if this_month_count else None,
+            'sessionsCompleted': this_month_count,
+            'monthlyTrend': trend,
+            'recentNote': {
+                'text': recent_session.session_notes,
+                'tutorName': tutor.get_full_name() if tutor else '',
+                'at': recent_session.starts_at.isoformat(),
+            } if recent_session else None,
+        })
+
+
+class ParentReportsView(APIView):
+    """Backs PortalProgressReports.jsx's 'Monthly Reports' list — reuses
+    the same signed-token PDF the WhatsApp monthly report links to
+    (services/reports.py, GET /api/reports/monthly/{token}/), so a parent
+    can download it straight from the web portal too. Only lists periods
+    that actually had a class, rather than 6 months of empty reports."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        student, error = _resolve_student(request)
+        if error:
+            return error
+
+        reports = []
+        for period_key in reports_service.recent_period_keys(6):
+            start, end = reports_service.period_bounds(period_key)
+            if not ClassSession.objects.filter(student=student, starts_at__date__gte=start, starts_at__date__lte=end).exists():
+                continue
+            token = reports_service.build_report_token(str(student.id), period_key)
+            reports.append({
+                'period': period_key,
+                'label': reports_service.period_label(period_key),
+                'downloadUrl': f'/reports/monthly/{token}/',
+            })
+        return Response({'reports': reports})
+
+
+class ParentInvoicesView(APIView):
+    """Backs PortalPaymentsInvoices.jsx — the student's real invoices
+    (read-only; marking one paid is still a tutor-side action via
+    RecordPaymentView), the tutor's own free-text payment instructions if
+    they've set any (see BrandSerializer.paymentInstructions — never
+    fabricated bank details), and the tutor's WhatsApp number so the
+    frontend can build a real click-to-chat link for 'I've Paid'."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        student, error = _resolve_student(request)
+        if error:
+            return error
+        tutor = _active_tutor_for(student)
+
+        invoices = Invoice.objects.filter(student=student).prefetch_related('items', 'payments').order_by('-issued_at')
+        return Response({
+            'invoices': InvoiceSerializer(invoices, many=True).data,
+            'paymentInstructions': tutor.payment_instructions if tutor else '',
+            'tutorWhatsapp': normalize_phone(tutor.phone) if tutor and tutor.phone else '',
+            'tutorName': tutor.get_full_name() if tutor else '',
+        })
