@@ -31,17 +31,17 @@ university portal rather than a single shared family login.
 ## 3. Current state (accurate as of this update)
 
 ### `frontend/` — React + Vite + Tailwind
-- **Wired to the real Django backend**: Login, Sign Up, Add/Edit Student (captures parent WhatsApp + reminder channel — the onboarding trigger), Create/Edit Class, My Schedule, Brand Setup, Invoice Maker, Invoice Detail, Record Payment, Quiz Maker, Materials Library, Material Viewer, and a passwordless parent/student login (`/login/parent`, WhatsApp OTP). Real loading/error states, no fake success.
-- **Still wired to `lib/store.js` (a documented localStorage mock, not the backend)**: Meeting Generator / Live Classroom's meeting link (explicitly mocked pending Google/Zoom OAuth — see C/D below).
+- **Wired to the real Django backend**: Login, Sign Up, Add/Edit Student (captures parent WhatsApp + reminder channel — the onboarding trigger), Create/Edit Class, My Schedule, Reschedule/Cancel Class, Post-Class Wrap-up, Brand Setup, Invoice Maker, Invoice Detail, Record Payment, Quiz Maker, Materials Library, Material Viewer, Settings → Data & Sync's Google connect/disconnect, and a passwordless parent/student login (`/login/parent`, WhatsApp OTP). Real loading/error states, no fake success.
+- **Still wired to `lib/store.js` (a documented localStorage mock, not the backend)**: Meeting Generator / Live Classroom's meeting link (explicitly mocked pending Google/Zoom OAuth — see D below; Calendar/Tasks OAuth itself is done, see C).
 - **Real but backend-independent**: Google Docs/Slides embed (pure client-side URL conversion, no data to persist).
 - **Real auth, still static content**: Parent Portal Home, Progress Reports, Contact Tutor, Payments & Invoices are now reachable at `/parent/*` only via a real parent login and gated by role — but the pages themselves are still the original static mockups (hardcoded numbers, no per-parent data fetch). Wiring them to real, parent-scoped data (their own students' invoices/reports) is separate follow-on work, not yet started. The same 4 pages also still preview under `/portal/view/...` for the tutor demo tour — harmless since nothing real is exposed there.
 - **Still fully static (no logic at all)**: Live Classroom, Messages, Notifications, and most Settings screens.
 - Route guard (`RequireAuth`) now takes an `allow` list of roles: `/portal/*` requires `tutor`, `/parent/*` requires `parent` or `student`. A signed-in user of the wrong role is redirected to the matching login page, not let through.
 
 ### `backend/` — Django + DRF
-- Models: `User` (role: tutor/parent/student — tutor accounts via signup, parent/student accounts auto-provisioned at onboarding completion; tutor also carries brand/invoice fields), `Student`, `Assignment`, `GuardianLink` (now populated — one row per completed onboarding), `ClassSession`, `Invoice`/`InvoiceItem`/`Payment`, `Material`, `Quiz`/`Question`, `LoginOTP` (passwordless login codes).
-- Endpoints: `POST /api/auth/signup/`, `POST /api/auth/login/`, `POST /api/auth/otp/request/`, `POST /api/auth/otp/verify/`, `GET+POST /api/students/`, `GET+POST /api/classes/`, `PATCH /api/students/{id}/complete-onboarding/`, `GET+PATCH /api/brand/`, `GET+POST /api/invoices/`, `GET /api/invoices/{id}/`, `POST /api/invoices/{id}/payments/`, `GET+POST /api/materials/`, `GET /api/materials/{id}/`, `GET+POST /api/quizzes/`, `GET /api/quizzes/{id}/`.
-- No models/endpoints yet for meetings — `lib/meetings.js` stays mocked pending Google/Zoom OAuth (C/D).
+- Models: `User` (role: tutor/parent/student — tutor accounts via signup, parent/student accounts auto-provisioned at onboarding completion; tutor also carries brand/invoice fields), `Student`, `Assignment`, `GuardianLink` (now populated — one row per completed onboarding), `ClassSession` (now also carries attendance/session notes/homework due date/cancel reason and Google event+task ids), `Invoice`/`InvoiceItem`/`Payment`, `Material`, `Quiz`/`Question`, `LoginOTP` (passwordless login codes), `GoogleAccount` (a tutor's connected Calendar/Tasks tokens).
+- Endpoints: `POST /api/auth/signup/`, `POST /api/auth/login/`, `POST /api/auth/otp/request/`, `POST /api/auth/otp/verify/`, `GET+POST /api/students/`, `GET+POST /api/classes/`, `PATCH /api/classes/{id}/` (reschedule), `POST /api/classes/{id}/cancel/`, `POST /api/classes/{id}/complete/`, `PATCH /api/students/{id}/complete-onboarding/`, `GET+PATCH /api/brand/`, `GET+POST /api/invoices/`, `GET /api/invoices/{id}/`, `POST /api/invoices/{id}/payments/`, `GET+POST /api/materials/`, `GET /api/materials/{id}/`, `GET+POST /api/quizzes/`, `GET /api/quizzes/{id}/`, `GET /api/google/connect/`, `GET /api/google/callback/`, `GET /api/google/status/`, `POST /api/google/disconnect/`.
+- No models/endpoints yet for meetings — `lib/meetings.js` stays mocked pending Google/Zoom OAuth (D).
 - SQLite by default; `DATABASE_URL` env var supported for Postgres but nothing is deployed anywhere yet.
 
 ### `whatsapp/` — FastAPI, Meta-first
@@ -77,10 +77,10 @@ section is the narrative reference for *why* each one matters.
 ### B2. Follow-on from B (not started)
 9b. Wire real, parent-scoped data into the `/parent/*` pages — a parent can only see their own linked students (via `GuardianLink`), so this needs new read endpoints plus the same wiring pass Section A did for the tutor side. The pages exist and are properly gated; only their content is still fake.
 
-### C. Google Calendar / Tasks
-10. Google OAuth connect step at tutor signup.
-11. Real two-way Calendar sync for classes.
-12. Google Tasks sync for tutor follow-ups.
+### C. Google Calendar / Tasks — done
+10. ✅ Google OAuth connect: `GET /api/google/connect/` (returns the consent URL) + `GET /api/google/callback/` (exchanges the code, stores tokens), wired into Settings → Data & Sync rather than into the single-step signup POST itself, since an OAuth redirect can't happen inside a form submit — a tutor connects post-signup instead. No real `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` exist yet (same "not obtained/configured for real" state as Meta — see F), so `/connect/` returns a clear 501 until they're set; everything else is verified against a mocked HTTP client.
+11. ✅ Two-way Calendar sync — scoped to classes TutorDesk itself created (push: create/reschedule/cancel a class updates/deletes its Google event; pull: `services/google.py`'s `pull_class_event_changes` reconciles only events carrying TutorDesk's own marker). Deliberately does **not** attempt to import a tutor's pre-existing, unrelated Google Calendar events as new classes — there's no reliable way to infer which student/subject those belong to. The pull side has no scheduled runner yet (would need the same kind of periodic job as the reminder scheduler in E).
+12. ✅ Google Tasks: a class's post-class wrap-up (new `POST /api/classes/{id}/complete/`) creates a Google Task when a homework due date is set and the tutor is connected.
 
 ### D. Video / classroom
 13. Real Google Meet/Zoom link generation (OAuth), replacing the mock in `lib/meetings.js`.
@@ -88,7 +88,7 @@ section is the narrative reference for *why* each one matters.
 15. Recording capture + delivery to parents via WhatsApp.
 
 ### E. Reminders & reports (the other half of the WhatsApp plan)
-16. Reminder scheduler (24h/1h before class), reading Django's calendar, sending via the WhatsApp service.
+16. Reminder scheduler (24h/1h before class), reading Django's calendar, sending via the WhatsApp service. Whatever runs this periodic job is also the natural place to call `services/google.py`'s `pull_class_event_changes` for each connected tutor — the two-way Calendar sync's pull side exists (C.11) but nothing invokes it on a schedule yet.
 17. Monthly report generation (PDF) + analytics link, sent via WhatsApp.
 18. Inbound "ask anything" Q&A agent for parents (balance/schedule lookups, escalation to the tutor).
 
@@ -101,6 +101,7 @@ section is the narrative reference for *why* each one matters.
 22. Deploy the WhatsApp service with a public HTTPS URL for Meta's webhook.
 23. Move off SQLite to Postgres.
 24. Set real `WHATSAPP_SERVICE_URL` / `INTERNAL_SERVICE_TOKEN` in both deployed environments.
+25. Create a Google Cloud project, enable the Calendar + Tasks APIs, configure the OAuth consent screen, and set real `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`GOOGLE_REDIRECT_URI`/`FRONTEND_BASE_URL` on the deployed backend (see `core/services/google.py`) — same "not done yet" state as the Meta credentials in F.
 
 ---
 
