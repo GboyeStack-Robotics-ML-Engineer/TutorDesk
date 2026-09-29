@@ -24,7 +24,10 @@ export const Sidebar = ({ isCollapsed }) => {
   };
 
   return (
-    <nav className={`fixed left-0 top-0 h-screen bg-primary text-on-primary py-5 z-40 transition-all duration-300 ease-spring flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}>
+    <nav
+      data-demo-guide-exempt
+      className={`fixed left-0 top-0 h-screen bg-primary text-on-primary py-5 z-40 transition-all duration-300 ease-spring flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}
+    >
       
       {/* Brand / Logo Area */}
       <div className={`px-space-5 mb-space-6 flex items-center gap-space-3 ${isCollapsed ? 'justify-center px-0' : ''}`}>

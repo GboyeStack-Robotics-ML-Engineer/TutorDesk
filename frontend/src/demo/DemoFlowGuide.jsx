@@ -38,6 +38,13 @@ export const DemoFlowGuide = () => {
       // async) submit handler's own success redirect (e.g. Add Student's
       // "Add student" button matches PRIMARY_LABELS).
       if (btn.closest('[data-live-page]')) return;
+      // Global chrome (Sidebar, Header) renders as a sibling of the page's
+      // own [data-live-page] wrapper, not inside it, so it's never covered
+      // by that opt-out — a real Sidebar nav click (e.g. "Schedule") could
+      // still get silently overridden by this handler's delayed navigate()
+      // below, sending the user somewhere they didn't click. Exempt it
+      // explicitly rather than relying on page-level opt-outs.
+      if (btn.closest('[data-demo-guide-exempt]')) return;
       const label = (btn.textContent || '').trim().toLowerCase();
       if (!label) return;
       if (PRIMARY_LABELS.some((l) => label === l || label.startsWith(l) || label.includes(l))) {

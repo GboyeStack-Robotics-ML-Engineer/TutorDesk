@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 
 export const Header = ({ isCollapsed, toggleSidebar }) => {
   return (
-    <header className={`fixed top-0 right-0 h-14 glass-header border-b border-paper-200/60 flex items-center justify-between px-gutter-desktop z-30 transition-all duration-300 ease-spring ${isCollapsed ? 'w-[calc(100%-5rem)]' : 'w-[calc(100%-16rem)]'}`}>
+    <header
+      data-demo-guide-exempt
+      className={`fixed top-0 right-0 h-14 glass-header border-b border-paper-200/60 flex items-center justify-between px-gutter-desktop z-30 transition-all duration-300 ease-spring ${isCollapsed ? 'w-[calc(100%-5rem)]' : 'w-[calc(100%-16rem)]'}`}
+    >
       
       <div className="flex items-center gap-space-3">
         <button 
