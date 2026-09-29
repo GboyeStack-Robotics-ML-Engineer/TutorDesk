@@ -9,12 +9,20 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Assignment, ClassSession, Student
+from .models import Assignment, ClassSession, Invoice, InvoiceItem, Material, Payment, Question, Quiz, Student
 from .serializers import (
+    BrandSerializer,
     ClassCreateSerializer,
     ClassSessionSerializer,
     CompleteOnboardingSerializer,
+    InvoiceCreateSerializer,
+    InvoiceSerializer,
     LoginSerializer,
+    MaterialCreateSerializer,
+    MaterialSerializer,
+    QuizCreateSerializer,
+    QuizSerializer,
+    RecordPaymentSerializer,
     SignupSerializer,
     StudentCreateSerializer,
     StudentSerializer,
@@ -179,3 +187,163 @@ class CompleteOnboardingView(APIView):
                     Assignment.objects.create(student=student, tutor=tutor, subject=subject)
 
         return Response(StudentSerializer(student).data)
+
+
+# ---- brand ---------------------------------------------------------------------
+
+class BrandView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(BrandSerializer(request.user).data)
+
+    def patch(self, request):
+        serializer = BrandSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(BrandSerializer(request.user).data)
+
+
+# ---- invoices ------------------------------------------------------------------
+
+class InvoiceListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        invoices = Invoice.objects.filter(tutor=request.user).select_related('student').prefetch_related('items', 'payments')
+        return Response(InvoiceSerializer(invoices, many=True).data)
+
+    def post(self, request):
+        serializer = InvoiceCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        student = Student.objects.filter(id=data['studentId'], assignments__tutor=request.user).distinct().first()
+        if student is None:
+            return Response({'detail': "That student isn't on your roster."}, status=status.HTTP_404_NOT_FOUND)
+
+        invoice = Invoice.objects.create(
+            tutor=request.user,
+            student=student,
+            issued_at=data['issuedAt'],
+            due_at=data['dueAt'],
+            note=data.get('note', ''),
+        )
+        for item in data['items']:
+            InvoiceItem.objects.create(
+                invoice=invoice,
+                description=item['description'],
+                qty=item['qty'],
+                rate=item['rate'],
+            )
+
+        return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
+
+
+class InvoiceDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, invoice_id):
+        invoice = get_object_or_404(Invoice, id=invoice_id, tutor=request.user)
+        return Response(InvoiceSerializer(invoice).data)
+
+
+class RecordPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, invoice_id):
+        invoice = get_object_or_404(Invoice, id=invoice_id, tutor=request.user)
+        serializer = RecordPaymentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        Payment.objects.create(
+            invoice=invoice,
+            amount=data['amount'],
+            method=data['method'],
+            paid_at=data['paidAt'],
+            reference=data.get('reference', ''),
+            note=data.get('note', ''),
+        )
+        if data.get('markPaid', True):
+            invoice.status = Invoice.Status.PAID
+            invoice.save()
+
+        return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
+
+
+# ---- materials -----------------------------------------------------------------
+
+class MaterialListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        materials = Material.objects.filter(tutor=request.user)
+        return Response(MaterialSerializer(materials, many=True).data)
+
+    def post(self, request):
+        serializer = MaterialCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        material = Material.objects.create(
+            tutor=request.user,
+            title=data['title'],
+            kind=data['kind'],
+            text=data.get('text', ''),
+        )
+        return Response(MaterialSerializer(material).data, status=status.HTTP_201_CREATED)
+
+
+class MaterialDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, material_id):
+        material = get_object_or_404(Material, id=material_id, tutor=request.user)
+        return Response(MaterialSerializer(material).data)
+
+
+# ---- quizzes -------------------------------------------------------------------
+
+class QuizListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        quizzes = Quiz.objects.filter(tutor=request.user).prefetch_related('questions')
+        return Response(QuizSerializer(quizzes, many=True).data)
+
+    def post(self, request):
+        serializer = QuizCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        material = None
+        if data.get('materialId'):
+            material = Material.objects.filter(id=data['materialId'], tutor=request.user).first()
+
+        quiz = Quiz.objects.create(
+            tutor=request.user,
+            title=data['title'],
+            subject=data.get('subject', ''),
+            source=data['source'],
+            material=material,
+        )
+        for order, q in enumerate(data['questions']):
+            Question.objects.create(
+                quiz=quiz,
+                type=q['type'],
+                prompt=q.get('prompt', ''),
+                options=q.get('options', []),
+                answer=q.get('answer', ''),
+                order=order,
+            )
+
+        return Response(QuizSerializer(quiz).data, status=status.HTTP_201_CREATED)
+
+
+class QuizDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, quiz_id):
+        quiz = get_object_or_404(Quiz, id=quiz_id, tutor=request.user)
+        return Response(QuizSerializer(quiz).data)

@@ -21,6 +21,19 @@
 //   POST /api/classes/       { studentId, subject, startsAt,
 //                               durationMinutes, recurrence,
 //                               platform, notes }                   -> ClassSession
+//   GET/PATCH /api/brand/    { logoDataUrl, primaryColor,
+//                               secondaryColor, invoiceName }        -> Brand
+//   GET  /api/invoices/                                             -> Invoice[]
+//   POST /api/invoices/      { studentId, items, issuedAt,
+//                               dueAt, note }                        -> Invoice
+//   GET  /api/invoices/{id}/                                        -> Invoice
+//   POST /api/invoices/{id}/payments/ { amount, method, paidAt,
+//                               reference, note, markPaid }          -> Invoice
+//   GET  /api/materials/                                            -> Material[]
+//   POST /api/materials/     { title, kind, text }                  -> Material
+//   GET  /api/quizzes/                                              -> Quiz[]
+//   POST /api/quizzes/       { title, subject, source, materialId,
+//                               questions }                          -> Quiz
 //
 // Adjust the paths here (not at every call site) once the real contract is
 // finalized with the backend track.
@@ -111,5 +124,35 @@ export const api = {
         method: 'POST',
         body: { studentId, subject, startsAt, durationMinutes, recurrence, platform, notes },
       }),
+  },
+
+  brand: {
+    get: () => request('/brand/'),
+    update: (brand) => request('/brand/', { method: 'PATCH', body: brand }),
+  },
+
+  invoices: {
+    list: () => request('/invoices/'),
+    get: (id) => request(`/invoices/${id}/`),
+    create: ({ studentId, items, issuedAt, dueAt, note }) =>
+      request('/invoices/', { method: 'POST', body: { studentId, items, issuedAt, dueAt, note } }),
+    recordPayment: (id, { amount, method, paidAt, reference, note, markPaid }) =>
+      request(`/invoices/${id}/payments/`, {
+        method: 'POST',
+        body: { amount, method, paidAt, reference, note, markPaid },
+      }),
+  },
+
+  materials: {
+    list: () => request('/materials/'),
+    get: (id) => request(`/materials/${id}/`),
+    create: ({ title, kind, text }) => request('/materials/', { method: 'POST', body: { title, kind, text } }),
+  },
+
+  quizzes: {
+    list: () => request('/quizzes/'),
+    get: (id) => request(`/quizzes/${id}/`),
+    create: ({ title, subject, source, materialId, questions }) =>
+      request('/quizzes/', { method: 'POST', body: { title, subject, source, materialId, questions } }),
   },
 };

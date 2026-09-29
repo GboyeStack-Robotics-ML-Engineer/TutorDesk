@@ -10,7 +10,6 @@ import { AddEditStudentDesktop } from './AddEditStudentDesktop';
 import { AiPromptLibraryDesktop } from './AiPromptLibraryDesktop';
 import { ClassroomPostClassWrap } from './ClassroomPostClassWrap';
 import { CreateEditClassDesktop } from './CreateEditClassDesktop';
-import { CreateEditInvoiceDesktop } from './CreateEditInvoiceDesktop';
 import { DiagnosticAssessmentEntryDesktop } from './DiagnosticAssessmentEntryDesktop';
 import { FlaggedStudentsDirectoryView } from './FlaggedStudentsDirectoryView';
 import { GlobalSearchResultsDesktop } from './GlobalSearchResultsDesktop';
@@ -27,7 +26,6 @@ import { ParentPortalHome } from './ParentPortalHome';
 import { PortalContactTutor1 } from './PortalContactTutor1';
 import { PortalPaymentsInvoices } from './PortalPaymentsInvoices';
 import { PortalProgressReports } from './PortalProgressReports';
-import { QuizBuilderDesktop } from './QuizBuilderDesktop';
 import { RecordPaymentDesktop } from './RecordPaymentDesktop';
 import { ReportsInsightsDesktop } from './ReportsInsightsDesktop';
 import { ReportDetailIncomeAnalysis } from './ReportDetailIncomeAnalysis';
@@ -55,7 +53,6 @@ export const generatedRoutes = [
   { path: "/view/ai-prompt-library-desktop", component: AiPromptLibraryDesktop },
   { path: "/view/classroom-post-class-wrap", component: ClassroomPostClassWrap },
   { path: "/view/create-edit-class-desktop", component: CreateEditClassDesktop },
-  { path: "/view/create-edit-invoice-desktop", component: CreateEditInvoiceDesktop },
   { path: "/view/diagnostic-assessment-entry-desktop", component: DiagnosticAssessmentEntryDesktop },
   { path: "/view/flagged-students-directory-view", component: FlaggedStudentsDirectoryView },
   { path: "/view/global-search-results-desktop", component: GlobalSearchResultsDesktop },
@@ -72,7 +69,6 @@ export const generatedRoutes = [
   { path: "/view/portal-contact-tutor-1", component: PortalContactTutor1 },
   { path: "/view/portal-payments-invoices", component: PortalPaymentsInvoices },
   { path: "/view/portal-progress-reports", component: PortalProgressReports },
-  { path: "/view/quiz-builder-desktop", component: QuizBuilderDesktop },
   { path: "/view/record-payment-desktop", component: RecordPaymentDesktop },
   { path: "/view/reports-insights-desktop", component: ReportsInsightsDesktop },
   { path: "/view/report-detail-income-analysis", component: ReportDetailIncomeAnalysis },

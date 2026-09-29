@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from .models import ClassSession, Student
+from .models import ClassSession, Invoice, InvoiceItem, Material, Payment, Question, Quiz, Student
 
 User = get_user_model()
 
@@ -129,3 +129,112 @@ class ClassSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassSession
         fields = ['id', 'subject', 'studentName', 'startsAt', 'durationMinutes', 'status', 'platform']
+
+
+# ---- brand (tutor invoice branding) -----------------------------------------
+
+class BrandSerializer(serializers.Serializer):
+    logoDataUrl = serializers.CharField(source='logo_data_url', required=False, allow_blank=True, allow_null=True)
+    primaryColor = serializers.CharField(source='brand_primary_color', required=False)
+    secondaryColor = serializers.CharField(source='brand_secondary_color', required=False)
+    invoiceName = serializers.CharField(source='invoice_name', required=False, allow_blank=True)
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value if value is not None else '')
+        instance.save()
+        return instance
+
+
+# ---- invoices ----------------------------------------------------------------
+
+class InvoiceItemSerializer(serializers.ModelSerializer):
+    desc = serializers.CharField(source='description')
+
+    class Meta:
+        model = InvoiceItem
+        fields = ['desc', 'qty', 'rate']
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    paidAt = serializers.DateField(source='paid_at')
+
+    class Meta:
+        model = Payment
+        fields = ['id', 'amount', 'method', 'paidAt', 'reference', 'note']
+
+
+class InvoiceCreateSerializer(serializers.Serializer):
+    studentId = serializers.UUIDField()
+    items = InvoiceItemSerializer(many=True)
+    issuedAt = serializers.DateField()
+    dueAt = serializers.DateField()
+    note = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    studentId = serializers.UUIDField(source='student.id', read_only=True)
+    studentName = serializers.CharField(source='student.name', read_only=True)
+    issuedAt = serializers.DateField(source='issued_at')
+    dueAt = serializers.DateField(source='due_at')
+    items = InvoiceItemSerializer(many=True, read_only=True)
+    payments = PaymentSerializer(many=True, read_only=True)
+    total = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = Invoice
+        fields = ['id', 'studentId', 'studentName', 'items', 'status', 'issuedAt', 'dueAt', 'note', 'total', 'payments']
+
+
+class RecordPaymentSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    method = serializers.ChoiceField(choices=[c[0] for c in Payment.Method.choices], default=Payment.Method.BANK_TRANSFER)
+    paidAt = serializers.DateField()
+    reference = serializers.CharField(required=False, allow_blank=True, default='')
+    note = serializers.CharField(required=False, allow_blank=True, default='')
+    markPaid = serializers.BooleanField(required=False, default=True)
+
+
+# ---- materials -----------------------------------------------------------------
+
+class MaterialCreateSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=255)
+    kind = serializers.ChoiceField(choices=['pdf', 'doc'], default='doc')
+    text = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class MaterialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Material
+        fields = ['id', 'title', 'kind', 'text']
+
+
+# ---- quizzes ---------------------------------------------------------------------
+
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ['id', 'type', 'prompt', 'options', 'answer']
+
+
+class QuestionInputSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=[c[0] for c in Question.Type.choices])
+    prompt = serializers.CharField(allow_blank=True)
+    options = serializers.ListField(child=serializers.CharField(allow_blank=True), required=False, default=list)
+    answer = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class QuizCreateSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=255)
+    subject = serializers.CharField(required=False, allow_blank=True, default='')
+    source = serializers.ChoiceField(choices=['scratch', 'material'], default='scratch')
+    materialId = serializers.UUIDField(required=False, allow_null=True)
+    questions = QuestionInputSerializer(many=True)
+
+
+class QuizSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Quiz
+        fields = ['id', 'title', 'subject', 'source', 'questions']

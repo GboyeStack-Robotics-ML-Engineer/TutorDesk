@@ -30,6 +30,13 @@ class User(AbstractUser):
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.TUTOR)
     phone = models.CharField(max_length=32, blank=True)
 
+    # Tutor brand/invoice settings (role=tutor only, not enforced at the DB
+    # level — same lightweight approach as the rest of this schema).
+    logo_data_url = models.TextField(blank=True)
+    brand_primary_color = models.CharField(max_length=7, default='#005248')
+    brand_secondary_color = models.CharField(max_length=7, default='#C48037')
+    invoice_name = models.CharField(max_length=255, blank=True)
+
     def __str__(self):
         return self.get_full_name() or self.username
 
@@ -147,3 +154,103 @@ class ClassSession(models.Model):
 
     def __str__(self):
         return f'{self.subject} with {self.student} at {self.starts_at:%Y-%m-%d %H:%M}'
+
+
+class Invoice(models.Model):
+    class Status(models.TextChoices):
+        UNPAID = 'unpaid', 'Unpaid'
+        PAID = 'paid', 'Paid'
+        OVERDUE = 'overdue', 'Overdue'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tutor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invoices')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='invoices')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.UNPAID)
+    issued_at = models.DateField()
+    due_at = models.DateField()
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def total(self):
+        return sum((item.qty * item.rate for item in self.items.all()), start=0)
+
+    def __str__(self):
+        return f'Invoice for {self.student} ({self.status})'
+
+
+class InvoiceItem(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='items')
+    description = models.CharField(max_length=255, blank=True)
+    qty = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    rate = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+
+class Payment(models.Model):
+    class Method(models.TextChoices):
+        BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'
+        CASH = 'cash', 'Cash'
+        CARD = 'card', 'Card'
+
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    method = models.CharField(max_length=20, choices=Method.choices, default=Method.BANK_TRANSFER)
+    paid_at = models.DateField()
+    reference = models.CharField(max_length=255, blank=True)
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-paid_at']
+
+
+class Material(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tutor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='materials')
+    title = models.CharField(max_length=255)
+    kind = models.CharField(max_length=20, default='doc')  # 'pdf' | 'doc' — matches the frontend's icon lookup
+    text = models.TextField(blank=True)  # plain-text content; used client-side to draft quiz questions
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class Quiz(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tutor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='quizzes')
+    title = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255, blank=True)
+    source = models.CharField(max_length=20, default='scratch')  # 'scratch' | 'material'
+    material = models.ForeignKey(Material, null=True, blank=True, on_delete=models.SET_NULL, related_name='quizzes')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class Question(models.Model):
+    class Type(models.TextChoices):
+        MCQ = 'mcq', 'Multiple choice'
+        SHORT = 'short', 'Short answer'
+
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
+    type = models.CharField(max_length=10, choices=Type.choices)
+    prompt = models.TextField()
+    options = models.JSONField(default=list, blank=True)  # mcq only
+    answer = models.CharField(max_length=500, blank=True)  # mcq: option index as string; short: model answer
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
