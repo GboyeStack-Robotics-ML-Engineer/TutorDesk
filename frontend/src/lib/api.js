@@ -24,7 +24,11 @@
 //   GET  /api/classes/?from=&to=                                    -> ClassSession[]
 //   POST /api/classes/       { studentId, subject, startsAt,
 //                               durationMinutes, recurrence,
-//                               platform, notes }                   -> ClassSession
+//                               platform, notes, meetLink? }         -> ClassSession
+//                             (meetLink is only used for platform=external
+//                              — a tutordesk-platform class gets a real
+//                              Google Meet link automatically when the
+//                              tutor is connected)
 //   PATCH /api/classes/{id}/ { startsAt, durationMinutes?, notes? }  -> ClassSession (reschedule)
 //   POST /api/classes/{id}/cancel/   { reason }                     -> ClassSession
 //   POST /api/classes/{id}/complete/ { attendance, notes,
@@ -35,6 +39,9 @@
 //   GET  /api/google/connect/                                       -> { authUrl }
 //   GET  /api/google/status/                                        -> { connected, email }
 //   POST /api/google/disconnect/                                    -> { connected: false }
+//   POST /api/google/meet-link/ { topic }                           -> { url }
+//                             (ad-hoc Google Meet link, not tied to a
+//                              scheduled class — requires Google connected)
 //   GET/PATCH /api/brand/    { logoDataUrl, primaryColor,
 //                               secondaryColor, invoiceName }        -> Brand
 //   GET  /api/invoices/                                             -> Invoice[]
@@ -137,10 +144,10 @@ export const api = {
       const qs = params.toString();
       return request(`/classes/${qs ? `?${qs}` : ''}`);
     },
-    create: ({ studentId, subject, startsAt, durationMinutes, recurrence, platform, notes }) =>
+    create: ({ studentId, subject, startsAt, durationMinutes, recurrence, platform, notes, meetLink }) =>
       request('/classes/', {
         method: 'POST',
-        body: { studentId, subject, startsAt, durationMinutes, recurrence, platform, notes },
+        body: { studentId, subject, startsAt, durationMinutes, recurrence, platform, notes, meetLink },
       }),
     reschedule: (id, { startsAt, durationMinutes, notes }) =>
       request(`/classes/${id}/`, { method: 'PATCH', body: { startsAt, durationMinutes, notes } }),
@@ -154,6 +161,7 @@ export const api = {
     connect: () => request('/google/connect/'),
     status: () => request('/google/status/'),
     disconnect: () => request('/google/disconnect/', { method: 'POST' }),
+    createMeetLink: ({ topic } = {}) => request('/google/meet-link/', { method: 'POST', body: { topic } }),
   },
 
   brand: {

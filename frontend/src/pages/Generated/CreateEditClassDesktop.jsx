@@ -21,6 +21,8 @@ export const CreateEditClassDesktop = () => {
   const [recurrence, setRecurrence] = useState('none');
   const [platform, setPlatform] = useState('tutordesk');
   const [notes, setNotes] = useState('');
+  const [meetLink, setMeetLink] = useState('');
+  const [googleConnected, setGoogleConnected] = useState(null);
 
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
@@ -46,6 +48,14 @@ export const CreateEditClassDesktop = () => {
       .finally(() => {
         if (!cancelled) setLoadingStudents(false);
       });
+    api.google
+      .status()
+      .then((s) => {
+        if (!cancelled) setGoogleConnected(s.connected);
+      })
+      .catch(() => {
+        if (!cancelled) setGoogleConnected(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -59,6 +69,7 @@ export const CreateEditClassDesktop = () => {
     if (!subject) next.subject = 'Choose a subject.';
     if (!date) next.date = 'Choose a date.';
     if (!startTime) next.startTime = 'Choose a start time.';
+    if (platform === 'external' && !meetLink.trim()) next.meetLink = 'Paste your meeting link.';
     setFieldErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -79,6 +90,7 @@ export const CreateEditClassDesktop = () => {
         recurrence,
         platform,
         notes,
+        meetLink: platform === 'external' ? meetLink.trim() : undefined,
       });
       navigate('/portal/schedule');
     } catch (err) {
@@ -270,6 +282,35 @@ export const CreateEditClassDesktop = () => {
                     <span className="font-body text-body text-ink-700">External Link</span>
                   </label>
                 </div>
+                {platform === 'tutordesk' ? (
+                  googleConnected ? (
+                    <p className="font-caption text-caption text-ink-500">
+                      A Google Meet link will be created automatically when you save.
+                    </p>
+                  ) : googleConnected === false ? (
+                    <p className="font-caption text-caption text-ink-500">
+                      Connect Google Calendar in{' '}
+                      <a href="/portal/view/settings-data-sync-preferences" className="text-primary underline">
+                        Settings
+                      </a>{' '}
+                      to auto-generate a Meet link — otherwise you'll need to add one after saving.
+                    </p>
+                  ) : null
+                ) : (
+                  <div className="space-y-space-1">
+                    <label className="block font-label text-label text-ink-700" htmlFor="meet_link">Meeting link</label>
+                    <input
+                      className="w-full px-3 py-2 bg-surface border border-paper-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary-fixed-dim transition-all font-body text-body placeholder:text-ink-500"
+                      id="meet_link"
+                      type="url"
+                      placeholder="https://zoom.us/j/..."
+                      value={meetLink}
+                      onChange={(e) => setMeetLink(e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                    {fieldErrors.meetLink && <p className="font-caption text-caption text-danger-solid">{fieldErrors.meetLink}</p>}
+                  </div>
+                )}
               </div>
             </div>
 

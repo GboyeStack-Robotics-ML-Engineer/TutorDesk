@@ -130,6 +130,7 @@ class ClassCreateSerializer(serializers.Serializer):
     recurrence = serializers.ChoiceField(choices=[c[0] for c in ClassSession.Recurrence.choices], default='none')
     platform = serializers.ChoiceField(choices=[c[0] for c in ClassSession.Platform.choices], default='tutordesk')
     notes = serializers.CharField(required=False, allow_blank=True, default='')
+    meetLink = serializers.URLField(required=False, allow_blank=True, default='')
 
 
 class ClassSessionSerializer(serializers.ModelSerializer):
@@ -139,13 +140,14 @@ class ClassSessionSerializer(serializers.ModelSerializer):
     sessionNotes = serializers.CharField(source='session_notes', read_only=True)
     homeworkDueAt = serializers.DateField(source='homework_due_at', read_only=True)
     cancelReason = serializers.CharField(source='cancel_reason', read_only=True)
+    meetLink = serializers.URLField(source='meet_link', read_only=True)
     googleSynced = serializers.SerializerMethodField()
 
     class Meta:
         model = ClassSession
         fields = [
             'id', 'subject', 'studentName', 'startsAt', 'durationMinutes', 'status', 'platform', 'notes',
-            'attendance', 'sessionNotes', 'homeworkDueAt', 'cancelReason', 'googleSynced',
+            'attendance', 'sessionNotes', 'homeworkDueAt', 'cancelReason', 'meetLink', 'googleSynced',
         ]
 
     def get_googleSynced(self, obj):
@@ -284,3 +286,7 @@ class ClassCompleteSerializer(serializers.Serializer):
 class GoogleAccountSerializer(serializers.Serializer):
     connected = serializers.BooleanField()
     email = serializers.CharField(required=False, allow_blank=True)
+
+
+class QuickMeetLinkRequestSerializer(serializers.Serializer):
+    topic = serializers.CharField(required=False, allow_blank=True, default='')

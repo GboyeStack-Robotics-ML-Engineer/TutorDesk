@@ -26,6 +26,7 @@ attempted here.
 """
 import logging
 import os
+import uuid
 from datetime import timedelta
 
 import httpx
@@ -164,36 +165,82 @@ def _ensure_valid_access_token(account):
 
 # ---- Calendar (push: TutorDesk -> Google) -----------------------------------
 
-def _event_payload(class_session):
+def _event_payload(class_session, request_meet_link=False):
     start = class_session.starts_at
     end = start + timedelta(minutes=class_session.duration_minutes)
-    return {
+    payload = {
         'summary': f'{class_session.subject} with {class_session.student.name}',
         'description': class_session.notes,
         'start': {'dateTime': start.isoformat()},
         'end': {'dateTime': end.isoformat()},
         'extendedProperties': {'private': {'tutordeskClassId': str(class_session.id)}},
     }
+    if request_meet_link:
+        # conferenceDataVersion=1 (set by the caller's query string) is what
+        # makes Google actually honor this — see create_event.
+        payload['conferenceData'] = {
+            'createRequest': {'requestId': str(uuid.uuid4()), 'conferenceSolutionKey': {'type': 'hangoutsMeet'}},
+        }
+    return payload
 
 
-def create_event(account, class_session):
-    """Pushes a new class to the tutor's Google Calendar. Returns the
-    created event's id (to store on ClassSession.google_event_id), or None
-    if the call fails — callers treat that as "sync didn't happen this
-    time," not a reason to fail the class creation itself."""
+def create_event(account, class_session, with_meet_link=False):
+    """Pushes a new class to the tutor's Google Calendar. Returns
+    {'id': ..., 'meetLink': ...} (to store on ClassSession.google_event_id /
+    .meet_link), or None if the call fails — callers treat that as "sync
+    didn't happen this time," not a reason to fail the class creation
+    itself. `with_meet_link` requests a real Google Meet room via
+    conferenceData — only meaningful for TutorDesk-platform classes; an
+    external-link class already has its own meeting link pasted in."""
     token = _ensure_valid_access_token(account)
     if not token:
         return None
+    params = {'conferenceDataVersion': 1} if with_meet_link else None
     try:
         with httpx.Client(timeout=15) as client:
             resp = client.post(
                 CALENDAR_EVENTS_URL, headers={'Authorization': f'Bearer {token}'},
-                json=_event_payload(class_session),
+                json=_event_payload(class_session, request_meet_link=with_meet_link),
+                params=params,
             )
             resp.raise_for_status()
-            return resp.json()['id']
+            data = resp.json()
+            return {'id': data['id'], 'meetLink': data.get('hangoutLink', '')}
     except httpx.HTTPError:
         logger.exception('Failed to create Google Calendar event for class %s', class_session.id)
+        return None
+
+
+def create_quick_meet_link(account, topic=''):
+    """An ad-hoc Meet link not tied to any scheduled class (the "Create
+    class link" flow — see views.GoogleQuickMeetLinkView). Google Meet
+    links only exist attached to a real Calendar event, so this creates a
+    throwaway one-hour placeholder event tagged
+    extendedProperties.private.tutordeskQuickMeet — it isn't a class and
+    nothing reads it back as one. Returns the hangoutLink, or None."""
+    token = _ensure_valid_access_token(account)
+    if not token:
+        return None
+    start = timezone.now()
+    payload = {
+        'summary': topic or 'TutorDesk session',
+        'start': {'dateTime': start.isoformat()},
+        'end': {'dateTime': (start + timedelta(hours=1)).isoformat()},
+        'extendedProperties': {'private': {'tutordeskQuickMeet': 'true'}},
+        'conferenceData': {
+            'createRequest': {'requestId': str(uuid.uuid4()), 'conferenceSolutionKey': {'type': 'hangoutsMeet'}},
+        },
+    }
+    try:
+        with httpx.Client(timeout=15) as client:
+            resp = client.post(
+                CALENDAR_EVENTS_URL, headers={'Authorization': f'Bearer {token}'},
+                json=payload, params={'conferenceDataVersion': 1},
+            )
+            resp.raise_for_status()
+            return resp.json().get('hangoutLink') or None
+    except httpx.HTTPError:
+        logger.exception('Failed to create an ad-hoc Google Meet link for tutor %s', account.tutor_id)
         return None
 
 

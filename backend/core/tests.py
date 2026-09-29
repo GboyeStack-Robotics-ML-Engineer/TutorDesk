@@ -551,11 +551,23 @@ class GoogleServiceTests(APITestCase):
     def test_create_event_stores_class_marker_and_returns_id(self):
         fake_client = FakeGoogleClient([FakeGoogleResponse(200, {'id': 'evt-123'})])
         with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
-            event_id = google_service.create_event(self.account, self.session)
+            result = google_service.create_event(self.account, self.session)
 
-        self.assertEqual(event_id, 'evt-123')
+        self.assertEqual(result, {'id': 'evt-123', 'meetLink': ''})
         sent_json = fake_client.calls[0][2]['json']
         self.assertEqual(sent_json['extendedProperties']['private']['tutordeskClassId'], str(self.session.id))
+        self.assertNotIn('conferenceData', sent_json)
+
+    def test_create_event_with_meet_link_requests_conference_data(self):
+        fake_client = FakeGoogleClient([FakeGoogleResponse(200, {'id': 'evt-123', 'hangoutLink': 'https://meet.google.com/abc-defg-hij'})])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            result = google_service.create_event(self.account, self.session, with_meet_link=True)
+
+        self.assertEqual(result, {'id': 'evt-123', 'meetLink': 'https://meet.google.com/abc-defg-hij'})
+        method, url, kwargs = fake_client.calls[0]
+        self.assertEqual(kwargs['params'], {'conferenceDataVersion': 1})
+        self.assertIn('conferenceData', kwargs['json'])
+        self.assertEqual(kwargs['json']['conferenceData']['createRequest']['conferenceSolutionKey']['type'], 'hangoutsMeet')
 
     def test_update_event_noop_without_a_stored_event_id(self):
         fake_client = FakeGoogleClient([])  # would raise IndexError if called
@@ -574,6 +586,23 @@ class GoogleServiceTests(APITestCase):
         with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
             task_id = google_service.create_task(self.account, 'Follow up', due_date=timezone.now().date())
         self.assertEqual(task_id, 'task-1')
+
+    def test_create_quick_meet_link_returns_url(self):
+        fake_client = FakeGoogleClient([FakeGoogleResponse(200, {'id': 'evt-q1', 'hangoutLink': 'https://meet.google.com/xyz-abcd-efg'})])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            url = google_service.create_quick_meet_link(self.account, topic='WAEC Prep')
+
+        self.assertEqual(url, 'https://meet.google.com/xyz-abcd-efg')
+        method, sent_url, kwargs = fake_client.calls[0]
+        self.assertEqual(kwargs['json']['summary'], 'WAEC Prep')
+        self.assertEqual(kwargs['json']['extendedProperties']['private']['tutordeskQuickMeet'], 'true')
+        self.assertEqual(kwargs['params'], {'conferenceDataVersion': 1})
+
+    def test_create_quick_meet_link_returns_none_when_google_omits_it(self):
+        fake_client = FakeGoogleClient([FakeGoogleResponse(200, {'id': 'evt-q2'})])
+        with mock.patch('core.services.google.httpx.Client', return_value=fake_client):
+            url = google_service.create_quick_meet_link(self.account)
+        self.assertIsNone(url)
 
     def test_pull_class_event_changes_only_reconciles_tagged_events(self):
         fake_client = FakeGoogleClient([FakeGoogleResponse(200, {
@@ -704,7 +733,7 @@ class ClassLifecycleTests(AuthenticatedAPITestCase):
             tutor=self.tutor, access_token='a', refresh_token='r',
             token_expires_at=timezone.now() + timedelta(hours=1),
         )
-        with mock.patch.object(google_service, 'create_event', return_value='evt-1') as mocked:
+        with mock.patch.object(google_service, 'create_event', return_value={'id': 'evt-1', 'meetLink': ''}) as mocked:
             response = self._create_session()
         mocked.assert_called_once()
         self.assertTrue(response.data['googleSynced'])
@@ -713,6 +742,37 @@ class ClassLifecycleTests(AuthenticatedAPITestCase):
         response = self._create_session()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertFalse(response.data['googleSynced'])
+
+    def test_create_with_google_connected_requests_a_meet_link_for_tutordesk_platform(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(
+            google_service, 'create_event',
+            return_value={'id': 'evt-1', 'meetLink': 'https://meet.google.com/abc-defg-hij'},
+        ) as mocked:
+            response = self._create_session()
+
+        mocked.assert_called_once_with(mock.ANY, mock.ANY, with_meet_link=True)
+        self.assertEqual(response.data['meetLink'], 'https://meet.google.com/abc-defg-hij')
+
+    def test_create_with_external_platform_uses_the_pasted_link_and_skips_meet_request(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(
+            google_service, 'create_event', return_value={'id': 'evt-1', 'meetLink': ''},
+        ) as mocked:
+            response = self.client.post('/api/classes/', {
+                'studentId': str(self.student.id), 'subject': 'Mathematics',
+                'startsAt': (timezone.now() + timedelta(days=1)).isoformat(),
+                'platform': 'external', 'meetLink': 'https://zoom.us/j/1234567890',
+            }, format='json')
+
+        mocked.assert_called_once_with(mock.ANY, mock.ANY, with_meet_link=False)
+        self.assertEqual(response.data['meetLink'], 'https://zoom.us/j/1234567890')
 
     def test_reschedule_updates_time_and_syncs(self):
         created = self._create_session()
@@ -746,7 +806,7 @@ class ClassLifecycleTests(AuthenticatedAPITestCase):
             tutor=self.tutor, access_token='a', refresh_token='r',
             token_expires_at=timezone.now() + timedelta(hours=1),
         )
-        with mock.patch.object(google_service, 'create_event', return_value='evt-1'):
+        with mock.patch.object(google_service, 'create_event', return_value={'id': 'evt-1', 'meetLink': ''}):
             created = self._create_session()
         class_id = created.data['id']
 
@@ -776,7 +836,7 @@ class ClassLifecycleTests(AuthenticatedAPITestCase):
             tutor=self.tutor, access_token='a', refresh_token='r',
             token_expires_at=timezone.now() + timedelta(hours=1),
         )
-        with mock.patch.object(google_service, 'create_event', return_value='evt-1'):
+        with mock.patch.object(google_service, 'create_event', return_value={'id': 'evt-1', 'meetLink': ''}):
             created = self._create_session()
         class_id = created.data['id']
         due = (timezone.now().date() + timedelta(days=7)).isoformat()
@@ -788,3 +848,32 @@ class ClassLifecycleTests(AuthenticatedAPITestCase):
 
         self.assertEqual(response.data['homeworkDueAt'], due)
         mocked.assert_called_once()
+
+
+# ---- ad-hoc "Create class link" endpoint --------------------------------------
+
+class GoogleQuickMeetLinkTests(AuthenticatedAPITestCase):
+    def test_requires_a_connected_google_account(self):
+        response = self.client.post('/api/google/meet-link/', {'topic': 'WAEC Prep'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_returns_the_generated_url_when_connected(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(google_service, 'create_quick_meet_link', return_value='https://meet.google.com/abc-defg-hij') as mocked:
+            response = self.client.post('/api/google/meet-link/', {'topic': 'WAEC Prep'}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'url': 'https://meet.google.com/abc-defg-hij'})
+        mocked.assert_called_once_with(mock.ANY, topic='WAEC Prep')
+
+    def test_returns_502_when_google_fails(self):
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        with mock.patch.object(google_service, 'create_quick_meet_link', return_value=None):
+            response = self.client.post('/api/google/meet-link/', {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)

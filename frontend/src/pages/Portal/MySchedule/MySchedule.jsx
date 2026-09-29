@@ -116,10 +116,10 @@ export const MySchedule = () => {
                 </div>
                 <div className={styles.cardAction}>
                   {i === 0 && (
-                    <button className={styles.joinButton}>
+                    <Link to={`/portal/view/live-classroom-desktop?id=${session.id}`} className={styles.joinButton}>
                       <span className="material-symbols-outlined text-[18px]">videocam</span>
                       Join Session
-                    </button>
+                    </Link>
                   )}
                   <Link
                     to={`/portal/view/reschedule-cancel-class-desktop?id=${session.id}`}

@@ -45,6 +45,7 @@ from .serializers import (
     MaterialSerializer,
     OtpRequestSerializer,
     OtpVerifySerializer,
+    QuickMeetLinkRequestSerializer,
     QuizCreateSerializer,
     QuizSerializer,
     RecordPaymentSerializer,
@@ -180,14 +181,22 @@ class ClassListCreateView(APIView):
             recurrence=data['recurrence'],
             platform=data['platform'],
             notes=data.get('notes', ''),
+            meet_link=data.get('meetLink', ''),
         )
 
         account = _google_account_for(request.user)
         if account:
-            event_id = google_service.create_event(account, session)
-            if event_id:
-                session.google_event_id = event_id
-                session.save(update_fields=['google_event_id'])
+            # Only ask Google for a real Meet room on TutorDesk-platform
+            # classes — an external-platform class already has its own
+            # pasted link (Zoom, etc.) and shouldn't get a second one.
+            result = google_service.create_event(
+                account, session, with_meet_link=(session.platform == ClassSession.Platform.TUTORDESK),
+            )
+            if result:
+                session.google_event_id = result['id']
+                if not session.meet_link and result.get('meetLink'):
+                    session.meet_link = result['meetLink']
+                session.save(update_fields=['google_event_id', 'meet_link'])
 
         return Response(ClassSessionSerializer(session).data, status=status.HTTP_201_CREATED)
 
@@ -645,3 +654,30 @@ class GoogleDisconnectView(APIView):
             google_service.revoke(account)
             account.delete()
         return Response({'connected': False})
+
+
+class GoogleQuickMeetLinkView(APIView):
+    """Ad-hoc "Create class link" flow (see frontend's MeetingGenerator) —
+    not tied to a scheduled class, unlike the Meet link a TutorDesk-platform
+    class gets automatically on creation. Requires a connected Google
+    account; there's no other way to mint a real Meet link."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        account = _google_account_for(request.user)
+        if account is None:
+            return Response(
+                {'detail': 'Connect Google Calendar in Settings to generate a Meet link.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = QuickMeetLinkRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        url = google_service.create_quick_meet_link(account, topic=serializer.validated_data.get('topic', ''))
+        if not url:
+            return Response(
+                {'detail': 'Could not generate a Meet link right now. Please try again.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        return Response({'url': url})
