@@ -31,20 +31,22 @@ university portal rather than a single shared family login.
 ## 3. Current state (accurate as of this update)
 
 ### `frontend/` — React + Vite + Tailwind
-- **Wired to the real Django backend**: Login, Sign Up, Add/Edit Student (captures parent WhatsApp + reminder channel — the onboarding trigger), Create/Edit Class, My Schedule, Brand Setup, Invoice Maker, Invoice Detail, Record Payment, Quiz Maker, Materials Library, Material Viewer. Real loading/error states, no fake success.
+- **Wired to the real Django backend**: Login, Sign Up, Add/Edit Student (captures parent WhatsApp + reminder channel — the onboarding trigger), Create/Edit Class, My Schedule, Brand Setup, Invoice Maker, Invoice Detail, Record Payment, Quiz Maker, Materials Library, Material Viewer, and a passwordless parent/student login (`/login/parent`, WhatsApp OTP). Real loading/error states, no fake success.
 - **Still wired to `lib/store.js` (a documented localStorage mock, not the backend)**: Meeting Generator / Live Classroom's meeting link (explicitly mocked pending Google/Zoom OAuth — see C/D below).
 - **Real but backend-independent**: Google Docs/Slides embed (pure client-side URL conversion, no data to persist).
-- **Still fully static (no logic at all)**: Parent Portal Home, Progress Reports, Contact Tutor, Payments & Invoices (parent-facing — blocked on parent auth, see B), Live Classroom, Messages, Notifications, and most Settings screens.
-- Route guard (`RequireAuth`) gates `/portal/*` on a real tutor login — but only tutors can log in; there is no parent or student login yet.
+- **Real auth, still static content**: Parent Portal Home, Progress Reports, Contact Tutor, Payments & Invoices are now reachable at `/parent/*` only via a real parent login and gated by role — but the pages themselves are still the original static mockups (hardcoded numbers, no per-parent data fetch). Wiring them to real, parent-scoped data (their own students' invoices/reports) is separate follow-on work, not yet started. The same 4 pages also still preview under `/portal/view/...` for the tutor demo tour — harmless since nothing real is exposed there.
+- **Still fully static (no logic at all)**: Live Classroom, Messages, Notifications, and most Settings screens.
+- Route guard (`RequireAuth`) now takes an `allow` list of roles: `/portal/*` requires `tutor`, `/parent/*` requires `parent` or `student`. A signed-in user of the wrong role is redirected to the matching login page, not let through.
 
 ### `backend/` — Django + DRF
-- Models: `User` (role: tutor/parent/student — only `tutor` accounts are ever actually created today; tutor also carries brand/invoice fields), `Student`, `Assignment`, `GuardianLink` (model exists, nothing writes to it yet), `ClassSession`, `Invoice`/`InvoiceItem`/`Payment`, `Material`, `Quiz`/`Question`.
-- Endpoints: `POST /api/auth/signup/`, `POST /api/auth/login/`, `GET+POST /api/students/`, `GET+POST /api/classes/`, `PATCH /api/students/{id}/complete-onboarding/`, `GET+PATCH /api/brand/`, `GET+POST /api/invoices/`, `GET /api/invoices/{id}/`, `POST /api/invoices/{id}/payments/`, `GET+POST /api/materials/`, `GET /api/materials/{id}/`, `GET+POST /api/quizzes/`, `GET /api/quizzes/{id}/`.
+- Models: `User` (role: tutor/parent/student — tutor accounts via signup, parent/student accounts auto-provisioned at onboarding completion; tutor also carries brand/invoice fields), `Student`, `Assignment`, `GuardianLink` (now populated — one row per completed onboarding), `ClassSession`, `Invoice`/`InvoiceItem`/`Payment`, `Material`, `Quiz`/`Question`, `LoginOTP` (passwordless login codes).
+- Endpoints: `POST /api/auth/signup/`, `POST /api/auth/login/`, `POST /api/auth/otp/request/`, `POST /api/auth/otp/verify/`, `GET+POST /api/students/`, `GET+POST /api/classes/`, `PATCH /api/students/{id}/complete-onboarding/`, `GET+PATCH /api/brand/`, `GET+POST /api/invoices/`, `GET /api/invoices/{id}/`, `POST /api/invoices/{id}/payments/`, `GET+POST /api/materials/`, `GET /api/materials/{id}/`, `GET+POST /api/quizzes/`, `GET /api/quizzes/{id}/`.
 - No models/endpoints yet for meetings — `lib/meetings.js` stays mocked pending Google/Zoom OAuth (C/D).
 - SQLite by default; `DATABASE_URL` env var supported for Postgres but nothing is deployed anywhere yet.
 
 ### `whatsapp/` — FastAPI, Meta-first
-- Parent-facing onboarding only: `POST /onboarding/start` (Django's trigger) → sends the `tutordesk_onboarding_welcome` template → structured Q&A → confirms → calls back Django's `complete-onboarding`.
+- Parent-facing onboarding: `POST /onboarding/start` (Django's trigger) → sends the `tutordesk_onboarding_welcome` template → structured Q&A → confirms → calls back Django's `complete-onboarding`.
+- `POST /otp/send` delivers a passwordless login code as free-form text — only guaranteed deliverable inside Meta's 24h session window (see F for the pre-approved-template gap this leaves in production).
 - No reminder scheduler, no monthly report sending, no inbound "ask anything" Q&A agent for parents yet.
 - Meta credentials are not yet obtained/configured for real (see `META_SETUP.md`) — everything has only been verified in `PROVIDER=dry`.
 
@@ -66,11 +68,14 @@ section is the narrative reference for *why* each one matters.
 4. ✅ Tutor brand/profile fields (logo, colors, invoice name) added to `User`; wired Brand Setup off `store.js`.
 5. Still open: replace `lib/meetings.js`'s explicitly-documented mock with a real backend call once Google Meet/Zoom OAuth exists (see C). Meeting Generator and Live Classroom's link generation are unchanged.
 
-### B. Parent & student accounts (schema exists, nothing built)
-6. Parent web login/account creation (passwordless per the PRD) + Django endpoints.
-7. Student web login/account + portal access, auto-provisioned once WhatsApp onboarding completes.
-8. Onboarding-complete should create a `Parent` User + `GuardianLink`, not just update the `Student` row (today it only does the latter).
-9. Gate the actual parent/student portal pages behind real auth instead of being open static pages.
+### B. Parent & student accounts — done
+6. ✅ Parent web login: passwordless, a 6-digit code sent over WhatsApp (`POST /api/auth/otp/request/` + `/verify/`, `whatsapp/`'s new `/otp/send`). No separate signup — the account is provisioned automatically (see 8).
+7. ✅ Student web login: same OTP mechanism, gated on the student having a phone on file at onboarding (many won't — see the PRD's account model). No student-facing UI page exists yet to reach with it; `RequireAuth`'s `/parent/*` gate already accepts the `student` role for when one is built.
+8. ✅ `complete-onboarding` now provisions a real `Parent` User (deduped by phone — a parent with multiple children reuses one account across `GuardianLink` rows) and, when the student has a phone, a `Student` User — not just an updated `Student` row.
+9. ✅ The 4 parent-facing pages (Parent Portal Home, Progress Reports, Contact Tutor, Payments & Invoices) are reachable at `/parent/*` only behind a real parent/student login, role-gated. They're still the original static mockups content-wise (see the frontend note above) — wiring them to real, parent-scoped data is separate, unstarted work.
+
+### B2. Follow-on from B (not started)
+9b. Wire real, parent-scoped data into the `/parent/*` pages — a parent can only see their own linked students (via `GuardianLink`), so this needs new read endpoints plus the same wiring pass Section A did for the tutor side. The pages exist and are properly gated; only their content is still fake.
 
 ### C. Google Calendar / Tasks
 10. Google OAuth connect step at tutor signup.
