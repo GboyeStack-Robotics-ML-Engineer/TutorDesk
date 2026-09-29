@@ -17,8 +17,10 @@ from .views import (
     LoginView,
     MaterialDetailView,
     MaterialListCreateView,
+    MonthlyReportDownloadView,
     OtpRequestView,
     OtpVerifyView,
+    ParentLookupView,
     QuizDetailView,
     QuizListCreateView,
     RecordPaymentView,
@@ -53,4 +55,6 @@ urlpatterns = [
     path('materials/<uuid:material_id>/', MaterialDetailView.as_view(), name='material-detail'),
     path('quizzes/', QuizListCreateView.as_view(), name='quizzes'),
     path('quizzes/<uuid:quiz_id>/', QuizDetailView.as_view(), name='quiz-detail'),
+    path('reports/monthly/<str:token>/', MonthlyReportDownloadView.as_view(), name='monthly-report-download'),
+    path('whatsapp/parent-lookup/', ParentLookupView.as_view(), name='whatsapp-parent-lookup'),
 ]

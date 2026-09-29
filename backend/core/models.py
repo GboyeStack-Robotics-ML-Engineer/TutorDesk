@@ -80,6 +80,10 @@ class Student(models.Model):
 
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING_ONBOARDING)
 
+    # Monthly report scheduler (see management/commands/send_monthly_reports.py)
+    # — guards against sending a second report for a period already covered.
+    last_report_sent_at = models.DateTimeField(null=True, blank=True)
+
     # Set once the student completes their own onboarding and gets a login —
     # null until then. See module docstring.
     user = models.OneToOneField(
@@ -173,6 +177,12 @@ class ClassSession(models.Model):
     # connected tutor's session is pushed/creates a follow-up task.
     google_event_id = models.CharField(max_length=255, blank=True)
     google_task_id = models.CharField(max_length=255, blank=True)
+
+    # Reminder scheduler (see management/commands/send_class_reminders.py)
+    # — null until that reminder has actually been sent, so a periodic run
+    # of the command is idempotent (never double-sends).
+    reminder_24h_sent_at = models.DateTimeField(null=True, blank=True)
+    reminder_1h_sent_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

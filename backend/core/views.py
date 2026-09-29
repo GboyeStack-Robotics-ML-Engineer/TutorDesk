@@ -2,9 +2,12 @@ import os
 import secrets
 from datetime import timedelta
 
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -55,6 +58,7 @@ from .serializers import (
     UserSerializer,
 )
 from .services import google as google_service
+from .services import reports as reports_service
 from .services.whatsapp import send_login_otp, trigger_onboarding
 
 INTERNAL_SERVICE_TOKEN = os.getenv('INTERNAL_SERVICE_TOKEN', 'dev-shared-secret-change-me')
@@ -681,3 +685,81 @@ class GoogleQuickMeetLinkView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
         return Response({'url': url})
+
+
+# ---- monthly report download (signed link, sent via WhatsApp) ---------------
+
+class MonthlyReportDownloadView(APIView):
+    """The link a parent taps from the monthly_report_ready WhatsApp message
+    (see management/commands/send_monthly_reports.py). Not user-authenticated
+    — the parent is reading this from their phone, often not logged into the
+    web app — the signed token itself is the access control (see
+    services/reports.py)."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        resolved = reports_service.resolve_report_token(token)
+        if resolved is None:
+            return Response({'detail': 'This report link is invalid or has expired.'}, status=status.HTTP_404_NOT_FOUND)
+        student_id, period_key = resolved
+
+        student = Student.objects.filter(id=student_id).first()
+        if student is None:
+            return Response({'detail': 'Report not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        pdf_bytes = reports_service.generate_monthly_report_pdf(student, period_key)
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{student.name}-{period_key}-report.pdf"'
+        return response
+
+
+# ---- WhatsApp inbound Q&A lookup (internal, called by ../whatsapp/) ---------
+
+class ParentLookupView(APIView):
+    """Backs the WhatsApp service's inbound "ask anything" agent (see
+    ../whatsapp/app/conversation.py) — a parent messaging outside any
+    onboarding flow asks about their balance or next class, and that
+    service looks the answer up here rather than guessing. Internal-token
+    protected, same pattern as CompleteOnboardingView; not a user login,
+    since the caller is the WhatsApp service, not a browser."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        if request.headers.get('X-Internal-Token') != INTERNAL_SERVICE_TOKEN:
+            return Response({'detail': 'Invalid or missing internal token'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        phone = normalize_phone(request.query_params.get('phone', ''))
+        parent = User.objects.filter(phone=phone, role=User.Role.PARENT).first()
+        if parent is None:
+            return Response({'detail': 'No parent account for this number.'}, status=status.HTTP_404_NOT_FOUND)
+
+        students = Student.objects.filter(guardian_links__parent=parent).distinct()
+        tutor_name = ''
+        student_payloads = []
+        now = timezone.now()
+        for student in students:
+            assignment = student.assignments.filter(status=Assignment.Status.ACTIVE).first()
+            if assignment and not tutor_name:
+                tutor_name = assignment.tutor.get_full_name()
+
+            next_class = ClassSession.objects.filter(
+                student=student, status=ClassSession.Status.SCHEDULED, starts_at__gte=now,
+            ).order_by('starts_at').first()
+
+            outstanding = sum(
+                (inv.total - sum((p.amount for p in inv.payments.all()), start=Decimal('0'))
+                 for inv in Invoice.objects.filter(student=student).exclude(status=Invoice.Status.PAID).prefetch_related('items', 'payments')),
+                start=Decimal('0'),
+            ).quantize(Decimal('0.01'))
+
+            student_payloads.append({
+                'name': student.name,
+                'nextClass': {
+                    'subject': next_class.subject, 'startsAt': next_class.starts_at.isoformat(),
+                } if next_class else None,
+                'balance': str(outstanding),
+            })
+
+        return Response({'parentName': parent.get_full_name(), 'tutorName': tutor_name, 'students': student_payloads})

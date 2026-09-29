@@ -11,6 +11,16 @@ FastAPI app exposing:
                             passwordless login code. Same shared-secret
                             protection as /onboarding/start.
 
+  POST /reminders/send      Django calls this (core/services/whatsapp.py's
+                            send_class_reminder, from the send_class_reminders
+                            management command) to send a 24h/1h class
+                            reminder. Same shared-secret protection.
+
+  POST /reports/send        Django calls this (core/services/whatsapp.py's
+                            send_monthly_report, from the send_monthly_reports
+                            management command) to send the monthly report's
+                            download link. Same shared-secret protection.
+
   GET  /webhook             Meta's verification handshake.
   POST /webhook             Meta's inbound messages. Signature-verified.
 
@@ -23,7 +33,7 @@ from pydantic import BaseModel
 
 from . import conversation, db
 from .config import settings
-from .whatsapp import parse_meta_json, send_text, verify_meta_signature
+from .whatsapp import parse_meta_json, send_template, send_text, verify_meta_signature
 
 app = FastAPI(title="TutorDesk WhatsApp")
 
@@ -89,6 +99,66 @@ def otp_send(body: OtpSendRequest, x_internal_token: str = Header(default="")):
 
     wa_id = _bare_number(body.phone)
     send_text(wa_id, f"Your TutorDesk login code is {body.code}. It expires in 10 minutes.")
+    return {"sent": True}
+
+
+class ReminderSendRequest(BaseModel):
+    phone: str
+    studentName: str
+    subject: str
+    tutorName: str = ""
+    startsAt: str
+    hoursBefore: int
+
+
+REMINDER_TEMPLATE_NAME = "class_reminder"
+
+
+@app.post("/reminders/send")
+def reminder_send(body: ReminderSendRequest, x_internal_token: str = Header(default="")):
+    """Business-initiated (the parent hasn't necessarily messaged
+    recently), so this needs an approved template — see META_SETUP.md's
+    class_reminder entry. One template covers both the 24h and 1h
+    reminders; {{4}} carries which one this is."""
+    if x_internal_token != settings.INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid or missing internal token")
+
+    wa_id = _bare_number(body.phone)
+    when_label = "1 hour" if body.hoursBefore == 1 else f"{body.hoursBefore} hours"
+    send_template(
+        wa_id, template_name=REMINDER_TEMPLATE_NAME,
+        body_params=[body.studentName, body.subject, body.tutorName or "your tutor", when_label],
+    )
+    return {"sent": True}
+
+
+class ReportSendRequest(BaseModel):
+    phone: str
+    studentName: str
+    periodLabel: str
+    token: str
+
+
+REPORT_TEMPLATE_NAME = "monthly_report_ready"
+
+
+@app.post("/reports/send")
+def report_send(body: ReportSendRequest, x_internal_token: str = Header(default="")):
+    """Business-initiated — needs an approved template, see META_SETUP.md's
+    monthly_report_ready entry. `token` is the report's signed download
+    path suffix (see backend's core/services/reports.py); the template's
+    URL button is configured on Meta's side with the fixed
+    `<backend>/api/reports/monthly/` prefix, and this fills the dynamic
+    suffix."""
+    if x_internal_token != settings.INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid or missing internal token")
+
+    wa_id = _bare_number(body.phone)
+    send_template(
+        wa_id, template_name=REPORT_TEMPLATE_NAME,
+        body_params=[body.studentName, body.periodLabel],
+        button_url_param=f"{body.token}/",
+    )
     return {"sent": True}
 
 

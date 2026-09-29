@@ -187,6 +187,88 @@ def test_webhook_rejects_an_unsigned_post(app_modules):
     assert resp.status_code == 403
 
 
+def test_reminder_send_requires_the_internal_token(app_modules):
+    conv, db, wa, main = app_modules
+    body = {
+        "phone": PARENT, "studentName": "Ada", "subject": "Mathematics",
+        "tutorName": TUTOR_NAME, "startsAt": "2026-01-10T10:00:00+00:00", "hoursBefore": 24,
+    }
+    with TestClient(main.app) as client:
+        unauthenticated = client.post("/reminders/send", json=body)
+        assert unauthenticated.status_code == 401
+
+        authenticated = client.post("/reminders/send", json=body, headers={"X-Internal-Token": "test-token"})
+    assert authenticated.status_code == 200
+    assert authenticated.json() == {"sent": True}
+
+
+def test_report_send_requires_the_internal_token(app_modules):
+    conv, db, wa, main = app_modules
+    body = {"phone": PARENT, "studentName": "Ada", "periodLabel": "January 2026", "token": "signed-token-abc"}
+    with TestClient(main.app) as client:
+        unauthenticated = client.post("/reports/send", json=body)
+        assert unauthenticated.status_code == 401
+
+        authenticated = client.post("/reports/send", json=body, headers={"X-Internal-Token": "test-token"})
+    assert authenticated.status_code == 200
+    assert authenticated.json() == {"sent": True}
+
+
+# ---- inbound Q&A agent --------------------------------------------------------
+
+def test_unknown_number_with_no_parent_record_gets_the_generic_reply(app_modules, monkeypatch):
+    conv, db, wa, main = app_modules
+    monkeypatch.setattr(conv, "_lookup_parent", lambda wa_id: None)
+
+    sent = []
+    monkeypatch.setattr(conv, "send_text", lambda wa_id, body: sent.append(body))
+    conv.handle("2349999999999", "hello?")
+    assert sent == ["Thanks for your message — a tutor will get back to you."]
+
+
+def test_known_parent_asking_about_balance_gets_a_balance_reply(app_modules, monkeypatch):
+    conv, db, wa, main = app_modules
+    info = {
+        "parentName": "Mrs Okoye", "tutorName": "Mr Balogun",
+        "students": [{"name": "Ada", "nextClass": None, "balance": "15000.00"}],
+    }
+    monkeypatch.setattr(conv, "_lookup_parent", lambda wa_id: info)
+
+    sent = []
+    monkeypatch.setattr(conv, "send_text", lambda wa_id, body: sent.append(body))
+    conv.handle(PARENT, "what's my balance?")
+    assert len(sent) == 1
+    assert "Ada" in sent[0]
+    assert "15000.00" in sent[0]
+
+
+def test_known_parent_asking_about_schedule_gets_a_schedule_reply(app_modules, monkeypatch):
+    conv, db, wa, main = app_modules
+    info = {
+        "parentName": "Mrs Okoye", "tutorName": "Mr Balogun",
+        "students": [{"name": "Ada", "nextClass": {"subject": "Mathematics", "startsAt": "2026-01-10T10:00:00+00:00"}, "balance": "0.00"}],
+    }
+    monkeypatch.setattr(conv, "_lookup_parent", lambda wa_id: info)
+
+    sent = []
+    monkeypatch.setattr(conv, "send_text", lambda wa_id, body: sent.append(body))
+    conv.handle(PARENT, "when is the next class?")
+    assert len(sent) == 1
+    assert "Mathematics" in sent[0]
+
+
+def test_known_parent_with_an_unmatched_message_gets_escalated_to_their_tutor(app_modules, monkeypatch):
+    conv, db, wa, main = app_modules
+    info = {"parentName": "Mrs Okoye", "tutorName": "Mr Balogun", "students": [{"name": "Ada", "nextClass": None, "balance": "0.00"}]}
+    monkeypatch.setattr(conv, "_lookup_parent", lambda wa_id: info)
+
+    sent = []
+    monkeypatch.setattr(conv, "send_text", lambda wa_id, body: sent.append(body))
+    conv.handle(PARENT, "Is Ada allergic to anything I should know about?")
+    assert len(sent) == 1
+    assert "Mr Balogun" in sent[0]
+
+
 def test_webhook_accepts_a_correctly_signed_post(app_modules):
     conv, db, wa, main = app_modules
     conv.start_onboarding(PARENT, STUDENT_ID, "Ada", TUTOR_NAME, subjects=["Math"], goals="g", availability=["weekends"])

@@ -35,8 +35,9 @@ app/
   whatsapp.py       send_text / send_template + inbound parsing &
                      signature verification (Meta + Twilio)
   conversation.py   the onboarding state machine (provider-agnostic)
-  main.py           FastAPI: POST /onboarding/start, GET+POST /webhook,
-                     GET /health
+  main.py           FastAPI: POST /onboarding/start, POST /otp/send,
+                     POST /reminders/send, POST /reports/send,
+                     GET+POST /webhook, GET /health
 tests/              pytest suite
 ```
 

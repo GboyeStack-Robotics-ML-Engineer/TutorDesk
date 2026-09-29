@@ -90,9 +90,27 @@ Free-form text only works inside the 24h window *after* the user replies.
 
     Keep it **utility**, not marketing — utility is far cheaper and, until
     30 Sep 2026, free inside the service window.
-14. Submit `class_reminder` and `monthly_report_ready` templates too, once
-    those features exist (not part of this build yet — see
-    `docs/PRD.md`'s deferred list).
+14. Submit two more templates — both now built and wired (see
+    `docs/PRD.md` Section E), just waiting on real Meta approval:
+
+    - **`class_reminder`**, category **Utility**, four body variables:
+      > Reminder: {{1}}'s {{2}} class with {{3}} starts in {{4}}.
+
+      (One template covers both the 24h and 1h reminder — `{{4}}` carries
+      "24 hours" or "1 hour". Matches `REMINDER_TEMPLATE_NAME` in
+      `app/main.py`.)
+
+    - **`monthly_report_ready`**, category **Utility**, two body variables
+      and a dynamic **URL button**:
+      > {{1}}'s progress report for {{2}} is ready.
+      > [View report] → button, type "Visit Website" / dynamic
+
+      Configure the button's base URL in Meta as
+      `https://<your-backend-domain>/api/reports/monthly/` with a single
+      trailing `{{1}}` as its own dynamic suffix variable (button
+      variables are numbered separately from the body's) — that's where
+      the signed report token lands (`app/main.py`'s `/reports/send`
+      sends it as `button_url_param`). Matches `REPORT_TEMPLATE_NAME`.
 
 ### B6. Flip the switch **[you]**
 15. With `PROVIDER=meta` and the `.env` above set, restart the service.
@@ -115,12 +133,36 @@ Free-form text only works inside the 24h window *after* the user replies.
 - New numbers start capped around 250 unique conversations per rolling
   24h, scaling up with volume and quality — irrelevant at pilot scale.
 
-## D. What's real vs. still a placeholder in this build
+## D. Running the reminder & report schedulers
+
+Both are Django management commands, not built-in cron jobs — nothing
+invokes them on a schedule until the backend is actually deployed
+(`docs/PRD.md` Section G). Until then, run them by hand or from your own
+local cron:
+
+```bash
+cd backend && source .venv/bin/activate
+python manage.py send_class_reminders     # safe to run every 5-15 min — idempotent
+python manage.py send_monthly_reports     # run once a month; --month YYYY-MM to backfill
+```
+
+A production crontab (adjust paths/venv):
+```cron
+*/10 * * * * cd /path/to/backend && .venv/bin/python manage.py send_class_reminders >> /var/log/tutordesk-reminders.log 2>&1
+0 6 1 * *    cd /path/to/backend && .venv/bin/python manage.py send_monthly_reports >> /var/log/tutordesk-reports.log 2>&1
+```
+
+`send_class_reminders` also reconciles Google Calendar changes for
+connected tutors (`core/services/google.py`'s `pull_class_event_changes`)
+— the PRD flagged this as needing a periodic runner, and this command is it.
+
+## E. What's real vs. still a placeholder in this build
 
 | Piece                     | This build                        | Later                                  |
 |----------------------------|-----------------------------------|-----------------------------------------|
 | Onboarding kickoff message | Real Meta template send           | —                                        |
 | Onboarding Q&A             | Real structured flow, real state  | AI layer for free-text answers          |
-| Reminders / reports        | Not built                         | Scheduled job reading Django's calendar |
-| Inbound "ask anything" Q&A | Not built (unknown numbers get a stock reply) | Scoped read-only agent (PRD Phase 2+) |
+| Reminders / reports        | Real generation + send logic, real PDF, idempotent (D above) | A real cron/Celery-beat runner once deployed (Section G) |
+| Inbound "ask anything" Q&A | Real, scoped keyword matching (balance/schedule) against real Django data | AI layer for free-text answers (PRD Phase 2+) |
 | Storage                    | SQLite                            | Shared with backend's Postgres, or kept separate |
+| `class_reminder` / `monthly_report_ready` templates | Code ready, **not yet submitted to Meta** (needs your account — see B5) | — |

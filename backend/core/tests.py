@@ -1,8 +1,9 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from unittest import mock
 
 import httpx
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -10,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Assignment, ClassSession, GoogleAccount, GuardianLink, Invoice, LoginOTP, Material, Quiz, Student
 from .services import google as google_service
+from .services import reports as reports_service
 
 User = get_user_model()
 
@@ -848,6 +850,216 @@ class ClassLifecycleTests(AuthenticatedAPITestCase):
 
         self.assertEqual(response.data['homeworkDueAt'], due)
         mocked.assert_called_once()
+
+
+# ---- monthly report generation (services/reports.py + download view) -------
+
+class ReportsServiceTests(APITestCase):
+    def test_build_and_resolve_report_token_roundtrip(self):
+        token = reports_service.build_report_token('student-1', '2026-01')
+        self.assertEqual(reports_service.resolve_report_token(token), ('student-1', '2026-01'))
+
+    def test_resolve_report_token_rejects_a_tampered_token(self):
+        self.assertIsNone(reports_service.resolve_report_token('not-a-real-token'))
+
+    def test_period_helpers(self):
+        self.assertEqual(reports_service.previous_month_key(date(2026, 3, 15)), '2026-02')
+        self.assertEqual(reports_service.previous_month_key(date(2026, 1, 15)), '2025-12')
+        self.assertEqual(reports_service.period_label('2026-02'), 'February 2026')
+        self.assertEqual(reports_service.period_bounds('2026-02'), (date(2026, 2, 1), date(2026, 2, 28)))
+
+    def test_generate_monthly_report_pdf_returns_real_pdf_bytes(self):
+        student = Student.objects.create(name='Ada', guardian_name='G', guardian_whatsapp='+1')
+        pdf_bytes = reports_service.generate_monthly_report_pdf(student, '2026-01')
+        self.assertTrue(pdf_bytes.startswith(b'%PDF'))
+
+    def test_generate_monthly_report_pdf_includes_session_and_billing_data(self):
+        tutor = User.objects.create_user(username='rt@example.com', email='rt@example.com', password='pw-1')
+        student = Student.objects.create(name='Ada', guardian_name='G', guardian_whatsapp='+1')
+        ClassSession.objects.create(
+            tutor=tutor, student=student, subject='Mathematics',
+            starts_at=timezone.make_aware(timezone.datetime(2026, 1, 10, 10, 0)),
+            status=ClassSession.Status.COMPLETED, attendance=ClassSession.Attendance.PRESENT,
+        )
+        invoice = Invoice.objects.create(tutor=tutor, student=student, issued_at=date(2026, 1, 5), due_at=date(2026, 1, 20))
+        invoice.items.create(description='Session', qty=1, rate=5000)
+
+        pdf_bytes = reports_service.generate_monthly_report_pdf(student, '2026-01')
+        self.assertTrue(pdf_bytes.startswith(b'%PDF'))
+        self.assertGreater(len(pdf_bytes), 500)  # more than an empty-page stub
+
+
+class MonthlyReportDownloadTests(APITestCase):
+    def test_valid_token_returns_the_pdf(self):
+        student = Student.objects.create(name='Ada', guardian_name='G', guardian_whatsapp='+1')
+        token = reports_service.build_report_token(str(student.id), '2026-01')
+
+        response = self.client.get(f'/api/reports/monthly/{token}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_invalid_token_returns_404(self):
+        response = self.client.get('/api/reports/monthly/garbage-token/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_valid_token_for_a_deleted_student_returns_404(self):
+        token = reports_service.build_report_token('00000000-0000-0000-0000-000000000000', '2026-01')
+        response = self.client.get(f'/api/reports/monthly/{token}/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+# ---- WhatsApp Q&A lookup endpoint --------------------------------------------
+
+class ParentLookupTests(APITestCase):
+    INTERNAL_TOKEN = 'dev-shared-secret-change-me'
+
+    def setUp(self):
+        self.tutor = User.objects.create_user(username='plt@example.com', email='plt@example.com', password='pw-1')
+        self.parent = User.objects.create_user(
+            username='parent-2348011112222', phone='2348011112222', role=User.Role.PARENT, first_name='Mrs Okoye',
+        )
+        self.student = Student.objects.create(name='Ada', guardian_name='Mrs Okoye', guardian_whatsapp='+2348011112222')
+        GuardianLink.objects.create(parent=self.parent, student=self.student)
+        Assignment.objects.create(student=self.student, tutor=self.tutor, subject='Mathematics')
+
+    def _get(self, phone, token=INTERNAL_TOKEN):
+        headers = {'HTTP_X_INTERNAL_TOKEN': token} if token is not None else {}
+        return self.client.get('/api/whatsapp/parent-lookup/', {'phone': phone}, **headers)
+
+    def test_requires_the_internal_token(self):
+        response = self._get('2348011112222', token='wrong')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_returns_404_for_an_unknown_phone(self):
+        response = self._get('2349999999999')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_returns_summary_for_a_known_parent(self):
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(days=1),
+        )
+        invoice = Invoice.objects.create(tutor=self.tutor, student=self.student, issued_at=date.today(), due_at=date.today())
+        invoice.items.create(description='Session', qty=1, rate=5000)
+
+        response = self._get('+234 801 111 2222')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['tutorName'], self.tutor.get_full_name())
+        self.assertEqual(len(response.data['students']), 1)
+        student_payload = response.data['students'][0]
+        self.assertEqual(student_payload['name'], 'Ada')
+        self.assertEqual(student_payload['nextClass']['subject'], 'Mathematics')
+        self.assertEqual(student_payload['balance'], '5000.00')
+
+    def test_student_with_no_upcoming_class_reports_null(self):
+        response = self._get('2348011112222')
+        self.assertIsNone(response.data['students'][0]['nextClass'])
+
+
+# ---- reminder scheduler management command -----------------------------------
+
+class SendClassRemindersCommandTests(AuthenticatedAPITestCase):
+    def setUp(self):
+        super().setUp()
+        self.student = Student.objects.create(name='Ada', guardian_name='G', guardian_whatsapp='+1')
+
+    def test_sends_a_24h_reminder_and_marks_it_sent(self):
+        session = ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(hours=20),
+        )
+        with mock.patch('core.management.commands.send_class_reminders.send_class_reminder', return_value=True) as mocked:
+            call_command('send_class_reminders')
+
+        mocked.assert_called_once_with(session, hours_before=24)
+        session.refresh_from_db()
+        self.assertIsNotNone(session.reminder_24h_sent_at)
+        self.assertIsNone(session.reminder_1h_sent_at)
+
+    def test_sends_a_1h_reminder_when_within_the_window(self):
+        session = ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(minutes=30),
+        )
+        with mock.patch('core.management.commands.send_class_reminders.send_class_reminder', return_value=True) as mocked:
+            call_command('send_class_reminders')
+
+        mocked.assert_any_call(session, hours_before=1)
+        session.refresh_from_db()
+        self.assertIsNotNone(session.reminder_1h_sent_at)
+
+    def test_does_not_send_a_reminder_twice(self):
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(hours=20),
+        )
+        with mock.patch('core.management.commands.send_class_reminders.send_class_reminder', return_value=True) as mocked:
+            call_command('send_class_reminders')
+            call_command('send_class_reminders')
+
+        mocked.assert_called_once()
+
+    def test_ignores_a_class_more_than_24h_away(self):
+        ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(days=3),
+        )
+        with mock.patch('core.management.commands.send_class_reminders.send_class_reminder') as mocked:
+            call_command('send_class_reminders')
+        mocked.assert_not_called()
+
+    def test_reconciles_google_calendar_cancellation(self):
+        session = ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(days=5),
+        )
+        GoogleAccount.objects.create(
+            tutor=self.tutor, access_token='a', refresh_token='r',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        changes = [(str(session.id), {'cancelled': True})]
+        with mock.patch.object(google_service, 'pull_class_event_changes', return_value=changes), \
+             mock.patch('core.management.commands.send_class_reminders.send_class_reminder'):
+            call_command('send_class_reminders')
+
+        session.refresh_from_db()
+        self.assertEqual(session.status, ClassSession.Status.CANCELLED)
+
+
+# ---- monthly report scheduler management command -----------------------------
+
+class SendMonthlyReportsCommandTests(AuthenticatedAPITestCase):
+    def setUp(self):
+        super().setUp()
+        self.student = Student.objects.create(
+            name='Ada', guardian_name='G', guardian_whatsapp='+1', status=Student.Status.ACTIVE,
+        )
+        Assignment.objects.create(student=self.student, tutor=self.tutor, subject='Mathematics')
+
+    def test_sends_a_report_and_marks_it_sent(self):
+        with mock.patch('core.management.commands.send_monthly_reports.send_monthly_report', return_value=True) as mocked:
+            call_command('send_monthly_reports', month='2026-01')
+
+        mocked.assert_called_once()
+        args, kwargs = mocked.call_args
+        self.assertEqual(args[0], self.student)
+        self.assertEqual(args[1], 'January 2026')
+        self.student.refresh_from_db()
+        self.assertIsNotNone(self.student.last_report_sent_at)
+
+    def test_skips_a_student_without_a_guardian_whatsapp_number(self):
+        self.student.guardian_whatsapp = ''
+        self.student.save()
+        with mock.patch('core.management.commands.send_monthly_reports.send_monthly_report') as mocked:
+            call_command('send_monthly_reports', month='2026-01')
+        mocked.assert_not_called()
+
+    def test_skips_an_inactive_student(self):
+        self.student.status = Student.Status.PENDING_ONBOARDING
+        self.student.save()
+        with mock.patch('core.management.commands.send_monthly_reports.send_monthly_report') as mocked:
+            call_command('send_monthly_reports', month='2026-01')
+        mocked.assert_not_called()
 
 
 # ---- ad-hoc "Create class link" endpoint --------------------------------------

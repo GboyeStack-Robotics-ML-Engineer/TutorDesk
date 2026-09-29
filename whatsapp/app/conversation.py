@@ -1,11 +1,15 @@
 """
-The parent-onboarding conversation engine — this service's whole job.
+The parent-onboarding conversation engine — plus a small inbound "ask
+anything" agent for parents who message outside any onboarding flow (see
+_lookup_parent below).
 
 A structured flow, not free-text/LLM parsing (see docs/PRD.md's "hybrid,
 structured-first" recommendation — an AI layer for free-text answers is a
 later addition, not this build). Skips any question the tutor already
 answered on the Add Student form (subjects/goals/availability), always
 confirms the reminder channel since that's the parent's call either way.
+The Q&A agent below follows the same philosophy: simple keyword matching
+against real data looked up from Django, not language understanding.
 
 Known simplification: declining the final summary ("no") resets every
 field and restarts the flow, rather than editing just the one field
@@ -14,6 +18,7 @@ worth revisiting once this is actually in front of parents.
 """
 import json
 import logging
+from datetime import datetime
 
 import httpx
 
@@ -110,15 +115,79 @@ def _notify_backend_complete(session: dict):
         )
 
 
+# ---- inbound "ask anything" Q&A agent (no onboarding in flight) -------------
+
+BALANCE_KEYWORDS = {"balance", "invoice", "owe", "owing", "pay", "payment", "bill", "cost", "fee"}
+SCHEDULE_KEYWORDS = {"schedule", "class", "classes", "next", "when", "session", "lesson"}
+
+
+def _lookup_parent(wa_id: str):
+    """Asks Django whether this number belongs to a known parent, and if
+    so, their students' next-class/balance summary — see
+    core/views.ParentLookupView. Returns None on any failure (unknown
+    number, or Django unreachable) so the caller can fall back to the
+    generic stock reply rather than erroring out."""
+    try:
+        response = httpx.get(
+            f"{settings.DJANGO_API_BASE_URL}/whatsapp/parent-lookup/",
+            params={"phone": wa_id},
+            headers={"X-Internal-Token": settings.INTERNAL_SERVICE_TOKEN},
+            timeout=5,
+        )
+        if response.status_code != 200:
+            return None
+        return response.json()
+    except httpx.HTTPError:
+        logger.exception("Parent lookup failed for %s", wa_id)
+        return None
+
+
+def _format_when(iso_str: str) -> str:
+    try:
+        return datetime.fromisoformat(iso_str).strftime("%a %b %d, %I:%M %p").replace(" 0", " ")
+    except ValueError:
+        return iso_str
+
+
+def _balance_reply(info: dict) -> str:
+    lines = [f"- {s['name']}: {s['balance']} outstanding" for s in info["students"]]
+    return "Here's your balance:\n" + "\n".join(lines)
+
+
+def _schedule_reply(info: dict) -> str:
+    lines = []
+    for s in info["students"]:
+        if s["nextClass"]:
+            lines.append(f"- {s['name']}: {s['nextClass']['subject']} on {_format_when(s['nextClass']['startsAt'])}")
+        else:
+            lines.append(f"- {s['name']}: no upcoming class scheduled")
+    return "Here's the schedule:\n" + "\n".join(lines)
+
+
+def _handle_unmatched_sender(wa_id: str, text: str):
+    info = _lookup_parent(wa_id)
+    if info is None:
+        # Not a recognized parent number (or Django unreachable) — no
+        # profile to answer from, so this stays a plain acknowledgement.
+        send_text(wa_id, "Thanks for your message — a tutor will get back to you.")
+        return
+
+    lowered = text.lower()
+    if any(k in lowered for k in BALANCE_KEYWORDS):
+        send_text(wa_id, _balance_reply(info))
+    elif any(k in lowered for k in SCHEDULE_KEYWORDS):
+        send_text(wa_id, _schedule_reply(info))
+    else:
+        tutor_name = info.get("tutorName") or "your tutor"
+        send_text(wa_id, f"Thanks for your message — I'll pass this along to {tutor_name}. They'll get back to you soon.")
+
+
 def handle(wa_id: str, text: str, profile_name: str = ""):
     text = (text or "").strip()
     session = db.get_session(wa_id)
 
     if session is None:
-        # No onboarding in flight for this number — this build has no
-        # general inbound-question agent yet (see docs/PRD.md's Phase 2+
-        # list: the bot that answers "what's my balance" etc).
-        send_text(wa_id, "Thanks for your message — a tutor will get back to you.")
+        _handle_unmatched_sender(wa_id, text)
         return
 
     if session["completed"]:

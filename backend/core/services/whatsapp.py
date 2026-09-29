@@ -60,6 +60,63 @@ def trigger_onboarding(student):
         logger.exception('Failed to trigger WhatsApp onboarding for student %s', student.id)
 
 
+def send_class_reminder(class_session, hours_before):
+    """Fires a class_reminder template send (see management/commands/
+    send_class_reminders.py, whatsapp/app/main.py's /reminders/send).
+    Business-initiated (the parent hasn't necessarily messaged recently),
+    so this needs an approved template, same as onboarding's — see
+    META_SETUP.md."""
+    payload = {
+        'phone': class_session.student.guardian_whatsapp,
+        'studentName': class_session.student.name,
+        'subject': class_session.subject,
+        'tutorName': class_session.tutor.get_full_name(),
+        'startsAt': class_session.starts_at.isoformat(),
+        'hoursBefore': hours_before,
+    }
+    if not WHATSAPP_SERVICE_URL:
+        logger.info(
+            'WHATSAPP_SERVICE_URL not set — skipping %sh reminder for class %s',
+            hours_before, class_session.id,
+        )
+        return False
+    try:
+        response = httpx.post(
+            f'{WHATSAPP_SERVICE_URL}/reminders/send',
+            json=payload, headers={'X-Internal-Token': INTERNAL_SERVICE_TOKEN}, timeout=5,
+        )
+        response.raise_for_status()
+        return True
+    except httpx.HTTPError:
+        logger.exception('Failed to send %sh reminder for class %s', hours_before, class_session.id)
+        return False
+
+
+def send_monthly_report(student, period_label, token):
+    """Fires a monthly_report_ready template send with a signed download
+    link's token (see services/reports.py, /reports/send). Business-
+    initiated, so also needs an approved template — see META_SETUP.md."""
+    payload = {
+        'phone': student.guardian_whatsapp,
+        'studentName': student.name,
+        'periodLabel': period_label,
+        'token': token,
+    }
+    if not WHATSAPP_SERVICE_URL:
+        logger.info('WHATSAPP_SERVICE_URL not set — skipping monthly report send for student %s', student.id)
+        return False
+    try:
+        response = httpx.post(
+            f'{WHATSAPP_SERVICE_URL}/reports/send',
+            json=payload, headers={'X-Internal-Token': INTERNAL_SERVICE_TOKEN}, timeout=5,
+        )
+        response.raise_for_status()
+        return True
+    except httpx.HTTPError:
+        logger.exception('Failed to send monthly report for student %s', student.id)
+        return False
+
+
 def send_login_otp(phone, code):
     """Delivers a passwordless login code over WhatsApp — see
     views.OtpRequestView. Sent as free-form text (send_text), which Meta
