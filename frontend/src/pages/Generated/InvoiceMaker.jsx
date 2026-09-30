@@ -1,30 +1,60 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { store, uid, naira } from '../../lib/store';
+import { api, NetworkError } from '../../lib/api';
+import { naira } from '../../lib/store';
 
 // Functional invoice maker.
 // - Uses the tutor's brand (logo + primary/secondary colour + invoice name)
-//   set during onboarding.
+//   set in Brand setup.
 // - Add/remove line items, pick a student, set dates & note.
 // - Live branded preview on the right.
-// - Saves to localStorage; appears in the invoices list and can be reopened.
+// - Saves to the backend via POST /api/invoices/.
+
+const DEFAULT_BRAND = { logoDataUrl: null, primaryColor: '#005248', secondaryColor: '#C48037', invoiceName: '' };
 
 export const InvoiceMaker = () => {
   const navigate = useNavigate();
-  const brand = store.getBrand();
-  const students = store.getStudents();
 
-  const [studentId, setStudentId] = useState(students[0]?.id || '');
+  const [brand, setBrand] = useState(DEFAULT_BRAND);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  const [studentId, setStudentId] = useState('');
   const [issuedAt, setIssuedAt] = useState(new Date().toISOString().slice(0, 10));
   const [dueAt, setDueAt] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() + 7);
     return d.toISOString().slice(0, 10);
   });
-  const [items, setItems] = useState([
-    { desc: '', qty: 1, rate: students[0]?.fee || 0 },
-  ]);
+  const [items, setItems] = useState([{ desc: '', qty: 1, rate: 0 }]);
   const [note, setNote] = useState('Thank you for your continued trust.');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [savedId, setSavedId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([api.brand.get(), api.students.list({ pageSize: 200 })])
+      .then(([brandData, studentData]) => {
+        if (cancelled) return;
+        const studentList = studentData?.results || [];
+        setBrand(brandData);
+        setStudents(studentList);
+        if (studentList[0]) setStudentId(studentList[0].id);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLoadError(
+          err instanceof NetworkError ? err.message : err.message || "Couldn't load your students."
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const student = students.find((s) => s.id === studentId);
   const total = useMemo(
@@ -37,29 +67,37 @@ export const InvoiceMaker = () => {
   const addItem = () => setItems((arr) => [...arr, { desc: '', qty: 1, rate: 0 }]);
   const removeItem = (i) => setItems((arr) => arr.filter((_, idx) => idx !== i));
 
-  const save = () => {
-    const inv = {
-      id: uid('inv'),
-      studentId,
-      studentName: student?.name || 'Student',
-      items: items.filter((it) => it.desc.trim() !== '' || it.rate),
-      status: 'unpaid',
-      issuedAt, dueAt, note,
-    };
-    store.saveInvoice(inv);
-    setSavedId(inv.id);
+  const save = async () => {
+    setSaving(true);
+    setSaveError('');
+    try {
+      const invoice = await api.invoices.create({
+        studentId,
+        items: items
+          .filter((it) => it.desc.trim() !== '' || it.rate)
+          .map((it) => ({ desc: it.desc, qty: Number(it.qty || 0), rate: Number(it.rate || 0) })),
+        issuedAt,
+        dueAt,
+        note,
+      });
+      setSavedId(invoice.id);
+    } catch (err) {
+      setSaveError(err instanceof NetworkError ? err.message : err.message || "Couldn't save this invoice.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const primary = brand.primaryColor;
   const secondary = brand.secondaryColor;
 
   return (
-    <div className="flex flex-col gap-space-5">
+    <div data-live-page="invoice-maker" className="flex flex-col gap-space-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-title-md text-ink-900">Invoice maker</h1>
           <p className="font-caption text-caption text-ink-500">
-            Branded with your logo and colours from onboarding.
+            Branded with your logo and colours from Brand setup.
           </p>
         </div>
         <div className="flex items-center gap-space-3">
@@ -72,21 +110,33 @@ export const InvoiceMaker = () => {
           </button>
           <button
             onClick={save}
-            className="flex items-center gap-2 text-white px-space-4 py-2 rounded-lg font-label text-label"
+            disabled={loading || saving || !studentId}
+            className="flex items-center gap-2 text-white px-space-4 py-2 rounded-lg font-label text-label disabled:opacity-60"
             style={{ background: primary }}
           >
             <span className="material-symbols-outlined text-[18px]">save</span>
-            Save invoice
+            {saving ? 'Saving…' : 'Save invoice'}
           </button>
         </div>
       </div>
 
+      {loadError && (
+        <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3">
+          {loadError}
+        </p>
+      )}
+      {saveError && (
+        <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3">
+          {saveError}
+        </p>
+      )}
+
       {savedId && (
         <div className="flex items-center gap-2 bg-success-tint text-success-solid px-space-4 py-space-3 rounded-lg font-label text-label">
           <span className="material-symbols-outlined text-[18px]">check_circle</span>
-          Saved. It now appears in Payments → Invoices.
-          <button className="underline ml-2" onClick={() => navigate('/portal/view/portal-payments-invoices')}>
-            View invoices
+          Saved.
+          <button className="underline ml-2" onClick={() => navigate(`/portal/view/invoice-detail-desktop?id=${savedId}`)}>
+            View invoice
           </button>
         </div>
       )}
@@ -98,15 +148,13 @@ export const InvoiceMaker = () => {
             <label className="font-label text-label text-ink-700">Bill to (student)</label>
             <select
               value={studentId}
-              onChange={(e) => {
-                setStudentId(e.target.value);
-                const st = students.find((s) => s.id === e.target.value);
-                if (st) setItem(0, { rate: st.fee, desc: `${st.subject} — monthly` });
-              }}
-              className="w-full mt-1 border border-paper-300 rounded-lg px-space-3 py-2 font-body text-body bg-paper-0 focus:outline-none focus:border-primary"
+              onChange={(e) => setStudentId(e.target.value)}
+              disabled={loading}
+              className="w-full mt-1 border border-paper-300 rounded-lg px-space-3 py-2 font-body text-body bg-paper-0 focus:outline-none focus:border-primary disabled:opacity-60"
             >
+              <option value="">{loading ? 'Loading students…' : 'Select a student'}</option>
               {students.map((s) => (
-                <option key={s.id} value={s.id}>{s.name} — {s.subject}</option>
+                <option key={s.id} value={s.id}>{s.name}{s.subjects?.length ? ` — ${s.subjects.join(', ')}` : ''}</option>
               ))}
             </select>
           </div>
@@ -181,7 +229,6 @@ export const InvoiceMaker = () => {
                 )}
                 <div>
                   <div className="font-heading text-title-sm text-ink-900">{brand.invoiceName}</div>
-                  <div className="font-caption text-caption text-ink-500">{brand.email}</div>
                 </div>
               </div>
               <div className="text-right">
@@ -194,7 +241,7 @@ export const InvoiceMaker = () => {
               <div>
                 <div className="font-caption text-caption text-ink-500 uppercase">Bill to</div>
                 <div className="font-label text-label text-ink-900">{student?.name}</div>
-                <div className="font-caption text-caption text-ink-500">{student?.parentName}</div>
+                <div className="font-caption text-caption text-ink-500">{student?.guardianName}</div>
               </div>
               <div className="text-right">
                 <div className="font-caption text-caption text-ink-500 uppercase">Due</div>

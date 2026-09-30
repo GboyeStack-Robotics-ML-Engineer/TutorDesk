@@ -1,24 +1,56 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { store } from '../../lib/store';
+import { api, NetworkError } from '../../lib/api';
 import { extractColorsFromImage, fileToDataUrl } from '../../lib/colors';
 
 // Branding setup (part of onboarding).
 // Path A: upload a logo -> we extract a primary + secondary colour automatically.
 // Path B: no logo -> tutor picks the two colours and types the invoice name.
-// Saved to the brand in localStorage; the invoice maker uses it live.
+// Saved to the tutor's User record via the backend; the invoice maker reads it live.
+
+const DEFAULTS = { logoDataUrl: null, primaryColor: '#005248', secondaryColor: '#C48037', invoiceName: '' };
 
 export const BrandSetup = () => {
   const navigate = useNavigate();
-  const existing = store.getBrand();
   const fileRef = useRef(null);
 
-  const [logoDataUrl, setLogoDataUrl] = useState(existing.logoDataUrl);
-  const [primary, setPrimary] = useState(existing.primaryColor);
-  const [secondary, setSecondary] = useState(existing.secondaryColor);
-  const [invoiceName, setInvoiceName] = useState(existing.invoiceName);
+  const [logoDataUrl, setLogoDataUrl] = useState(DEFAULTS.logoDataUrl);
+  const [primary, setPrimary] = useState(DEFAULTS.primaryColor);
+  const [secondary, setSecondary] = useState(DEFAULTS.secondaryColor);
+  const [invoiceName, setInvoiceName] = useState(DEFAULTS.invoiceName);
+  const [paymentInstructions, setPaymentInstructions] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [extracting, setExtracting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.brand
+      .get()
+      .then((brand) => {
+        if (cancelled) return;
+        setLogoDataUrl(brand.logoDataUrl || null);
+        setPrimary(brand.primaryColor || DEFAULTS.primaryColor);
+        setSecondary(brand.secondaryColor || DEFAULTS.secondaryColor);
+        setInvoiceName(brand.invoiceName || '');
+        setPaymentInstructions(brand.paymentInstructions || '');
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLoadError(
+          err instanceof NetworkError ? err.message : err.message || "Couldn't load your branding."
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const onPickLogo = async (e) => {
     const file = e.target.files?.[0];
@@ -45,20 +77,34 @@ export const BrandSetup = () => {
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const save = () => {
-    store.setBrand({ logoDataUrl, primaryColor: primary, secondaryColor: secondary, invoiceName });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const save = async () => {
+    setSaving(true);
+    setSaveError('');
+    try {
+      await api.brand.update({ logoDataUrl, primaryColor: primary, secondaryColor: secondary, invoiceName, paymentInstructions });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setSaveError(err instanceof NetworkError ? err.message : err.message || "Couldn't save your branding.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-space-5">
+    <div data-live-page="brand-setup" className="max-w-3xl mx-auto flex flex-col gap-space-5">
       <div>
         <h1 className="font-heading text-title-md text-ink-900">Brand your invoices</h1>
         <p className="font-caption text-caption text-ink-500">
           Add your logo and we'll pick your colours automatically — or set them yourself.
         </p>
       </div>
+
+      {loadError && (
+        <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3">
+          {loadError}
+        </p>
+      )}
 
       {/* Logo */}
       <div className="bg-paper-0 border border-paper-200 rounded-xl p-space-5 flex flex-col gap-space-4">
@@ -137,11 +183,33 @@ export const BrandSetup = () => {
         </div>
       </div>
 
+      {/* Payment instructions */}
+      <div className="bg-paper-0 border border-paper-200 rounded-xl p-space-5 flex flex-col gap-space-4">
+        <h2 className="font-label text-label text-ink-700">Payment instructions</h2>
+        <p className="font-caption text-caption text-ink-500">
+          Shown to parents on their Payments &amp; Invoices page — bank details, or however you'd like to be paid.
+          Left blank, parents see a note to contact you directly.
+        </p>
+        <textarea
+          value={paymentInstructions}
+          onChange={(e) => setPaymentInstructions(e.target.value)}
+          placeholder={'e.g. GTB, Account Name: Aisha Bello Tutorials, Account Number: 0123456789'}
+          rows="4"
+          className="w-full border border-paper-300 rounded-lg px-space-3 py-2 font-body text-body focus:outline-none focus:border-primary resize-y"
+        />
+      </div>
+
+      {saveError && (
+        <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3">
+          {saveError}
+        </p>
+      )}
+
       <div className="flex items-center gap-space-3">
-        <button onClick={save}
-          className="flex items-center gap-2 bg-primary text-on-primary px-space-5 py-2.5 rounded-lg font-label text-label">
+        <button onClick={save} disabled={loading || saving}
+          className="flex items-center gap-2 bg-primary text-on-primary px-space-5 py-2.5 rounded-lg font-label text-label disabled:opacity-60">
           <span className="material-symbols-outlined text-[18px]">save</span>
-          Save branding
+          {saving ? 'Saving…' : 'Save branding'}
         </button>
         <button onClick={() => navigate('/portal/view/invoice-maker')}
           className="flex items-center gap-2 border border-paper-300 px-space-5 py-2.5 rounded-lg font-label text-label text-ink-700">

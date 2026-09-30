@@ -1,3 +1,28 @@
+# TutorDesk frontend
+
+React + Vite + Tailwind. See `../docs/PRD.md` at the repo root for the full
+product plan this is built against.
+
+## Backend / WhatsApp integration
+
+This frontend expects a Django backend and doesn't fake one — see
+`src/lib/api.js` for the exact endpoint contract (auth, students, classes)
+and `src/lib/auth.js` / `src/context/AuthContext.jsx` for how the session
+token is stored and attached to requests. Nothing under `/portal` is
+reachable until that backend exists and `/api/auth/login/` actually
+succeeds — that's deliberate, not a bug.
+
+Copy `.env.example` to `.env` and set `VITE_API_BASE_URL` to wherever the
+Django backend is running. `VITE_SKIP_AUTH=true` is a local-only escape
+hatch to walk the portal screens before auth is wired up on the backend —
+never set it outside your own machine.
+
+The Add Student form (`src/pages/Generated/AddEditStudentDesktop.jsx`) is
+the seam that matters most: submitting it is what's meant to trigger the
+parent's WhatsApp onboarding on the backend/WhatsApp side.
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

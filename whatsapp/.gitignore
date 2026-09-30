@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+
+# Env files — .env.example is the one that's tracked
+.env
+.env.*
+!.env.example

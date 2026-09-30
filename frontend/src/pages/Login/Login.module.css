@@ -68,6 +68,17 @@
   padding-top: var(--space-2);
 }
 
+.formError {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--danger-solid);
+  background-color: var(--danger-tint);
+  border-radius: var(--radius-sm, 6px);
+  padding: var(--space-3);
+  margin: 0;
+}
+
 .actionLink {
   color: var(--primary);
   text-decoration: none;

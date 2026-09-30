@@ -1,9 +1,70 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { api, NetworkError } from '../../lib/api';
+
+const GOOGLE_REDIRECT_STATUS = {
+  connected: { tone: 'success', message: 'Google Calendar & Tasks connected.' },
+  denied: { tone: 'warning', message: 'Google connection cancelled.' },
+  error: { tone: 'danger', message: "Couldn't connect your Google account. Please try again." },
+};
 
 export const SettingsDataSyncPreferences = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [google, setGoogle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [error, setError] = useState('');
+
+  const redirectStatus = GOOGLE_REDIRECT_STATUS[searchParams.get('google')];
+
+  const loadStatus = () => {
+    setLoading(true);
+    api.google.status()
+      .then(setGoogle)
+      .catch((err) => setError(err instanceof NetworkError ? err.message : err.message || "Couldn't load Google connection status."))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadStatus();
+    if (searchParams.get('google')) {
+      // Clear the redirect marker so a reload doesn't keep showing the banner.
+      const next = new URLSearchParams(searchParams);
+      next.delete('google');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleConnect = async () => {
+    setConnecting(true);
+    setError('');
+    try {
+      const { authUrl } = await api.google.connect();
+      window.location.href = authUrl;
+    } catch (err) {
+      setError(err instanceof NetworkError ? err.message : err.message || "Couldn't start the Google connection.");
+      setConnecting(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    setDisconnecting(true);
+    setError('');
+    try {
+      await api.google.disconnect();
+      setGoogle({ connected: false, email: '' });
+    } catch (err) {
+      setError(err instanceof NetworkError ? err.message : err.message || "Couldn't disconnect your Google account.");
+    } finally {
+      setDisconnecting(false);
+    }
+  };
+
   return (
     <>
-      
+
 <div className="mb-space-8">
 <h1 className="font-display-md text-display-md text-on-surface mb-space-2">Data &amp; Sync Preferences</h1>
 <p className="font-body text-body text-ink-500 max-w-2xl">Manage how TutorDesk handles data on your device, optimizes for low-bandwidth connections, and syncs with the cloud.</p>
@@ -12,6 +73,49 @@ export const SettingsDataSyncPreferences = () => {
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-space-6">
 
 <div className="lg:col-span-2 flex flex-col gap-space-6">
+
+<section data-live-page="google-connect" className="bg-paper-0 rounded-lg hairline-border elev-1 p-space-6">
+<h3 className="font-title-md text-title-md text-on-surface mb-space-1 flex items-center gap-2">
+<span className="material-symbols-outlined text-primary">calendar_month</span>
+                            Google Calendar &amp; Tasks
+                        </h3>
+<p className="font-caption text-caption text-ink-500 mb-space-4 pb-space-4 border-b border-paper-200">
+  Classes you schedule are pushed to your Google Calendar, and homework due dates become Google Tasks.
+</p>
+
+{redirectStatus && (
+  <p className={`font-body text-body rounded-lg p-3 mb-space-4 ${redirectStatus.tone === 'success' ? 'bg-success-tint text-success-solid' : redirectStatus.tone === 'warning' ? 'bg-warning-tint text-warning-solid' : 'bg-danger-tint text-danger-solid'}`}>
+    {redirectStatus.message}
+  </p>
+)}
+{error && (
+  <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3 mb-space-4">{error}</p>
+)}
+
+{loading ? (
+  <p className="font-caption text-caption text-ink-500">Checking connection…</p>
+) : google?.connected ? (
+  <div className="flex items-center justify-between gap-space-4">
+    <div className="flex items-center gap-space-3">
+      <span className="material-symbols-outlined text-success-solid">check_circle</span>
+      <div>
+        <p className="font-label text-label text-on-surface">Connected</p>
+        {google.email && <p className="font-caption text-caption text-ink-500">{google.email}</p>}
+      </div>
+    </div>
+    <button onClick={handleDisconnect} disabled={disconnecting}
+      className="px-space-4 py-2 rounded font-label text-label border border-paper-300 text-ink-700 hover:bg-paper-100 transition-colors disabled:opacity-60">
+      {disconnecting ? 'Disconnecting…' : 'Disconnect'}
+    </button>
+  </div>
+) : (
+  <button onClick={handleConnect} disabled={connecting}
+    className="flex items-center gap-2 bg-primary text-on-primary px-space-4 py-2 rounded-lg font-label text-label disabled:opacity-60">
+    <span className="material-symbols-outlined text-[18px]">link</span>
+    {connecting ? 'Redirecting…' : 'Connect Google Calendar'}
+  </button>
+)}
+</section>
 
 <section className="bg-paper-0 rounded-lg hairline-border elev-1 p-space-6 relative overflow-hidden">
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 const navItems = [
   { icon: 'space_dashboard', label: 'Home', path: '/portal/view/setup-checklist-home-variant' },
@@ -14,9 +15,19 @@ const navItems = [
 
 export const Sidebar = ({ isCollapsed }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
-    <nav className={`fixed left-0 top-0 h-screen bg-primary text-on-primary py-5 z-40 transition-all duration-300 ease-spring flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}>
+    <nav
+      data-demo-guide-exempt
+      className={`fixed left-0 top-0 h-screen bg-primary text-on-primary py-5 z-40 transition-all duration-300 ease-spring flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}
+    >
       
       {/* Brand / Logo Area */}
       <div className={`px-space-5 mb-space-6 flex items-center gap-space-3 ${isCollapsed ? 'justify-center px-0' : ''}`}>
@@ -67,7 +78,8 @@ export const Sidebar = ({ isCollapsed }) => {
           <span aria-hidden="true" className="material-symbols-outlined" style={{ fontSize: '20px' }}>settings</span>
           {!isCollapsed && <span className="text-[12.5px] tracking-wide">Settings</span>}
         </Link>
-        <button 
+        <button
+          onClick={handleLogout}
           className={`flex items-center gap-space-3 px-space-3 py-2 rounded-lg text-on-primary/60 font-medium hover:text-on-primary hover:bg-on-primary/6 transition-all duration-200 w-full text-left ${isCollapsed ? 'justify-center px-0 mx-2' : ''}`}
           title={isCollapsed ? "Logout" : undefined}
         >

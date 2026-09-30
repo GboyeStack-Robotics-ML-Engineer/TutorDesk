@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+db.sqlite3
+staticfiles/
+
+# Env files — .env.example is the one that's tracked
+.env
+.env.*
+!.env.example

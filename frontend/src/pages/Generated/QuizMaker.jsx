@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { store, uid } from '../../lib/store';
+import React, { useState, useEffect } from 'react';
+import { api, NetworkError } from '../../lib/api';
+import { uid } from '../../lib/store';
 
 // Functional quiz maker.
 // Two ways to start:
 //   1. From a material — we turn the material's text into starter questions
 //      (simple sentence-based generation, fully client-side).
 //   2. From scratch — start with one blank question.
-// Add/edit/remove MCQ and short-answer questions, then save to localStorage.
+// Add/edit/remove MCQ and short-answer questions, then save via POST /api/quizzes/.
 
 function draftFromMaterial(text) {
   // naive but real: split into sentences, turn the most substantive ones into
-  // fill-in / short questions and a couple of MCQs. Good enough for a demo seed.
+  // fill-in / short questions and a couple of MCQs. Good enough as a starting draft.
   const sentences = text
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
@@ -22,11 +22,11 @@ function draftFromMaterial(text) {
     // make a short-answer by removing the last clause
     if (i === 0 && /=|law|method|force/i.test(s)) {
       qs.push({
-        id: uid('q'),
+        localId: uid('q'),
         type: 'mcq',
         prompt: `Which statement is correct?`,
         options: [s, 'None of these', 'The opposite of the above', 'Cannot be determined'],
-        answer: 0,
+        answer: '0',
       });
     } else {
       const words = s.split(' ');
@@ -34,7 +34,7 @@ function draftFromMaterial(text) {
       const answer = words[blankAt] || '';
       words[blankAt] = '_____';
       qs.push({
-        id: uid('q'),
+        localId: uid('q'),
         type: 'short',
         prompt: words.join(' '),
         answer,
@@ -42,31 +42,56 @@ function draftFromMaterial(text) {
     }
   });
   if (qs.length === 0) {
-    qs.push({ id: uid('q'), type: 'short', prompt: 'Summarise the key idea from the material.', answer: '' });
+    qs.push({ localId: uid('q'), type: 'short', prompt: 'Summarise the key idea from the material.', answer: '' });
   }
   return qs;
 }
 
 export const QuizMaker = () => {
-  const navigate = useNavigate();
-  const materials = store.getMaterials();
+  const [materials, setMaterials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const [step, setStep] = useState('choose'); // choose | edit
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('Mathematics');
   const [questions, setQuestions] = useState([]);
   const [source, setSource] = useState('scratch');
+  const [materialId, setMaterialId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.materials
+      .list({ pageSize: 200 })
+      .then((data) => {
+        if (!cancelled) setMaterials(data?.results || []);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLoadError(err instanceof NetworkError ? err.message : err.message || "Couldn't load your materials.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const startScratch = () => {
     setSource('scratch');
+    setMaterialId(null);
     setTitle('New quiz');
-    setQuestions([{ id: uid('q'), type: 'mcq', prompt: '', options: ['', '', '', ''], answer: 0 }]);
+    setQuestions([{ localId: uid('q'), type: 'mcq', prompt: '', options: ['', '', '', ''], answer: '0' }]);
     setStep('edit');
   };
 
   const startFromMaterial = (mat) => {
     setSource('material');
+    setMaterialId(mat.id);
     setTitle(`Quiz — ${mat.title.replace(/\.[^.]+$/, '')}`);
     setQuestions(draftFromMaterial(mat.text));
     setStep('edit');
@@ -77,24 +102,48 @@ export const QuizMaker = () => {
     setQuestions((arr) => arr.map((q, idx) => (idx === i ? { ...q, options: q.options.map((o, k) => (k === oi ? val : o)) } : q)));
   const addQ = (type) =>
     setQuestions((arr) => [...arr, type === 'mcq'
-      ? { id: uid('q'), type: 'mcq', prompt: '', options: ['', '', '', ''], answer: 0 }
-      : { id: uid('q'), type: 'short', prompt: '', answer: '' }]);
+      ? { localId: uid('q'), type: 'mcq', prompt: '', options: ['', '', '', ''], answer: '0' }
+      : { localId: uid('q'), type: 'short', prompt: '', answer: '' }]);
   const removeQ = (i) => setQuestions((arr) => arr.filter((_, idx) => idx !== i));
 
-  const save = () => {
-    const quiz = { id: uid('quiz'), title, subject, source, questions };
-    store.saveQuiz(quiz);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const save = async () => {
+    setSaving(true);
+    setSaveError('');
+    try {
+      await api.quizzes.create({
+        title,
+        subject,
+        source,
+        materialId: source === 'material' ? materialId : null,
+        questions: questions.map((q) => ({
+          type: q.type,
+          prompt: q.prompt,
+          options: q.type === 'mcq' ? q.options : [],
+          answer: String(q.answer ?? ''),
+        })),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setSaveError(err instanceof NetworkError ? err.message : err.message || "Couldn't save this quiz.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (step === 'choose') {
     return (
-      <div className="max-w-3xl mx-auto flex flex-col gap-space-5">
+      <div data-live-page="quiz-maker" className="max-w-3xl mx-auto flex flex-col gap-space-5">
         <div>
           <h1 className="font-heading text-title-md text-ink-900">Quiz maker</h1>
           <p className="font-caption text-caption text-ink-500">Build a quiz from a material, or start from scratch.</p>
         </div>
+
+        {loadError && (
+          <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3">
+            {loadError}
+          </p>
+        )}
 
         <button onClick={startScratch}
           className="flex items-center gap-space-4 bg-paper-0 border border-paper-200 rounded-xl p-space-5 hover:border-primary transition-colors text-left">
@@ -110,6 +159,12 @@ export const QuizMaker = () => {
         <div>
           <div className="font-label text-label text-ink-700 mb-space-3">Or generate from a material</div>
           <div className="flex flex-col gap-space-3">
+            {loading && <p className="font-caption text-caption text-ink-500">Loading materials…</p>}
+            {!loading && materials.length === 0 && (
+              <p className="font-caption text-caption text-ink-500">
+                No materials yet — add one in Materials Library first.
+              </p>
+            )}
             {materials.map((m) => (
               <button key={m.id} onClick={() => startFromMaterial(m)}
                 className="flex items-center gap-space-4 bg-paper-0 border border-paper-200 rounded-xl p-space-4 hover:border-primary transition-colors text-left">
@@ -118,7 +173,7 @@ export const QuizMaker = () => {
                 </span>
                 <div className="flex-1">
                   <div className="font-label text-label text-ink-900">{m.title}</div>
-                  <div className="font-caption text-caption text-ink-500 line-clamp-1">{m.text.slice(0, 80)}…</div>
+                  <div className="font-caption text-caption text-ink-500 line-clamp-1">{(m.text || '').slice(0, 80)}…</div>
                 </div>
                 <span className="material-symbols-outlined text-primary">auto_awesome</span>
               </button>
@@ -130,7 +185,7 @@ export const QuizMaker = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-space-4">
+    <div data-live-page="quiz-maker" className="max-w-3xl mx-auto flex flex-col gap-space-4">
       <div className="flex items-center justify-between">
         <button onClick={() => setStep('choose')} className="flex items-center gap-1 font-label text-label text-ink-700">
           <span className="material-symbols-outlined text-[18px]">arrow_back</span> Back
@@ -141,11 +196,17 @@ export const QuizMaker = () => {
               <span className="material-symbols-outlined text-[14px]">auto_awesome</span> Generated from material
             </span>
           )}
-          <button onClick={save} className="flex items-center gap-2 bg-primary text-on-primary px-space-4 py-2 rounded-lg font-label text-label">
-            <span className="material-symbols-outlined text-[18px]">save</span> Save quiz
+          <button onClick={save} disabled={saving} className="flex items-center gap-2 bg-primary text-on-primary px-space-4 py-2 rounded-lg font-label text-label disabled:opacity-60">
+            <span className="material-symbols-outlined text-[18px]">save</span> {saving ? 'Saving…' : 'Save quiz'}
           </button>
         </div>
       </div>
+
+      {saveError && (
+        <p role="alert" className="font-body text-body text-danger-solid bg-danger-tint rounded-lg p-3">
+          {saveError}
+        </p>
+      )}
 
       {saved && (
         <div className="flex items-center gap-2 bg-success-tint text-success-solid px-space-4 py-space-3 rounded-lg font-label text-label">
@@ -161,7 +222,7 @@ export const QuizMaker = () => {
       </div>
 
       {questions.map((q, i) => (
-        <div key={q.id} className="bg-paper-0 border border-paper-200 rounded-xl p-space-5 flex flex-col gap-space-3">
+        <div key={q.localId} className="bg-paper-0 border border-paper-200 rounded-xl p-space-5 flex flex-col gap-space-3">
           <div className="flex items-center justify-between">
             <span className="font-label text-caption text-ink-500">Q{i + 1} · {q.type === 'mcq' ? 'Multiple choice' : 'Short answer'}</span>
             <button onClick={() => removeQ(i)} className="text-ink-500 hover:text-danger-solid">
@@ -175,10 +236,10 @@ export const QuizMaker = () => {
             <div className="flex flex-col gap-space-2">
               {q.options.map((opt, oi) => (
                 <label key={oi} className="flex items-center gap-space-3">
-                  <input type="radio" name={`ans-${q.id}`} checked={q.answer === oi} onChange={() => setQ(i, { answer: oi })} />
+                  <input type="radio" name={`ans-${q.localId}`} checked={q.answer === String(oi)} onChange={() => setQ(i, { answer: String(oi) })} />
                   <input value={opt} onChange={(e) => setOpt(i, oi, e.target.value)} placeholder={`Option ${oi + 1}`}
                     className="flex-1 border border-paper-300 rounded-lg px-space-3 py-1.5 font-body text-body focus:outline-none focus:border-primary" />
-                  {q.answer === oi && <span className="font-caption text-caption text-success-solid">correct</span>}
+                  {q.answer === String(oi) && <span className="font-caption text-caption text-success-solid">correct</span>}
                 </label>
               ))}
             </div>
