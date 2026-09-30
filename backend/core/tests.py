@@ -15,7 +15,18 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .fields import EncryptedTextField
-from .models import Assignment, ClassSession, GoogleAccount, GuardianLink, Invoice, LoginOTP, Material, Quiz, Student
+from .models import (
+    Assignment,
+    BlacklistedAccessToken,
+    ClassSession,
+    GoogleAccount,
+    GuardianLink,
+    Invoice,
+    LoginOTP,
+    Material,
+    Quiz,
+    Student,
+)
 from .services import google as google_service
 from .services import password_reset as password_reset_service
 from .services import reports as reports_service
@@ -1553,3 +1564,62 @@ class EncryptedFieldTests(APITestCase):
         # Back on the real test key — decrypting ciphertext from a different
         # key must fail closed (blank), never raise or leak plaintext.
         self.assertEqual(field.from_db_value(ciphertext, None, None), '')
+
+
+# ---- JWT revocation (logout) -------------------------------------------------
+
+class LogoutTests(AuthenticatedAPITestCase):
+    """Previously "logout" only cleared the frontend's localStorage — the
+    token itself stayed valid server-side for the rest of its 7-day life.
+    LogoutView + RevocableJWTAuthentication (core/authentication.py) make
+    logout actually revoke the token."""
+
+    def test_logout_requires_auth(self):
+        self.client.credentials()
+        response = self.client.post('/api/auth/logout/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_logout_succeeds_and_blacklists_the_token(self):
+        response = self.client.post('/api/auth/logout/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(BlacklistedAccessToken.objects.count(), 1)
+
+    def test_a_logged_out_token_can_no_longer_authenticate(self):
+        # Prove it's not just a 204 that does nothing: the *same* token used
+        # to call logout must be rejected on the very next authenticated call.
+        response = self.client.post('/api/auth/logout/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        response = self.client.get('/api/students/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_other_tokens_for_the_same_user_are_unaffected(self):
+        # Logging out on one device shouldn't kill every session — only the
+        # jti actually presented to /auth/logout/ gets revoked.
+        other_token = str(RefreshToken.for_user(self.tutor).access_token)
+
+        response = self.client.post('/api/auth/logout/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
+        response = self.client.get('/api/students/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_logout_is_idempotent_for_the_same_token(self):
+        self.assertEqual(self.client.post('/api/auth/logout/').status_code, status.HTTP_204_NO_CONTENT)
+        # A second logout call with the same (already-blacklisted) token is
+        # itself rejected as unauthenticated — same as any other blacklisted
+        # token — rather than erroring on a duplicate-jti write.
+        response = self.client.post('/api/auth/logout/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class CleanupExpiredBlacklistedTokensCommandTests(APITestCase):
+    def test_deletes_only_expired_rows(self):
+        BlacklistedAccessToken.objects.create(jti='expired', expires_at=timezone.now() - timedelta(days=1))
+        BlacklistedAccessToken.objects.create(jti='still-valid', expires_at=timezone.now() + timedelta(days=1))
+
+        call_command('cleanup_expired_blacklisted_tokens')
+
+        remaining = set(BlacklistedAccessToken.objects.values_list('jti', flat=True))
+        self.assertEqual(remaining, {'still-valid'})

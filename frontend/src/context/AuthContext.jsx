@@ -36,6 +36,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
+    // Best-effort: revoke the token server-side (see api.js/auth.logout),
+    // but don't let a slow/failed request block clearing local state —
+    // the user should always be able to log out of this device instantly.
+    api.auth.logout().catch(() => {});
     clearSession();
     setUser(null);
   }, []);

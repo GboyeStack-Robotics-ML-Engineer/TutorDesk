@@ -20,6 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import (
     Assignment,
+    BlacklistedAccessToken,
     ClassSession,
     GoogleAccount,
     GuardianLink,
@@ -98,6 +99,24 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         return Response(_auth_payload(user))
+
+
+class LogoutView(APIView):
+    """Revokes the calling request's own access token server-side (see
+    models.BlacklistedAccessToken / authentication.RevocableJWTAuthentication)
+    — previously "logout" only cleared the token from the browser's
+    localStorage, so a token copied off a shared/compromised device stayed
+    valid for the rest of its 7-day life even after the user "logged out"."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        token = request.auth
+        BlacklistedAccessToken.objects.get_or_create(
+            jti=token['jti'],
+            defaults={'expires_at': timezone.datetime.fromtimestamp(token['exp'], tz=timezone.get_current_timezone())},
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PasswordResetRequestView(APIView):

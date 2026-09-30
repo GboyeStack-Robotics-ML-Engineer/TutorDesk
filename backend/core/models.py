@@ -337,3 +337,24 @@ class GoogleAccount(models.Model):
 
     def __str__(self):
         return f'{self.tutor} ({self.google_email or "no email on file"})'
+
+
+class BlacklistedAccessToken(models.Model):
+    """Server-side JWT revocation (see core/authentication.py and
+    LogoutView in views.py). This build issues a single long-lived (7
+    day) access token per login and has no refresh-token flow — see
+    settings.py's SIMPLE_JWT comment — so `rest_framework_simplejwt`'s
+    stock `token_blacklist` app (built around blacklisting *refresh*
+    tokens) doesn't fit. This is the minimal real equivalent: on logout,
+    the token's own `jti` gets recorded here, and RevocableJWTAuthentication
+    rejects any request bearing a blacklisted jti even though the JWT
+    itself is still cryptographically valid until it expires. `expires_at`
+    mirrors the token's own expiry so `cleanup_expired_blacklisted_tokens`
+    can purge rows for tokens that would have expired naturally anyway."""
+
+    jti = models.CharField(max_length=255, unique=True)
+    expires_at = models.DateTimeField()
+    blacklisted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.jti

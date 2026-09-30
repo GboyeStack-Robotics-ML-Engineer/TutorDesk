@@ -141,6 +141,10 @@ export const api = {
       request('/auth/signup/', { method: 'POST', body: { name, email, phone, password }, auth: false }),
     login: ({ identifier, password }) =>
       request('/auth/login/', { method: 'POST', body: { identifier, password }, auth: false }),
+    // Revokes the current token server-side (see backend core/authentication.py) —
+    // without this, "logout" only ever cleared localStorage, so a token
+    // copied off a shared/compromised device stayed valid until it expired.
+    logout: () => request('/auth/logout/', { method: 'POST' }),
     requestOtp: ({ phone }) =>
       request('/auth/otp/request/', { method: 'POST', body: { phone }, auth: false }),
     verifyOtp: ({ phone, code }) =>

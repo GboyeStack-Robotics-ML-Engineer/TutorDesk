@@ -15,6 +15,7 @@ from .views import (
     InvoiceDetailView,
     InvoiceListCreateView,
     LoginView,
+    LogoutView,
     MaterialDetailView,
     MaterialListCreateView,
     MonthlyReportDownloadView,
@@ -41,6 +42,7 @@ from .views import (
 urlpatterns = [
     path('auth/signup/', SignupView.as_view(), name='auth-signup'),
     path('auth/login/', LoginView.as_view(), name='auth-login'),
+    path('auth/logout/', LogoutView.as_view(), name='auth-logout'),
     path('auth/otp/request/', OtpRequestView.as_view(), name='auth-otp-request'),
     path('auth/otp/verify/', OtpVerifyView.as_view(), name='auth-otp-verify'),
     path('auth/password-reset/request/', PasswordResetRequestView.as_view(), name='auth-password-reset-request'),

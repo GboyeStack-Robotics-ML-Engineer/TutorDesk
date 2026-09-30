@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
 from .models import (
     Assignment,
+    BlacklistedAccessToken,
     ClassSession,
     GoogleAccount,
     GuardianLink,
@@ -105,3 +106,9 @@ class GoogleAccountAdmin(admin.ModelAdmin):
     # Tokens are live credentials, not debug data — never shown, even to staff.
     readonly_fields = ['tutor', 'google_email', 'connected_at', 'token_expires_at', 'scope']
     exclude = ['access_token', 'refresh_token', 'calendar_sync_token']
+
+
+@admin.register(BlacklistedAccessToken)
+class BlacklistedAccessTokenAdmin(admin.ModelAdmin):
+    list_display = ['jti', 'blacklisted_at', 'expires_at']
+    readonly_fields = ['jti', 'blacklisted_at', 'expires_at']
