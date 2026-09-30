@@ -2,15 +2,19 @@ from datetime import date, timedelta
 from unittest import mock
 
 import httpx
+from cryptography.fernet import Fernet
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.cache import cache
 from django.core.management import call_command
+from django.db import connection
+from django.test import override_settings
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .fields import EncryptedTextField
 from .models import Assignment, ClassSession, GoogleAccount, GuardianLink, Invoice, LoginOTP, Material, Quiz, Student
 from .services import google as google_service
 from .services import password_reset as password_reset_service
@@ -1464,3 +1468,88 @@ class ThrottlingTests(APITestCase):
         for _ in range(6):
             response = self.client.get('/api/whatsapp/parent-lookup/', {'phone': '10000000000'}, HTTP_X_INTERNAL_TOKEN='wrong')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)  # never 429
+
+
+# ---- GoogleAccount OAuth tokens are encrypted at rest (core/fields.py) -------
+
+class EncryptedFieldTests(APITestCase):
+    """GoogleAccount.access_token/refresh_token use EncryptedTextField —
+    these prove the encryption is real (not a no-op) and that the ORM
+    round-trips it transparently for every existing call site."""
+
+    def setUp(self):
+        self.tutor = User.objects.create_user(username='enc@example.com', email='enc@example.com', password='pw-1')
+
+    def _raw_db_value(self, account, column):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f'SELECT {column} FROM {GoogleAccount._meta.db_table} WHERE id = %s',
+                [account.id],
+            )
+            return cursor.fetchone()[0]
+
+    def test_tokens_round_trip_through_a_real_db_save_and_reload(self):
+        account = GoogleAccount.objects.create(
+            tutor=self.tutor, google_email='enc@gmail.com',
+            access_token='super-secret-access-token', refresh_token='super-secret-refresh-token',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+
+        reloaded = GoogleAccount.objects.get(pk=account.pk)
+        self.assertEqual(reloaded.access_token, 'super-secret-access-token')
+        self.assertEqual(reloaded.refresh_token, 'super-secret-refresh-token')
+
+    def test_stored_db_value_is_not_the_plaintext_token(self):
+        account = GoogleAccount.objects.create(
+            tutor=self.tutor, google_email='enc@gmail.com',
+            access_token='super-secret-access-token', refresh_token='super-secret-refresh-token',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+
+        raw_access = self._raw_db_value(account, 'access_token')
+        raw_refresh = self._raw_db_value(account, 'refresh_token')
+        self.assertNotEqual(raw_access, 'super-secret-access-token')
+        self.assertNotEqual(raw_refresh, 'super-secret-refresh-token')
+        self.assertNotIn('super-secret', raw_access)
+        self.assertNotIn('super-secret', raw_refresh)
+        # A Fernet token is a recognisable base64 blob starting with 'gAAAAA'.
+        self.assertTrue(raw_access.startswith('gAAAAA'))
+
+    def test_blank_token_is_stored_and_read_back_as_blank(self):
+        account = GoogleAccount.objects.create(
+            tutor=self.tutor, google_email='enc@gmail.com',
+            access_token='', refresh_token='',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        reloaded = GoogleAccount.objects.get(pk=account.pk)
+        self.assertEqual(reloaded.access_token, '')
+        self.assertEqual(reloaded.refresh_token, '')
+
+    def test_a_value_that_fails_to_decrypt_reads_back_as_blank_not_an_exception(self):
+        account = GoogleAccount.objects.create(
+            tutor=self.tutor, google_email='enc@gmail.com',
+            access_token='some-token', refresh_token='refresh-token',
+            token_expires_at=timezone.now() + timedelta(hours=1),
+        )
+        # Simulate a legacy plaintext row (pre-encryption data) or a token
+        # encrypted under a since-rotated key — either way, ciphertext that
+        # this key can't decrypt.
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"UPDATE {GoogleAccount._meta.db_table} SET access_token = %s WHERE id = %s",
+                ['plaintext-left-over-from-before-encryption', account.id],
+            )
+
+        reloaded = GoogleAccount.objects.get(pk=account.pk)
+        self.assertEqual(reloaded.access_token, '')
+
+    def test_encrypted_with_one_key_fails_to_decrypt_under_a_different_key(self):
+        field = EncryptedTextField()
+        other_key = Fernet.generate_key().decode()
+
+        with override_settings(FIELD_ENCRYPTION_KEY=other_key):
+            ciphertext = field.get_prep_value('some-secret')
+
+        # Back on the real test key — decrypting ciphertext from a different
+        # key must fail closed (blank), never raise or leak plaintext.
+        self.assertEqual(field.from_db_value(ciphertext, None, None), '')

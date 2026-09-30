@@ -21,6 +21,8 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
 
+from .fields import EncryptedTextField
+
 
 def normalize_phone(raw):
     """Digits only, no '+' — matches the WhatsApp service's wa_id format
@@ -324,8 +326,8 @@ class GoogleAccount(models.Model):
 
     tutor = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='google_account')
     google_email = models.EmailField(blank=True)
-    access_token = models.TextField()
-    refresh_token = models.TextField()
+    access_token = EncryptedTextField()
+    refresh_token = EncryptedTextField()
     token_expires_at = models.DateTimeField()
     scope = models.TextField(blank=True)
     # Google Calendar's incremental-sync cursor (see services.google.pull_class_event_changes)

@@ -22,6 +22,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # deployed environment must set a real DJANGO_SECRET_KEY.
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'insecure-dev-key-change-me-before-deploying-anywhere-real')
 
+# Encrypts GoogleAccount's OAuth tokens at rest (see core/fields.py) — a
+# Fernet key, same "insecure dev fallback, must set a real one before
+# deploying" pattern as DJANGO_SECRET_KEY above. Generate a real one with:
+#   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# Rotating this key invalidates every already-stored token — connected
+# tutors would need to reconnect Google.
+FIELD_ENCRYPTION_KEY = os.getenv('FIELD_ENCRYPTION_KEY', 'OH-W2ZX2dSk8USdIa23Vmfmx1ikxfHi42FZtW22Edsk=')
+
 DEBUG = os.getenv('DJANGO_DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
