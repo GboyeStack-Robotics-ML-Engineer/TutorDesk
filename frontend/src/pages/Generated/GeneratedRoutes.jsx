@@ -1,52 +1,59 @@
 
 import React from 'react';
-import { InvoiceMaker } from './InvoiceMaker';
-import { QuizMaker } from './QuizMaker';
-import { BrandSetup } from './BrandSetup';
-import { MeetingGenerator } from './MeetingGenerator';
-import { GoogleEmbed } from './GoogleEmbed';
-import { LiveClassroomDesktop } from './LiveClassroomDesktop';
-import { AddEditStudentDesktop } from './AddEditStudentDesktop';
-import { AiPromptLibraryDesktop } from './AiPromptLibraryDesktop';
-import { ClassroomPostClassWrap } from './ClassroomPostClassWrap';
-import { CreateEditClassDesktop } from './CreateEditClassDesktop';
-import { DiagnosticAssessmentEntryDesktop } from './DiagnosticAssessmentEntryDesktop';
-import { FlaggedStudentsDirectoryView } from './FlaggedStudentsDirectoryView';
-import { GlobalSearchResultsDesktop } from './GlobalSearchResultsDesktop';
-import { InvoiceDetailDesktop } from './InvoiceDetailDesktop';
-import { LessonTemplatesLibraryDesktop } from './LessonTemplatesLibraryDesktop';
-import { LessonTemplateEditorDesktop } from './LessonTemplateEditorDesktop';
-import { MaterialsLibraryDesktop } from './MaterialsLibraryDesktop';
-import { MaterialViewerDesktop } from './MaterialViewerDesktop';
-import { MessagesDesktop } from './MessagesDesktop';
-import { MonthlyReportGeneratorDesktop } from './MonthlyReportGeneratorDesktop';
-import { NotificationsCenterDesktop } from './NotificationsCenterDesktop';
-import { OnboardingAvailabilitySetup } from './OnboardingAvailabilitySetup';
-import { ParentPortalHome } from './ParentPortalHome';
-import { PortalContactTutor1 } from './PortalContactTutor1';
-import { PortalPaymentsInvoices } from './PortalPaymentsInvoices';
-import { PortalProgressReports } from './PortalProgressReports';
-import { RecordPaymentDesktop } from './RecordPaymentDesktop';
-import { ReportsInsightsDesktop } from './ReportsInsightsDesktop';
-import { ReportDetailIncomeAnalysis } from './ReportDetailIncomeAnalysis';
-import { RescheduleCancelClassDesktop } from './RescheduleCancelClassDesktop';
-import { SettingsAccountSecurity } from './SettingsAccountSecurity';
-import { SettingsAutomationRules } from './SettingsAutomationRules';
-import { SettingsCommunicationHours } from './SettingsCommunicationHours';
-import { SettingsDataSyncPreferences } from './SettingsDataSyncPreferences';
-import { SettingsHubDesktop } from './SettingsHubDesktop';
-import { SettingsPaymentDetails } from './SettingsPaymentDetails';
-import { SettingsPortalManagement } from './SettingsPortalManagement';
-import { SettingsProfileBio } from './SettingsProfileBio';
-import { SettingsReminderRulesAdmin } from './SettingsReminderRulesAdmin';
-import { SettingsSopsProcedures } from './SettingsSopsProcedures';
-import { SettingsTermsOfService } from './SettingsTermsOfService';
-import { SetupChecklistHomeVariant } from './SetupChecklistHomeVariant';
-import { SplashLoadingState } from './SplashLoadingState';
-import { StudentOnboardingFormDesktop } from './StudentOnboardingFormDesktop';
-import { SubscriptionsPlansDesktop } from './SubscriptionsPlansDesktop';
-import { TheOrganizedDesk } from './TheOrganizedDesk';
-import { VerificationEmailPhone } from './VerificationEmailPhone';
+
+// Lazy-loaded (React.lazy + Suspense boundary in App.jsx) rather than
+// imported statically — this is most of the app's page count in one
+// place, and eagerly importing all of them put every settings/admin
+// page a tutor might never visit into the one bundle everyone downloads
+// on first load (833KB, per Vite's own build-time warning). Each entry
+// below becomes its own chunk, fetched only when that route is visited.
+const InvoiceMaker = React.lazy(() => import('./InvoiceMaker').then((m) => ({ default: m.InvoiceMaker })));
+const QuizMaker = React.lazy(() => import('./QuizMaker').then((m) => ({ default: m.QuizMaker })));
+const BrandSetup = React.lazy(() => import('./BrandSetup').then((m) => ({ default: m.BrandSetup })));
+const MeetingGenerator = React.lazy(() => import('./MeetingGenerator').then((m) => ({ default: m.MeetingGenerator })));
+const GoogleEmbed = React.lazy(() => import('./GoogleEmbed').then((m) => ({ default: m.GoogleEmbed })));
+const LiveClassroomDesktop = React.lazy(() => import('./LiveClassroomDesktop').then((m) => ({ default: m.LiveClassroomDesktop })));
+const AddEditStudentDesktop = React.lazy(() => import('./AddEditStudentDesktop').then((m) => ({ default: m.AddEditStudentDesktop })));
+const AiPromptLibraryDesktop = React.lazy(() => import('./AiPromptLibraryDesktop').then((m) => ({ default: m.AiPromptLibraryDesktop })));
+const ClassroomPostClassWrap = React.lazy(() => import('./ClassroomPostClassWrap').then((m) => ({ default: m.ClassroomPostClassWrap })));
+const CreateEditClassDesktop = React.lazy(() => import('./CreateEditClassDesktop').then((m) => ({ default: m.CreateEditClassDesktop })));
+const DiagnosticAssessmentEntryDesktop = React.lazy(() => import('./DiagnosticAssessmentEntryDesktop').then((m) => ({ default: m.DiagnosticAssessmentEntryDesktop })));
+const FlaggedStudentsDirectoryView = React.lazy(() => import('./FlaggedStudentsDirectoryView').then((m) => ({ default: m.FlaggedStudentsDirectoryView })));
+const GlobalSearchResultsDesktop = React.lazy(() => import('./GlobalSearchResultsDesktop').then((m) => ({ default: m.GlobalSearchResultsDesktop })));
+const InvoiceDetailDesktop = React.lazy(() => import('./InvoiceDetailDesktop').then((m) => ({ default: m.InvoiceDetailDesktop })));
+const LessonTemplatesLibraryDesktop = React.lazy(() => import('./LessonTemplatesLibraryDesktop').then((m) => ({ default: m.LessonTemplatesLibraryDesktop })));
+const LessonTemplateEditorDesktop = React.lazy(() => import('./LessonTemplateEditorDesktop').then((m) => ({ default: m.LessonTemplateEditorDesktop })));
+const MaterialsLibraryDesktop = React.lazy(() => import('./MaterialsLibraryDesktop').then((m) => ({ default: m.MaterialsLibraryDesktop })));
+const MaterialViewerDesktop = React.lazy(() => import('./MaterialViewerDesktop').then((m) => ({ default: m.MaterialViewerDesktop })));
+const MessagesDesktop = React.lazy(() => import('./MessagesDesktop').then((m) => ({ default: m.MessagesDesktop })));
+const MonthlyReportGeneratorDesktop = React.lazy(() => import('./MonthlyReportGeneratorDesktop').then((m) => ({ default: m.MonthlyReportGeneratorDesktop })));
+const NotificationsCenterDesktop = React.lazy(() => import('./NotificationsCenterDesktop').then((m) => ({ default: m.NotificationsCenterDesktop })));
+const OnboardingAvailabilitySetup = React.lazy(() => import('./OnboardingAvailabilitySetup').then((m) => ({ default: m.OnboardingAvailabilitySetup })));
+const ParentPortalHome = React.lazy(() => import('./ParentPortalHome').then((m) => ({ default: m.ParentPortalHome })));
+const PortalContactTutor1 = React.lazy(() => import('./PortalContactTutor1').then((m) => ({ default: m.PortalContactTutor1 })));
+const PortalPaymentsInvoices = React.lazy(() => import('./PortalPaymentsInvoices').then((m) => ({ default: m.PortalPaymentsInvoices })));
+const PortalProgressReports = React.lazy(() => import('./PortalProgressReports').then((m) => ({ default: m.PortalProgressReports })));
+const RecordPaymentDesktop = React.lazy(() => import('./RecordPaymentDesktop').then((m) => ({ default: m.RecordPaymentDesktop })));
+const ReportsInsightsDesktop = React.lazy(() => import('./ReportsInsightsDesktop').then((m) => ({ default: m.ReportsInsightsDesktop })));
+const ReportDetailIncomeAnalysis = React.lazy(() => import('./ReportDetailIncomeAnalysis').then((m) => ({ default: m.ReportDetailIncomeAnalysis })));
+const RescheduleCancelClassDesktop = React.lazy(() => import('./RescheduleCancelClassDesktop').then((m) => ({ default: m.RescheduleCancelClassDesktop })));
+const SettingsAccountSecurity = React.lazy(() => import('./SettingsAccountSecurity').then((m) => ({ default: m.SettingsAccountSecurity })));
+const SettingsAutomationRules = React.lazy(() => import('./SettingsAutomationRules').then((m) => ({ default: m.SettingsAutomationRules })));
+const SettingsCommunicationHours = React.lazy(() => import('./SettingsCommunicationHours').then((m) => ({ default: m.SettingsCommunicationHours })));
+const SettingsDataSyncPreferences = React.lazy(() => import('./SettingsDataSyncPreferences').then((m) => ({ default: m.SettingsDataSyncPreferences })));
+const SettingsHubDesktop = React.lazy(() => import('./SettingsHubDesktop').then((m) => ({ default: m.SettingsHubDesktop })));
+const SettingsPaymentDetails = React.lazy(() => import('./SettingsPaymentDetails').then((m) => ({ default: m.SettingsPaymentDetails })));
+const SettingsPortalManagement = React.lazy(() => import('./SettingsPortalManagement').then((m) => ({ default: m.SettingsPortalManagement })));
+const SettingsProfileBio = React.lazy(() => import('./SettingsProfileBio').then((m) => ({ default: m.SettingsProfileBio })));
+const SettingsReminderRulesAdmin = React.lazy(() => import('./SettingsReminderRulesAdmin').then((m) => ({ default: m.SettingsReminderRulesAdmin })));
+const SettingsSopsProcedures = React.lazy(() => import('./SettingsSopsProcedures').then((m) => ({ default: m.SettingsSopsProcedures })));
+const SettingsTermsOfService = React.lazy(() => import('./SettingsTermsOfService').then((m) => ({ default: m.SettingsTermsOfService })));
+const SetupChecklistHomeVariant = React.lazy(() => import('./SetupChecklistHomeVariant').then((m) => ({ default: m.SetupChecklistHomeVariant })));
+const SplashLoadingState = React.lazy(() => import('./SplashLoadingState').then((m) => ({ default: m.SplashLoadingState })));
+const StudentOnboardingFormDesktop = React.lazy(() => import('./StudentOnboardingFormDesktop').then((m) => ({ default: m.StudentOnboardingFormDesktop })));
+const SubscriptionsPlansDesktop = React.lazy(() => import('./SubscriptionsPlansDesktop').then((m) => ({ default: m.SubscriptionsPlansDesktop })));
+const TheOrganizedDesk = React.lazy(() => import('./TheOrganizedDesk').then((m) => ({ default: m.TheOrganizedDesk })));
+const VerificationEmailPhone = React.lazy(() => import('./VerificationEmailPhone').then((m) => ({ default: m.VerificationEmailPhone })));
 
 export const generatedRoutes = [
   { path: "/view/add-edit-student-desktop", component: AddEditStudentDesktop },
