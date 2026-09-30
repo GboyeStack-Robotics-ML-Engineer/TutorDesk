@@ -103,6 +103,15 @@ export class NetworkError extends Error {
   }
 }
 
+function buildQuery(params) {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') qs.set(key, value);
+  }
+  const s = qs.toString();
+  return s ? `?${s}` : '';
+}
+
 async function request(path, { method = 'GET', body, auth = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (auth) {
@@ -155,8 +164,15 @@ export const api = {
       request('/auth/password-reset/confirm/', { method: 'POST', body: { token, password }, auth: false }),
   },
 
+  // list() endpoints return a paginated envelope — { count, next, previous,
+  // results } — not a bare array (see backend core/pagination.py). Pass
+  // { pageSize } to raise the page above the default (25) up to the
+  // server's cap (200); every call site here that needs "all of them" for
+  // a dropdown/library view does this rather than paging through results,
+  // since no tutor realistically has more than a couple hundred of any of
+  // these — see docs/PRD.md's audit notes.
   students: {
-    list: () => request('/students/'),
+    list: ({ page, pageSize } = {}) => request(`/students/${buildQuery({ page, pageSize })}`),
     add: ({ name, subject, parentName, parentWhatsapp, reminderChannel }) =>
       request('/students/', {
         method: 'POST',
@@ -165,13 +181,9 @@ export const api = {
   },
 
   classes: {
-    list: ({ from, to } = {}) => {
-      const params = new URLSearchParams();
-      if (from) params.set('from', from);
-      if (to) params.set('to', to);
-      const qs = params.toString();
-      return request(`/classes/${qs ? `?${qs}` : ''}`);
-    },
+    list: ({ from, to, page, pageSize } = {}) =>
+      request(`/classes/${buildQuery({ from, to, page, pageSize })}`),
+    get: (id) => request(`/classes/${id}/`),
     create: ({ studentId, subject, startsAt, durationMinutes, recurrence, platform, notes, meetLink }) =>
       request('/classes/', {
         method: 'POST',
@@ -198,7 +210,7 @@ export const api = {
   },
 
   invoices: {
-    list: () => request('/invoices/'),
+    list: ({ page, pageSize } = {}) => request(`/invoices/${buildQuery({ page, pageSize })}`),
     get: (id) => request(`/invoices/${id}/`),
     create: ({ studentId, items, issuedAt, dueAt, note }) =>
       request('/invoices/', { method: 'POST', body: { studentId, items, issuedAt, dueAt, note } }),
@@ -210,13 +222,13 @@ export const api = {
   },
 
   materials: {
-    list: () => request('/materials/'),
+    list: ({ page, pageSize } = {}) => request(`/materials/${buildQuery({ page, pageSize })}`),
     get: (id) => request(`/materials/${id}/`),
     create: ({ title, kind, text }) => request('/materials/', { method: 'POST', body: { title, kind, text } }),
   },
 
   quizzes: {
-    list: () => request('/quizzes/'),
+    list: ({ page, pageSize } = {}) => request(`/quizzes/${buildQuery({ page, pageSize })}`),
     get: (id) => request(`/quizzes/${id}/`),
     create: ({ title, subject, source, materialId, questions }) =>
       request('/quizzes/', { method: 'POST', body: { title, subject, source, materialId, questions } }),

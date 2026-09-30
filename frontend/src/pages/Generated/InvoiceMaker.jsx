@@ -34,12 +34,13 @@ export const InvoiceMaker = () => {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([api.brand.get(), api.students.list()])
-      .then(([brandData, studentList]) => {
+    Promise.all([api.brand.get(), api.students.list({ pageSize: 200 })])
+      .then(([brandData, studentData]) => {
         if (cancelled) return;
+        const studentList = studentData?.results || [];
         setBrand(brandData);
-        setStudents(studentList || []);
-        if (studentList?.[0]) setStudentId(studentList[0].id);
+        setStudents(studentList);
+        if (studentList[0]) setStudentId(studentList[0].id);
       })
       .catch((err) => {
         if (cancelled) return;

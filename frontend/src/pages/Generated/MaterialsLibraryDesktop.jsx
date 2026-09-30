@@ -29,8 +29,8 @@ export const MaterialsLibraryDesktop = () => {
   const load = () => {
     setLoading(true);
     api.materials
-      .list()
-      .then((list) => setMaterials(list || []))
+      .list({ pageSize: 200 })
+      .then((data) => setMaterials(data?.results || []))
       .catch((err) => {
         setLoadError(err instanceof NetworkError ? err.message : err.message || "Couldn't load your materials.");
       })

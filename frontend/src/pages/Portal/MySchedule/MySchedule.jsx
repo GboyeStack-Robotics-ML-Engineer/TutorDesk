@@ -34,9 +34,9 @@ export const MySchedule = () => {
   useEffect(() => {
     let cancelled = false;
     api.classes
-      .list()
-      .then((list) => {
-        if (!cancelled) setClasses(list || []);
+      .list({ pageSize: 200 })
+      .then((data) => {
+        if (!cancelled) setClasses(data?.results || []);
       })
       .catch((err) => {
         if (cancelled) return;

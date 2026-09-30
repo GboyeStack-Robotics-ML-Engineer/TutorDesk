@@ -26,16 +26,17 @@ export const LiveClassroomDesktop = () => {
 
   useEffect(() => {
     let cancelled = false;
-    api.classes
-      .list()
-      .then((list) => {
+    const loaded = classId
+      ? api.classes.get(classId)
+      : api.classes.list({ pageSize: 200 }).then((data) =>
+          (data?.results || [])
+            .filter((c) => c.status === 'scheduled')
+            .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt))[0] || null
+        );
+
+    loaded
+      .then((match) => {
         if (cancelled) return;
-        const sessions = list || [];
-        const match = classId
-          ? sessions.find((c) => c.id === classId)
-          : sessions
-              .filter((c) => c.status === 'scheduled')
-              .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt))[0];
         setSession(match || null);
         if (!match) {
           setError(classId ? "That session couldn't be found." : "You don't have an upcoming session scheduled.");

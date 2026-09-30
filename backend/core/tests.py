@@ -171,9 +171,14 @@ class StudentTests(AuthenticatedAPITestCase):
         Assignment.objects.create(student=theirs, tutor=other_tutor, subject='Math')
 
         response = self.client.get('/api/students/')
-        names = [s['name'] for s in response.data]
+        names = [s['name'] for s in response.data['results']]
         self.assertIn('Mine', names)
         self.assertNotIn('Theirs', names)
+
+    def test_student_list_response_is_a_paginated_envelope(self):
+        response = self.client.get('/api/students/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(response.data.keys()), {'count', 'next', 'previous', 'results'})
 
 
 class ClassSessionTests(AuthenticatedAPITestCase):
@@ -206,12 +211,12 @@ class ClassSessionTests(AuthenticatedAPITestCase):
             'from': timezone.now().isoformat(),
             'to': (timezone.now() + timedelta(days=2)).isoformat(),
         })
-        self.assertEqual(len(in_range.data), 1)
+        self.assertEqual(len(in_range.data['results']), 1)
 
         out_of_range = self.client.get('/api/classes/', {
             'from': (timezone.now() + timedelta(days=5)).isoformat(),
         })
-        self.assertEqual(len(out_of_range.data), 0)
+        self.assertEqual(len(out_of_range.data['results']), 0)
 
     def test_classes_are_scoped_to_the_requesting_tutor(self):
         other_tutor = User.objects.create_user(username='other2@example.com', email='other2@example.com', password='pw-1')
@@ -220,7 +225,51 @@ class ClassSessionTests(AuthenticatedAPITestCase):
             starts_at=timezone.now() + timedelta(days=1),
         )
         response = self.client.get('/api/classes/')
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
+
+    def test_get_a_single_class_by_id(self):
+        session = ClassSession.objects.create(
+            tutor=self.tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(days=1),
+        )
+        response = self.client.get(f'/api/classes/{session.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], str(session.id))
+        self.assertEqual(response.data['studentName'], 'Ada')
+
+    def test_get_a_single_class_scoped_to_the_requesting_tutor(self):
+        other_tutor = User.objects.create_user(username='other2b@example.com', email='other2b@example.com', password='pw-1')
+        theirs = ClassSession.objects.create(
+            tutor=other_tutor, student=self.student, subject='Mathematics',
+            starts_at=timezone.now() + timedelta(days=1),
+        )
+        response = self.client.get(f'/api/classes/{theirs.id}/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_class_list_is_paginated_beyond_the_default_page_size(self):
+        for i in range(30):
+            ClassSession.objects.create(
+                tutor=self.tutor, student=self.student, subject='Mathematics',
+                starts_at=timezone.now() + timedelta(days=i + 1),
+            )
+        response = self.client.get('/api/classes/')
+        self.assertEqual(response.data['count'], 30)
+        self.assertEqual(len(response.data['results']), 25)  # default page_size
+        self.assertIsNotNone(response.data['next'])
+
+        second_page = self.client.get(response.data['next'])
+        self.assertEqual(len(second_page.data['results']), 5)
+        self.assertIsNone(second_page.data['next'])
+
+    def test_class_list_page_size_is_capped(self):
+        for i in range(10):
+            ClassSession.objects.create(
+                tutor=self.tutor, student=self.student, subject='Mathematics',
+                starts_at=timezone.now() + timedelta(days=i + 1),
+            )
+        response = self.client.get('/api/classes/', {'pageSize': 5000})
+        self.assertEqual(len(response.data['results']), 10)  # under the 200 cap, so unaffected
+        self.assertEqual(response.data['count'], 10)
 
 
 class CompleteOnboardingTests(APITestCase):
@@ -373,7 +422,13 @@ class InvoiceTests(AuthenticatedAPITestCase):
         other_tutor = User.objects.create_user(username='other3@example.com', email='other3@example.com', password='pw-1')
         Invoice.objects.create(tutor=other_tutor, student=self.student, issued_at='2026-01-01', due_at='2026-01-15')
         response = self.client.get('/api/invoices/')
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
+
+    def test_invoice_list_response_is_a_paginated_envelope(self):
+        self._create_invoice()
+        response = self.client.get('/api/invoices/')
+        self.assertEqual(set(response.data.keys()), {'count', 'next', 'previous', 'results'})
+        self.assertEqual(response.data['count'], 1)
 
     def test_record_payment_marks_invoice_paid_by_default(self):
         created = self._create_invoice()
@@ -411,14 +466,20 @@ class MaterialTests(AuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         listed = self.client.get('/api/materials/')
-        self.assertEqual(len(listed.data), 1)
-        self.assertEqual(listed.data[0]['title'], 'Algebra basics')
+        self.assertEqual(len(listed.data['results']), 1)
+        self.assertEqual(listed.data['results'][0]['title'], 'Algebra basics')
 
     def test_materials_are_scoped_to_the_requesting_tutor(self):
         other_tutor = User.objects.create_user(username='other4@example.com', email='other4@example.com', password='pw-1')
         Material.objects.create(tutor=other_tutor, title='Not mine')
         response = self.client.get('/api/materials/')
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
+
+    def test_material_list_response_is_a_paginated_envelope(self):
+        Material.objects.create(tutor=self.tutor, title='Mine')
+        response = self.client.get('/api/materials/')
+        self.assertEqual(set(response.data.keys()), {'count', 'next', 'previous', 'results'})
+        self.assertEqual(response.data['count'], 1)
 
 
 class QuizTests(AuthenticatedAPITestCase):
@@ -452,7 +513,13 @@ class QuizTests(AuthenticatedAPITestCase):
         other_tutor = User.objects.create_user(username='other5@example.com', email='other5@example.com', password='pw-1')
         Quiz.objects.create(tutor=other_tutor, title='Not mine')
         response = self.client.get('/api/quizzes/')
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
+
+    def test_quiz_list_response_is_a_paginated_envelope(self):
+        Quiz.objects.create(tutor=self.tutor, title='Mine')
+        response = self.client.get('/api/quizzes/')
+        self.assertEqual(set(response.data.keys()), {'count', 'next', 'previous', 'results'})
+        self.assertEqual(response.data['count'], 1)
 
 
 class OtpLoginTests(APITestCase):

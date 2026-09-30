@@ -19,7 +19,7 @@ export const SetupChecklistHomeVariant = () => {
   useEffect(() => {
     let cancelled = false;
     api.students.list()
-      .then((list) => { if (!cancelled) setHasStudents((list || []).length > 0); })
+      .then((data) => { if (!cancelled) setHasStudents((data?.count || 0) > 0); })
       .catch(() => { if (!cancelled) setHasStudents(false); });
     return () => { cancelled = true; };
   }, []);

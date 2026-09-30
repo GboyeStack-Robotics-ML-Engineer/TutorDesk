@@ -34,6 +34,7 @@ from .models import (
     Student,
     normalize_phone,
 )
+from .pagination import StandardResultsPagination
 from .serializers import (
     BrandSerializer,
     ClassCancelSerializer,
@@ -169,7 +170,9 @@ class StudentListCreateView(APIView):
 
     def get(self, request):
         students = Student.objects.filter(assignments__tutor=request.user).distinct()
-        return Response(StudentSerializer(students, many=True).data)
+        paginator = StandardResultsPagination()
+        page = paginator.paginate_queryset(students, request)
+        return paginator.get_paginated_response(StudentSerializer(page, many=True).data)
 
     def post(self, request):
         serializer = StudentCreateSerializer(data=request.data)
@@ -237,7 +240,9 @@ class ClassListCreateView(APIView):
             if parsed:
                 sessions = sessions.filter(starts_at__lte=parsed)
 
-        return Response(ClassSessionSerializer(sessions, many=True).data)
+        paginator = StandardResultsPagination()
+        page = paginator.paginate_queryset(sessions, request)
+        return paginator.get_paginated_response(ClassSessionSerializer(page, many=True).data)
 
     def post(self, request):
         serializer = ClassCreateSerializer(data=request.data)
@@ -288,11 +293,18 @@ class ClassListCreateView(APIView):
 
 
 class ClassDetailView(APIView):
-    """Reschedule a class (PATCH) — see ClassCancelView / ClassCompleteView
-    for the other two class-lifecycle actions, split out because each has
-    a distinctly shaped payload and a different Google side-effect."""
+    """GET a single class (needed now that ClassListCreateView's list is
+    paginated — a few pages used to fetch the whole list just to find one
+    class by id, which silently broke for a class outside page 1) —
+    reschedule (PATCH) — see ClassCancelView / ClassCompleteView for the
+    other two class-lifecycle actions, split out because each has a
+    distinctly shaped payload and a different Google side-effect."""
 
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, class_id):
+        session = get_object_or_404(ClassSession.objects.select_related('student'), id=class_id, tutor=request.user)
+        return Response(ClassSessionSerializer(session).data)
 
     def patch(self, request, class_id):
         session = get_object_or_404(ClassSession, id=class_id, tutor=request.user)
@@ -465,7 +477,9 @@ class InvoiceListCreateView(APIView):
 
     def get(self, request):
         invoices = Invoice.objects.filter(tutor=request.user).select_related('student').prefetch_related('items', 'payments')
-        return Response(InvoiceSerializer(invoices, many=True).data)
+        paginator = StandardResultsPagination()
+        page = paginator.paginate_queryset(invoices, request)
+        return paginator.get_paginated_response(InvoiceSerializer(page, many=True).data)
 
     def post(self, request):
         serializer = InvoiceCreateSerializer(data=request.data)
@@ -533,7 +547,9 @@ class MaterialListCreateView(APIView):
 
     def get(self, request):
         materials = Material.objects.filter(tutor=request.user)
-        return Response(MaterialSerializer(materials, many=True).data)
+        paginator = StandardResultsPagination()
+        page = paginator.paginate_queryset(materials, request)
+        return paginator.get_paginated_response(MaterialSerializer(page, many=True).data)
 
     def post(self, request):
         serializer = MaterialCreateSerializer(data=request.data)
@@ -564,7 +580,9 @@ class QuizListCreateView(APIView):
 
     def get(self, request):
         quizzes = Quiz.objects.filter(tutor=request.user).prefetch_related('questions')
-        return Response(QuizSerializer(quizzes, many=True).data)
+        paginator = StandardResultsPagination()
+        page = paginator.paginate_queryset(quizzes, request)
+        return paginator.get_paginated_response(QuizSerializer(page, many=True).data)
 
     def post(self, request):
         serializer = QuizCreateSerializer(data=request.data)

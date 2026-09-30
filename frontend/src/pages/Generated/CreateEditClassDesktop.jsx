@@ -33,9 +33,9 @@ export const CreateEditClassDesktop = () => {
   useEffect(() => {
     let cancelled = false;
     api.students
-      .list()
-      .then((list) => {
-        if (!cancelled) setStudents(list || []);
+      .list({ pageSize: 200 })
+      .then((data) => {
+        if (!cancelled) setStudents(data?.results || []);
       })
       .catch((err) => {
         if (cancelled) return;

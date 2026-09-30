@@ -65,9 +65,9 @@ export const QuizMaker = () => {
   useEffect(() => {
     let cancelled = false;
     api.materials
-      .list()
-      .then((list) => {
-        if (!cancelled) setMaterials(list || []);
+      .list({ pageSize: 200 })
+      .then((data) => {
+        if (!cancelled) setMaterials(data?.results || []);
       })
       .catch((err) => {
         if (cancelled) return;

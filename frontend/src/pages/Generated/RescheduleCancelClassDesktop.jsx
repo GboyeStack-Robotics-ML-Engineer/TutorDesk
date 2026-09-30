@@ -44,18 +44,13 @@ export const RescheduleCancelClassDesktop = () => {
     }
     let cancelled = false;
     api.classes
-      .list()
-      .then((list) => {
+      .get(id)
+      .then((found) => {
         if (cancelled) return;
-        const found = (list || []).find((c) => c.id === id);
-        if (!found) {
-          setLoadError("Couldn't find this class.");
-        } else {
-          setSession(found);
-          const d = new Date(found.startsAt);
-          setNewDate(d.toISOString().slice(0, 10));
-          setNewTime(d.toTimeString().slice(0, 5));
-        }
+        setSession(found);
+        const d = new Date(found.startsAt);
+        setNewDate(d.toISOString().slice(0, 10));
+        setNewTime(d.toTimeString().slice(0, 5));
       })
       .catch((err) => {
         if (cancelled) return;

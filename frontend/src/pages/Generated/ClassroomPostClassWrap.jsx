@@ -33,12 +33,9 @@ export const ClassroomPostClassWrap = () => {
     }
     let cancelled = false;
     api.classes
-      .list()
-      .then((list) => {
-        if (cancelled) return;
-        const found = (list || []).find((c) => c.id === id);
-        if (!found) setLoadError("Couldn't find this class.");
-        else setSession(found);
+      .get(id)
+      .then((found) => {
+        if (!cancelled) setSession(found);
       })
       .catch((err) => {
         if (cancelled) return;
