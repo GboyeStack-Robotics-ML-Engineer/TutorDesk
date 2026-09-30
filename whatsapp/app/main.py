@@ -185,5 +185,13 @@ async def meta_incoming(request: Request):
     payload = await request.json()
     msg = parse_meta_json(payload)
     if msg:
-        conversation.handle(msg["from"], msg["text"], msg.get("name", ""))
+        # Meta documents at-least-once webhook delivery — the same
+        # message can arrive twice (a slow response, a retry after a
+        # timeout). Without this, a redelivery would advance the
+        # onboarding flow an extra step or double-answer a Q&A question.
+        # A message with no id (shouldn't happen for a real Meta payload,
+        # but see make_incoming's test fixtures) is processed as-is rather
+        # than silently dropped.
+        if not msg["id"] or db.claim_message(msg["id"]):
+            conversation.handle(msg["from"], msg["text"], msg.get("name", ""))
     return {"received": True}

@@ -165,7 +165,10 @@ def parse_meta_json(payload: dict) -> Optional[dict]:
         contacts = entry.get("contacts", [])
         if contacts:
             name = contacts[0].get("profile", {}).get("name", "")
-        return {"from": msg["from"], "text": msg["text"]["body"], "name": name}
+        # msg["id"] (the "wamid...") is what main.py's webhook handler
+        # uses to dedupe against Meta's documented at-least-once delivery
+        # — see db.claim_message.
+        return {"from": msg["from"], "text": msg["text"]["body"], "name": name, "id": msg.get("id", "")}
     except (KeyError, IndexError):
         return None
 

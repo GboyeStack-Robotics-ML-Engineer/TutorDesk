@@ -269,6 +269,40 @@ def test_known_parent_with_an_unmatched_message_gets_escalated_to_their_tutor(ap
     assert "Mr Balogun" in sent[0]
 
 
+def test_claim_message_is_true_once_then_false_for_the_same_id(app_modules):
+    conv, db, wa, main = app_modules
+    assert db.claim_message("wamid.abc123") is True
+    assert db.claim_message("wamid.abc123") is False
+    assert db.claim_message("wamid.other456") is True
+
+
+def test_webhook_redelivery_of_the_same_message_is_not_processed_twice(app_modules):
+    """Meta documents at-least-once webhook delivery. Without dedup, this
+    exact scenario is a real bug, not just a theoretical double-count:
+    the session is CONFIRMING and the redelivered text ("1") doesn't
+    match CONFIRM_WORDS, so a second, unguarded pass through handle()
+    would hit the "else" branch of the CONFIRMING state and wipe the
+    session's fields, thinking the parent declined the summary."""
+    conv, db, wa, main = app_modules
+    conv.start_onboarding(PARENT, STUDENT_ID, "Ada", TUTOR_NAME, subjects=["Math"], goals="g", availability=["weekends"])
+    conv.handle(PARENT, "hi")  # only reminder_channel left unanswered
+
+    payload = json.dumps(wa.make_incoming(PARENT, "1")).encode()
+    sig = "sha256=" + hmac.new(b"test-secret", payload, hashlib.sha256).hexdigest()
+    headers = {"content-type": "application/json", "x-hub-signature-256": sig}
+
+    with TestClient(main.app) as client:
+        first = client.post("/webhook", content=payload, headers=headers)
+        second = client.post("/webhook", content=payload, headers=headers)  # Meta redelivering the same message
+
+    assert first.status_code == 200
+    assert second.status_code == 200  # still acknowledged, never an error back to Meta
+
+    session = db.get_session(PARENT)
+    assert session["state"] == "CONFIRMING"  # advanced once, not reset by the redelivery
+    assert session["reminder_channel"] == "whatsapp"
+
+
 def test_webhook_accepts_a_correctly_signed_post(app_modules):
     conv, db, wa, main = app_modules
     conv.start_onboarding(PARENT, STUDENT_ID, "Ada", TUTOR_NAME, subjects=["Math"], goals="g", availability=["weekends"])

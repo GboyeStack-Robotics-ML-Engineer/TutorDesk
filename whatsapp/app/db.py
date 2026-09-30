@@ -58,6 +58,12 @@ def init_db():
                 created_at TEXT NOT NULL
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS processed_messages (
+                message_id TEXT PRIMARY KEY,
+                processed_at TEXT NOT NULL
+            )
+        """)
 
 
 def create_session(wa_id: str, student_id: str, student_name: str, tutor_name: str,
@@ -101,3 +107,21 @@ def log_message(to_wa_id: str, body: str, dry_run: bool):
             "INSERT INTO messages_out (to_wa_id, body, dry_run, created_at) VALUES (?, ?, ?, ?)",
             (to_wa_id, body, int(dry_run), _now()),
         )
+
+
+def claim_message(message_id: str) -> bool:
+    """Atomically records that message_id is being processed for the
+    first time. Returns True the first time a given id is claimed (the
+    caller should go ahead and process it), False if it was already
+    claimed before (Meta redelivered the same webhook — the caller should
+    skip it, not process it a second time). The INSERT OR IGNORE +
+    rowcount check is what makes this safe even if two deliveries of the
+    same message arrive close together, not just a plain check-then-insert
+    which could let both through. See main.py's webhook handler — this is
+    the fix for Meta's documented at-least-once webhook delivery."""
+    with get_conn() as conn:
+        cursor = conn.execute(
+            "INSERT OR IGNORE INTO processed_messages (message_id, processed_at) VALUES (?, ?)",
+            (message_id, _now()),
+        )
+        return cursor.rowcount == 1
